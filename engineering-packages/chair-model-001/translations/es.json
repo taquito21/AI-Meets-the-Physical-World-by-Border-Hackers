@@ -1,0 +1,222 @@
+{
+  "language": "es",
+  "note": "Spanish display text for this package. Identifiers, part numbers, units and values are unchanged. Not part of the package content hash.",
+  "product": {
+    "product_name": "Silla estándar",
+    "product_description": "Silla de cuatro patas sin brazos, con estructura de acero y asiento y respaldo de madera laminada. Modelo provisional de desarrollo, en espera de fotos del lugar del evento.",
+    "asset_category": "Producto fabricado",
+    "provenance": "Preparado por el equipo del hackathon para simular la entrega de ingeniería de un fabricante. No lo proporcionó un fabricante real."
+  },
+  "procedure": {
+    "title": "Silla estándar - inspección visual de recepción / periódica",
+    "scope": "Inspección visual y manual de una silla armada. No incluye pruebas de carga, verificación del apriete (torque) ni medición de dimensiones."
+  },
+  "components": {
+    "CHAIR-001-SEAT": {
+      "name": "Tablero del asiento",
+      "description": "Tablero del asiento que carga el peso, fijado a la estructura con cuatro escuadras de montaje."
+    },
+    "CHAIR-001-BACKREST": {
+      "name": "Tablero del respaldo",
+      "description": "Respaldo atornillado a los dos postes traseros con cuatro pernos."
+    },
+    "CHAIR-001-LEG-FL": {
+      "name": "Pata delantera izquierda",
+      "description": "Pata delantera estructural (lado izquierdo de quien se sienta)."
+    },
+    "CHAIR-001-LEG-FR": {
+      "name": "Pata delantera derecha",
+      "description": "Pata delantera estructural (lado derecho de quien se sienta)."
+    },
+    "CHAIR-001-UPRIGHT-RL": {
+      "name": "Pata trasera izquierda / poste del respaldo",
+      "description": "Pata trasera que sigue hacia arriba como poste del respaldo (lado izquierdo de quien se sienta)."
+    },
+    "CHAIR-001-UPRIGHT-RR": {
+      "name": "Pata trasera derecha / poste del respaldo",
+      "description": "Pata trasera que sigue hacia arriba como poste del respaldo (lado derecho de quien se sienta)."
+    },
+    "CHAIR-001-STRETCHER-L": {
+      "name": "Travesaño lateral izquierdo",
+      "description": "Travesaño lateral de abajo que une la pata delantera izquierda con la pata trasera izquierda."
+    },
+    "CHAIR-001-STRETCHER-R": {
+      "name": "Travesaño lateral derecho",
+      "description": "Travesaño lateral de abajo que une la pata delantera derecha con la pata trasera derecha."
+    },
+    "CHAIR-001-RAIL-FRONT": {
+      "name": "Barra delantera del asiento",
+      "description": "Barra delantera que sostiene el tablero del asiento."
+    },
+    "CHAIR-001-RAIL-REAR": {
+      "name": "Barra trasera del asiento",
+      "description": "Barra trasera que sostiene el tablero del asiento."
+    },
+    "CHAIR-001-SEAT-BRACKETS": {
+      "name": "Escuadras de montaje del asiento",
+      "description": "Cuatro escuadras que fijan el tablero del asiento a la estructura, una en cada esquina."
+    },
+    "CHAIR-001-SEAT-SCREWS": {
+      "name": "Tornillos del asiento M5x30",
+      "description": "Tornillos que fijan el tablero del asiento a través de las escuadras de montaje."
+    },
+    "CHAIR-001-BACKREST-BOLTS": {
+      "name": "Pernos del respaldo M6x50",
+      "description": "Pernos que fijan el tablero del respaldo a los dos postes traseros."
+    },
+    "CHAIR-001-GLIDES": {
+      "name": "Deslizadores para piso",
+      "description": "Deslizadores para piso que se meten a presión, uno en cada pata."
+    }
+  },
+  "requirements": {
+    "SEAT-SURFACE": {
+      "title": "Estado de la superficie del asiento",
+      "instructions": "Revisa la superficie de arriba y los bordes visibles del tablero del asiento. Busca grietas, rajaduras, capas despegadas (delaminación), rayones profundos o daños en la superficie.",
+      "photo_guidance": "Toma una foto de todo el asiento desde arriba, con buena luz, de modo que el asiento ocupe casi toda la foto.",
+      "acceptance_criteria": [
+        "Sin grietas ni rajaduras",
+        "Sin capas despegadas (delaminación) en los bordes",
+        "Sin daños que puedan lastimar a quien la use"
+      ],
+      "visual_limitations": [
+        "Los defectos dentro de las capas de la madera no se ven en una foto."
+      ]
+    },
+    "BACKREST-SURFACE": {
+      "title": "Estado de la superficie del respaldo",
+      "instructions": "Revisa la cara de enfrente y los bordes del tablero del respaldo. Busca grietas, rajaduras, capas despegadas (delaminación) o daños.",
+      "photo_guidance": "Toma una foto de toda la cara de enfrente del respaldo, de frente y derecho.",
+      "acceptance_criteria": [
+        "Sin grietas ni rajaduras",
+        "Sin capas despegadas (delaminación)",
+        "Sin bordes filosos ni astillas"
+      ],
+      "visual_limitations": [
+        "Los defectos dentro de las capas de la madera no se ven en una foto."
+      ]
+    },
+    "BACKREST-ATTACHMENT": {
+      "title": "Fijación del respaldo",
+      "instructions": "Empuja el respaldo con firmeza y confirma que no se mueve con respecto a los postes. Toma una foto de un punto de fijación.",
+      "photo_guidance": "Foto de cerca de la unión entre el respaldo y uno de los postes traseros, donde se vea el tornillo o perno de sujeción.",
+      "acceptance_criteria": [
+        "El respaldo no se tambalea ni se recorre al empujarlo con la mano",
+        "Tornillería de fijación visible y bien asentada"
+      ],
+      "visual_limitations": [
+        "El apriete (torque) de la tornillería y el enganche de la rosca no se pueden verificar con una foto."
+      ]
+    },
+    "LEG-FL-CONDITION": {
+      "title": "Estado de la pata delantera izquierda",
+      "instructions": "Revisa que la pata esté derecha, sin daños, y que sus uniones no tengan grietas ni estén separadas.",
+      "acceptance_criteria": [
+        "Sin dobleces visibles",
+        "Sin soldaduras ni uniones agrietadas",
+        "Sin daños en la pintura que dejen ver corrosión (óxido)"
+      ]
+    },
+    "LEG-FR-CONDITION": {
+      "title": "Estado de la pata delantera derecha",
+      "instructions": "Revisa que la pata esté derecha, sin daños, y que sus uniones no tengan grietas ni estén separadas.",
+      "acceptance_criteria": [
+        "Sin dobleces visibles",
+        "Sin soldaduras ni uniones agrietadas",
+        "Sin daños en la pintura que dejen ver corrosión (óxido)"
+      ]
+    },
+    "UPRIGHT-RL-CONDITION": {
+      "title": "Estado del poste trasero izquierdo",
+      "instructions": "Revisa que la pata trasera (poste del respaldo) esté derecha y sin daños en todo su largo.",
+      "acceptance_criteria": [
+        "Sin dobleces visibles",
+        "Sin soldaduras ni uniones agrietadas"
+      ]
+    },
+    "UPRIGHT-RR-CONDITION": {
+      "title": "Estado del poste trasero derecho",
+      "instructions": "Revisa que la pata trasera (poste del respaldo) esté derecha y sin daños en todo su largo.",
+      "acceptance_criteria": [
+        "Sin dobleces visibles",
+        "Sin soldaduras ni uniones agrietadas"
+      ]
+    },
+    "STRETCHER-L-SECURE": {
+      "title": "Travesaño lateral izquierdo bien sujeto",
+      "instructions": "Confirma que el travesaño esté en su lugar y que sus dos extremos estén unidos.",
+      "acceptance_criteria": [
+        "Está en su lugar",
+        "Los dos extremos están unidos"
+      ]
+    },
+    "STRETCHER-R-SECURE": {
+      "title": "Travesaño lateral derecho bien sujeto",
+      "instructions": "Confirma que el travesaño esté en su lugar y que sus dos extremos estén unidos.",
+      "acceptance_criteria": [
+        "Está en su lugar",
+        "Los dos extremos están unidos"
+      ]
+    },
+    "RAIL-FRONT-CONDITION": {
+      "title": "Estado de la barra delantera del asiento",
+      "instructions": "Confirma que la barra esté en su lugar, derecha y unida a las dos patas.",
+      "acceptance_criteria": [
+        "Está en su lugar",
+        "Sin deformaciones"
+      ]
+    },
+    "RAIL-REAR-CONDITION": {
+      "title": "Estado de la barra trasera del asiento",
+      "instructions": "Confirma que la barra esté en su lugar, derecha y unida a los dos postes.",
+      "acceptance_criteria": [
+        "Está en su lugar",
+        "Sin deformaciones"
+      ]
+    },
+    "SEAT-BRACKETS-VISUAL": {
+      "title": "Escuadras de montaje del asiento",
+      "instructions": "Voltea la silla de forma segura. Revisa las cuatro escuadras de montaje del asiento: que estén todas, que no estén deformadas y que no tengan grietas.",
+      "photo_guidance": "Toma una foto de la parte de abajo del asiento donde se vean las escuadras y sus puntos de sujeción.",
+      "acceptance_criteria": [
+        "Las 4 escuadras están en su lugar",
+        "Sin dobleces ni grietas",
+        "Escuadra pegada al ras de la parte de abajo del asiento"
+      ],
+      "visual_limitations": [
+        "El apriete (torque) de la tornillería no se puede verificar a simple vista."
+      ]
+    },
+    "SEAT-SCREWS-PRESENT": {
+      "title": "Tornillos del asiento en su lugar y apretados",
+      "instructions": "Confirma que los cuatro tornillos del asiento estén en su lugar y que ninguno gire con la mano.",
+      "acceptance_criteria": [
+        "4 de 4 en su lugar",
+        "Ninguno está flojo al probarlo con la mano"
+      ]
+    },
+    "BACKREST-BOLTS-PRESENT": {
+      "title": "Pernos del respaldo en su lugar",
+      "instructions": "Confirma que los cuatro pernos del respaldo estén en su lugar y bien asentados.",
+      "acceptance_criteria": [
+        "4 de 4 en su lugar",
+        "Cabezas bien asentadas, sin sobresalir"
+      ]
+    },
+    "GLIDES-PRESENT": {
+      "title": "Deslizadores para piso en su lugar",
+      "instructions": "Confirma que cada pata tenga su deslizador puesto y que la silla no se tambalee sobre un piso plano.",
+      "acceptance_criteria": [
+        "4 de 4 colocados",
+        "La silla queda firme sobre un piso plano"
+      ]
+    }
+  },
+  "documents": {
+    "DWG-CH-GA": "Plano de disposición general"
+  },
+  "locations": {
+    "CHAIR-001-SN-0025": "Sala de presentaciones, fila 1",
+    "CHAIR-001-SN-0026": "Sala de presentaciones, fila 1"
+  }
+}

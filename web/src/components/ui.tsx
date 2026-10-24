@@ -1,5 +1,42 @@
 import { useEffect, useRef, useState } from "react";
+import {
+  Armchair, Ban, BadgeCheck, Circle, CircleAlert, CircleCheck, CircleDashed, CircleX, Clock, FireExtinguisher,
+  GraduationCap, Pointer, RefreshCw, Send, Shapes, TriangleAlert, Undo2, Zap, type LucideIcon,
+} from "lucide-react";
 import type { ComponentStatus, Issue, ItemStatus } from "../api";
+import { locale, t } from "../i18n";
+
+// Every status also has an icon, so it can be recognised at a glance (and without reading English).
+export const ITEM_ICON: Record<ItemStatus, LucideIcon> = {
+  pending: Circle,
+  evidence_submitted: Pointer,
+  more_evidence_requested: RefreshCw,
+  passed: CircleCheck,
+  failed: TriangleAlert,
+  not_applicable: Ban,
+};
+
+export const COMPONENT_ICON: Record<ComponentStatus, LucideIcon> = {
+  not_inspected: Circle,
+  in_progress: CircleDashed,
+  pending: CircleAlert,
+  accepted: CircleCheck,
+  finding: TriangleAlert,
+};
+
+export const INSPECTION_ICON: Record<string, LucideIcon> = {
+  in_progress: Clock,
+  submitted: Send,
+  changes_requested: Undo2,
+  approved: CircleCheck,
+  rejected: CircleX,
+};
+
+export const INDUSTRY_ICON: Record<string, LucideIcon> = {
+  Furniture: Armchair,
+  Electrical: Zap,
+  "Facility Safety": FireExtinguisher,
+};
 
 // Plain-language labels: the people using the app are not necessarily technical.
 export const ITEM_LABEL: Record<ItemStatus, string> = {
@@ -50,13 +87,14 @@ export const INSPECTION_LABEL: Record<string, string> = {
 };
 
 export function ModeBadge({ mode }: { mode: string | undefined | null }) {
-  if (mode !== "demo") return <Chip tone="blue">Real inspection</Chip>;
-  return <span className="chip chip-demo" title="Uses photos prepared in advance">Practice</span>;
+  if (mode !== "demo") return <Chip tone="blue" icon={BadgeCheck}>{t("Real inspection")}</Chip>;
+  return <span className="chip chip-demo" title={t("Uses photos prepared in advance")}><GraduationCap aria-hidden />{t("Practice")}</span>;
 }
 
 export function IndustryChip({ industry }: { industry: string | undefined | null }) {
   const slug = (industry ?? "general").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  return <span className={`chip chip-industry chip-ind-${slug}`}>{industry ?? "General"}</span>;
+  const Icon = INDUSTRY_ICON[industry ?? ""] ?? Shapes;
+  return <span className={`chip chip-industry chip-ind-${slug}`}><Icon aria-hidden />{t(industry ?? "General")}</span>;
 }
 
 export const COMPONENT_TONE: Record<ComponentStatus, string> = {
@@ -75,16 +113,24 @@ export const INSPECTION_TONE: Record<string, string> = {
   rejected: "red",
 };
 
-export function Chip({ tone = "neutral", children }: { tone?: string; children: React.ReactNode }) {
-  return <span className={`chip chip-${tone}`}>{children}</span>;
+export function Chip({ tone = "neutral", icon: Icon, children }: { tone?: string; icon?: LucideIcon; children: React.ReactNode }) {
+  return <span className={`chip chip-${tone}`}>{Icon && <Icon aria-hidden />}{children}</span>;
 }
+
+// Status chips: colour + icon + plain words, the same everywhere.
+export const ItemChip = ({ status }: { status: ItemStatus }) =>
+  <Chip tone={ITEM_TONE[status]} icon={ITEM_ICON[status]}>{t(ITEM_LABEL[status])}</Chip>;
+export const ComponentChip = ({ status }: { status: ComponentStatus }) =>
+  <Chip tone={COMPONENT_TONE[status]} icon={COMPONENT_ICON[status]}>{t(COMPONENT_LABEL[status])}</Chip>;
+export const InspectionChip = ({ status }: { status: string }) =>
+  <Chip tone={INSPECTION_TONE[status]} icon={INSPECTION_ICON[status]}>{t(INSPECTION_LABEL[status] ?? status.replace(/_/g, " "))}</Chip>;
 
 export function Progress({ done, total }: { done: number; total: number }) {
   const pct = total ? Math.round((done / total) * 100) : 0;
   return (
-    <div className="progress" aria-label={`${done} of ${total}`}>
+    <div className="progress" aria-label={t("{done} of {total} required checks done", { done, total })}>
       <div className="progress-bar" style={{ width: `${pct}%` }} />
-      <span>{done} of {total} required checks done</span>
+      <span>{t("{done} of {total} required checks done", { done, total })}</span>
     </div>
   );
 }
@@ -93,7 +139,7 @@ export function ErrorBox({ error, onSelect }: { error: { message: string; issues
   if (!error) return null;
   return (
     <div className="error-box" role="alert">
-      <strong>{FRIENDLY_ERRORS[error.message] ?? error.message}</strong>
+      <strong className="with-icon"><CircleAlert aria-hidden />{t(FRIENDLY_ERRORS[error.message] ?? error.message)}</strong>
       {!!error.issues?.length && (
         <ul>
           {error.issues.map((i, n) => (
@@ -101,7 +147,7 @@ export function ErrorBox({ error, onSelect }: { error: { message: string; issues
               {onSelect && i.component_id ? (
                 <button className="link" onClick={() => onSelect(i)}>{i.title ?? i.component_id}</button>
               ) : i.title ? <b>{i.title}</b> : null}
-              {i.title || i.component_id ? ": " : ""}{i.reason}
+              {i.title || i.component_id ? ": " : ""}{t(i.reason)}
             </li>
           ))}
         </ul>
@@ -125,14 +171,14 @@ export function usePolling(fn: () => void, ms: number, deps: unknown[] = []) {
 export function when(ts: string | null | undefined): string {
   if (!ts) return "—";
   const d = new Date(ts);
-  return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleString(locale(), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 export function Lightbox({ src, onClose }: { src: string | null; onClose: () => void }) {
   if (!src) return null;
   return (
     <div className="lightbox" onClick={onClose} role="dialog">
-      <img src={src} alt="Evidence" />
+      <img src={src} alt={t("Evidence")} />
     </div>
   );
 }

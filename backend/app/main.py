@@ -16,7 +16,7 @@ from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, StringConstraints
 from starlette.concurrency import run_in_threadpool
 
-from . import ai, catalog, db, workflow
+from . import ai, catalog, db, i18n, workflow
 from .config import settings
 from .packages import discover_packages, validate_package
 from .workflow import WorkflowError
@@ -57,6 +57,8 @@ app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_me
 
 @app.middleware("http")
 async def access_and_readiness(request: Request, call_next):
+    # Display language for this request (content overlays and AI replies); English when absent.
+    i18n.current_lang.set(i18n.pick(request.headers.get("x-lang") or request.query_params.get("lang")))
     # Shared-password gate for hosted test deployments (no user accounts in the MVP).
     if settings.access_password:
         ok = False
@@ -166,6 +168,10 @@ def list_products() -> list[dict[str, Any]]:
             r["industry"] = manifest.get("industry") or "General"
             r["asset_category"] = manifest.get("asset_category")
             r["demo_evidence_count"] = len(catalog.demo_evidence(r["source_dir"]))
+            tr = i18n.overlay(r["source_dir"])
+            i18n.product_fields(r, tr)
+            for i in r["instances"]:
+                i["metadata"] = i18n.location(i["serial_number"], i["metadata"], tr)
     return revs
 
 
@@ -175,7 +181,7 @@ def get_revision(revision_id: str) -> dict[str, Any]:
         rev = catalog.get_revision(conn, revision_id)
     if not rev:
         raise HTTPException(404, "Revision not found")
-    return rev
+    return i18n.revision(rev)
 
 
 @app.get("/api/instances/{serial_number}")
@@ -186,9 +192,10 @@ def product_passport(serial_number: str) -> dict[str, Any]:
         if not inst:
             raise HTTPException(404, "Product instance not found")
         rev = db.row(conn.execute(
-            "SELECT r.id, r.revision, m.name AS product_name, mf.name AS manufacturer FROM product_revisions r "
-            "JOIN product_models m ON m.id = r.product_model_id JOIN manufacturers mf ON mf.id = m.manufacturer_id "
-            "WHERE r.id = ?", (inst["product_revision_id"],)).fetchone())
+            "SELECT r.id, r.revision, m.name AS product_name, mf.name AS manufacturer, p.source_dir "
+            "FROM product_revisions r JOIN product_models m ON m.id = r.product_model_id "
+            "JOIN manufacturers mf ON mf.id = m.manufacturer_id JOIN engineering_packages p "
+            "ON p.id = r.engineering_package_id WHERE r.id = ?", (inst["product_revision_id"],)).fetchone())
         inspections = db.rows(conn.execute(
             "SELECT * FROM inspections WHERE product_instance_id = ? ORDER BY started_at DESC", (inst["id"],)).fetchall())
         findings = db.rows(conn.execute(
@@ -199,6 +206,15 @@ def product_passport(serial_number: str) -> dict[str, Any]:
         activity = db.rows(conn.execute(
             f"SELECT * FROM activity_events WHERE entity_id IN ({marks}) OR json_extract(metadata,'$.inspection_id') "
             f"IN ({marks}) ORDER BY created_at DESC LIMIT 200", ids + ids).fetchall())
+    tr = i18n.overlay(rev["source_dir"])
+    i18n.product_fields(rev, tr)
+    inst["metadata"] = i18n.location(inst["serial_number"], inst["metadata"], tr)
+    with db.read() as conn:
+        names = dict(conn.execute("SELECT id, name FROM components WHERE product_revision_id = ?",
+                                  (inst["product_revision_id"],)).fetchall())
+    comp_tr = tr.get("components") or {}
+    for f in findings:
+        f["component_name"] = (comp_tr.get(f["component_id"]) or {}).get("name") or names.get(f["component_id"])
     return {"instance": inst, "revision": rev, "inspections": inspections, "findings": findings, "activity": activity}
 
 
@@ -235,6 +251,18 @@ def load_package(package_dir: str, body: Actor) -> dict[str, Any]:
 
 
 # ------------------------------------------------------------- inspections --
+
+def _source_dir(conn, revision_id: str) -> str | None:
+    row = conn.execute("SELECT p.source_dir FROM product_revisions r JOIN engineering_packages p "
+                       "ON p.id = r.engineering_package_id WHERE r.id = ?", (revision_id,)).fetchone()
+    return row[0] if row else None
+
+
+def _localize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    for r in rows:
+        i18n.product_fields(r, i18n.overlay(r.get("source_dir")))
+    return rows
+
 
 def inspection_state(conn, inspection_id: str) -> dict[str, Any]:
     insp = db.row(conn.execute("SELECT * FROM inspections WHERE id = ?", (inspection_id,)).fetchone())
@@ -274,7 +302,18 @@ def inspection_state(conn, inspection_id: str) -> dict[str, Any]:
         "SELECT * FROM activity_events WHERE entity_id = ? OR json_extract(metadata,'$.inspection_id') = ? "
         "OR entity_id IN (SELECT id FROM inspection_items WHERE inspection_id = ?) ORDER BY created_at",
         (inspection_id, inspection_id, inspection_id)).fetchall())
+    # Display text in the reader's language; the stored snapshot itself is never changed.
+    tr = i18n.overlay(_source_dir(conn, insp["product_revision_id"]))
+    if tr:
+        for it in items:
+            it["requirement_snapshot"] = i18n.requirement(it["requirement_snapshot"], it["requirement_id"], tr)
+        instance["metadata"] = i18n.location(instance["serial_number"], instance["metadata"], tr)
     required = [i for i in items if i["required"]]
+    readiness = workflow.readiness(conn, inspection_id)
+    titles = {it["id"]: it["requirement_snapshot"].get("title") for it in items}
+    for entry in readiness["blocking"] + readiness["warnings"]:
+        if entry.get("item_id") in titles:
+            entry["title"] = titles[entry["item_id"]]
     return {
         "inspection": insp, "instance": instance, "revision_id": insp["product_revision_id"],
         "items": items, "findings": findings, "reviews": reviews, "activity": activity,
@@ -283,7 +322,7 @@ def inspection_state(conn, inspection_id: str) -> dict[str, Any]:
             "total": len(items), "done": sum(i["status"] in workflow.FINAL_ITEM for i in items),
             "required_total": len(required), "required_done": sum(i["status"] in workflow.FINAL_ITEM for i in required),
         },
-        "readiness": workflow.readiness(conn, inspection_id),
+        "readiness": readiness,
     }
 
 
@@ -296,7 +335,7 @@ def start_inspection(body: StartInspection) -> dict[str, Any]:
 
 
 INSPECTION_LIST_SQL = (
-    "SELECT s.*, i.serial_number, m.name AS product_name, r.revision, "
+    "SELECT s.*, i.serial_number, m.name AS product_name, r.revision, p.source_dir, "
     "COALESCE(json_extract(p.manifest, '$.industry'), 'General') AS industry, "
     "json_extract(p.manifest, '$.asset_category') AS asset_category, "
     "(SELECT COUNT(*) FROM findings f WHERE f.inspection_id = s.id AND f.status NOT IN ('closed','void')) "
@@ -316,14 +355,14 @@ def list_inspections(status: str | None = None, industry: str | None = None) -> 
         args.append(industry)
     sql = INSPECTION_LIST_SQL + (" WHERE " + " AND ".join(where) if where else "")
     with db.read() as conn:
-        return db.rows(conn.execute(sql + " ORDER BY s.updated_at DESC", args).fetchall())
+        return _localize_rows(db.rows(conn.execute(sql + " ORDER BY s.updated_at DESC", args).fetchall()))
 
 
 @app.get("/api/dashboard")
 def dashboard(industry: str | None = None) -> dict[str, Any]:
     """Cross-industry metrics computed from the same inspection records (one data model for every asset type)."""
     with db.read() as conn:
-        insp = db.rows(conn.execute(INSPECTION_LIST_SQL).fetchall())
+        insp = _localize_rows(db.rows(conn.execute(INSPECTION_LIST_SQL).fetchall()))
         industries = sorted({i["industry"] for i in insp} | {
             (r["manifest"] or {}).get("industry") or "General" for r in
             db.rows(conn.execute("SELECT manifest FROM engineering_packages").fetchall())})
@@ -446,11 +485,12 @@ def _assessment_context(conn, evidence_id: str, worker_note: str | None) -> dict
     rev = db.row(conn.execute("SELECT r.procedure, p.manifest FROM product_revisions r JOIN engineering_packages p "
                               "ON p.id = r.engineering_package_id WHERE r.id = ?",
                               (insp["product_revision_id"],)).fetchone())
+    # The AI always gets the published (English) package text as context; only its reply follows the reader's language.
     return ai.build_context(
         manifest=rev["manifest"], procedure=rev["procedure"], component=comp,
         requirement={"requirement_id": item["requirement_id"], **item["requirement_snapshot"]},
         serial_number=insp["product_instance_id"], worker_note=worker_note, image_checks=e["image_checks"],
-        inspection_id=insp["id"])
+        inspection_id=insp["id"], language=i18n.current_lang.get())
 
 
 def _store_assessment(evidence_id: str, inspection_id: str, outcome: ai.AssessmentOutcome,
@@ -538,7 +578,10 @@ async def use_demo_evidence(inspection_id: str, item_id: str, body: UseDemoEvide
     jpeg, checks = await run_in_threadpool(prepare)
     evidence_id = db.new_id("ev")
     storage_path = _store(evidence_id, inspection_id, jpeg)
-    note = f"DEMO PHOTO: {entry.get('caption') or entry['id']}"
+    lang = i18n.current_lang.get()
+    caption = ((i18n.overlay(source_dir).get("demo_evidence") or {}).get(entry["id"]) or {}).get("caption")
+    note = (f"FOTO DE PRÁCTICA: {caption or entry.get('caption') or entry['id']}" if lang == "es"
+            else f"DEMO PHOTO: {entry.get('caption') or entry['id']}")
     try:
         with db.tx() as conn:
             conn.execute("INSERT INTO evidence VALUES (?,?,?,?,?,?,?,?,?,?,?)",
@@ -549,7 +592,8 @@ async def use_demo_evidence(inspection_id: str, item_id: str, body: UseDemoEvide
         (settings.evidence_dir / storage_path).unlink(missing_ok=True)
         raise
 
-    pre = entry.get("precomputed_assessment")
+    # Saved results are kept per language; fall back to the English one when none was captured for this language.
+    pre = (lang != "en" and entry.get(f"precomputed_assessment_{lang}")) or entry.get("precomputed_assessment")
     assessment = None
     if body.live_ai and ai.get_provider().available()[0]:
         assessment = await run_in_threadpool(_run_assessment, evidence_id, note)
@@ -596,8 +640,10 @@ def evidence_file(evidence_id: str):
 
 @app.get("/api/findings")
 def list_findings(status: str | None = None) -> list[dict[str, Any]]:
-    sql = ("SELECT f.*, c.name AS component_name, c.part_number, s.product_revision_id, s.mode FROM findings f "
-           "JOIN inspections s ON s.id = f.inspection_id "
+    sql = ("SELECT f.*, c.name AS component_name, c.part_number, s.product_revision_id, s.mode, pk.source_dir "
+           "FROM findings f JOIN inspections s ON s.id = f.inspection_id "
+           "JOIN product_revisions rv ON rv.id = s.product_revision_id "
+           "JOIN engineering_packages pk ON pk.id = rv.engineering_package_id "
            "LEFT JOIN components c ON c.id = f.component_id AND c.product_revision_id = s.product_revision_id")
     args: tuple = ()
     if status:
@@ -615,6 +661,8 @@ def list_findings(status: str | None = None) -> list[dict[str, Any]]:
                 (f["id"], f["inspection_item_id"])).fetchall())
             for e in f["evidence"]:
                 e["url"] = f"/api/evidence/{e['id']}/file"
+            name = ((i18n.overlay(f["source_dir"]).get("components") or {}).get(f["component_id"]) or {}).get("name")
+            f["component_name"] = name or f["component_name"]
     return findings
 
 

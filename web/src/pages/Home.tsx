@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, ChartColumn, ClipboardCheck, CloudOff, Pointer, Search, Send, Upload, UserRound, Wrench } from "lucide-react";
 import { api } from "../api";
-import { Chip, INSPECTION_LABEL, INSPECTION_TONE, ModeBadge, useAsync, when } from "../components/ui";
+import { INDUSTRY_ICON, InspectionChip, ModeBadge, useAsync, when } from "../components/ui";
+import { t } from "../i18n";
 import { useSession } from "../session";
 
 const SCENARIOS = [
@@ -22,12 +24,12 @@ export default function Home() {
     <div className="page">
       <section className="hero">
         <h1>{label}</h1>
-        <p>Check equipment step by step from your phone. The app shows you what to look at, the AI tells you if your photo is clear, and you decide the result.</p>
+        <p>{t("Check equipment step by step from your phone. The app shows you what to look at, the AI tells you if your photo is clear, and you decide the result.")}</p>
       </section>
 
       {ongoing.length > 0 && (
         <section className="card">
-          <h2>Continue where you left off</h2>
+          <h2>{t("Continue where you left off")}</h2>
           <ul className="list">
             {ongoing.map((i) => (
               <li key={i.id} className="resume">
@@ -35,8 +37,8 @@ export default function Home() {
                   <b>{i.product_name}</b> <span className="muted small">{i.serial_number} · {i.inspector}, {when(i.updated_at)}</span>
                 </span>
                 <ModeBadge mode={i.mode} />
-                <Chip tone={INSPECTION_TONE[i.status]}>{INSPECTION_LABEL[i.status] ?? i.status}</Chip>
-                <Link className="btn btn-primary btn-small" to={`/inspections/${i.id}`}>Continue →</Link>
+                <InspectionChip status={i.status} />
+                <Link className="btn btn-primary btn-small" to={`/inspections/${i.id}`}>{t("Continue")} <ArrowRight aria-hidden /></Link>
               </li>
             ))}
           </ul>
@@ -44,70 +46,74 @@ export default function Home() {
       )}
 
       <section>
-        <h2>{ongoing.length ? "Or start a new inspection" : "Start an inspection"}</h2>
-        <p className="muted small">What kind of equipment are you checking?</p>
+        <h2>{ongoing.length ? t("Or start a new inspection") : t("Start an inspection")}</h2>
+        <p className="muted small">{t("What kind of equipment are you checking?")}</p>
         <div className="scenarios">
-          {SCENARIOS.map((s) => (
-            <button key={s.industry} className={`scenario ${s.cls}`} onClick={() => { setIndustry(s.industry); nav("/catalog"); }}>
-              <span className="scenario-tag">{s.tag}</span>
-              <b>{s.title}</b>
-              <span>{s.text}</span>
-              <span className="scenario-go">Choose →</span>
-            </button>
-          ))}
+          {SCENARIOS.map((s) => {
+            const Icon = INDUSTRY_ICON[s.industry];
+            return (
+              <button key={s.industry} className={`scenario ${s.cls}`} onClick={() => { setIndustry(s.industry); nav("/catalog"); }}>
+                <span className="scenario-icon" aria-hidden><Icon /></span>
+                <span className="scenario-tag">{t(s.tag)}</span>
+                <b>{t(s.title)}</b>
+                <span>{t(s.text)}</span>
+                <span className="scenario-go">{t("Choose")} <ArrowRight aria-hidden /></span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
       <section className="card">
-        <h2>How it works</h2>
+        <h2>{t("How it works")}</h2>
         <ol className="how-steps">
-          <li><b>Choose the equipment</b><span>Pick the unit in front of you. First time? Choose <i>Practice</i> to try it with sample photos.</span></li>
-          <li><b>Follow the steps</b><span>The app tells you which part to check next. Take a photo and the AI says if it is clear enough.</span></li>
-          <li><b>Choose a result and send it</b><span>For each check tap <i>Looks good</i> or <i>Report a problem</i>. At the end, send it for review.</span></li>
+          <li><b className="with-icon"><Search aria-hidden />{t("Choose the equipment")}</b><span>{t("Pick the unit in front of you. First time? Choose")} <i>{t("Practice")}</i> {t("to try it with sample photos.")}</span></li>
+          <li><b className="with-icon"><Pointer aria-hidden />{t("Follow the steps")}</b><span>{t("The app tells you which part to check next. Take a photo and the AI says if it is clear enough.")}</span></li>
+          <li><b className="with-icon"><Send aria-hidden />{t("Choose a result and send it")}</b><span>{t("For each check tap")} <i>{t("Looks good")}</i> {t("or")} <i>{t("Report a problem")}</i>. {t("At the end, send it for review.")}</span></li>
         </ol>
-        <p className="muted small">The AI only helps. A person always makes the decision.</p>
+        <p className="muted small">{t("The AI only helps. A person always makes the decision.")}</p>
       </section>
 
       {health && !health.ai.available && (
         <div className="notice small" title={health.ai.detail}>
-          <b>AI photo feedback is off right now.</b> You can still inspect: look at each part yourself and choose the result.
+          <b className="with-icon"><CloudOff aria-hidden />{t("AI photo feedback is off right now.")}</b> {t("You can still inspect: look at each part yourself and choose the result.")}
         </div>
       )}
 
       <section className="card">
         {editingName ? (
           <>
-            <h2>Who is working?</h2>
+            <h2 className="with-icon"><UserRound aria-hidden />{t("Who is working?")}</h2>
             <div className="row">
-              <input value={name} onChange={(e) => setName(e.target.value)} aria-label="Your name" placeholder="Your name" />
+              <input value={name} onChange={(e) => setName(e.target.value)} aria-label={t("Your name")} placeholder={t("Your name")} />
               <div className="segmented">
-                <button className={role === "inspector" ? "on" : ""} onClick={() => setRole("inspector")}>Inspector</button>
-                <button className={role === "supervisor" ? "on" : ""} onClick={() => setRole("supervisor")}>Supervisor</button>
+                <button className={role === "inspector" ? "on" : ""} onClick={() => setRole("inspector")}>{t("Inspector")}</button>
+                <button className={role === "supervisor" ? "on" : ""} onClick={() => setRole("supervisor")}>{t("Supervisor")}</button>
               </div>
-              <button className="btn btn-primary" disabled={!name.trim()} onClick={() => setEditingName(false)}>Save</button>
+              <button className="btn btn-primary" disabled={!name.trim()} onClick={() => setEditingName(false)}>{t("Save")}</button>
             </div>
-            <p className="muted small">Your name is saved with everything you do. A supervisor must be a different person from the inspector. This demo has no passwords.</p>
+            <p className="muted small">{t("Your name is saved with everything you do. A supervisor must be a different person from the inspector. This demo has no passwords.")}</p>
           </>
         ) : (
           <div className="row">
-            <span className="grow">Working as <b>{name}</b> ({role === "supervisor" ? "supervisor" : "inspector"})</span>
-            <button className="btn btn-ghost btn-small" onClick={() => setEditingName(true)}>Change</button>
+            <span className="grow with-icon"><UserRound aria-hidden /><span>{t("Working as")} <b>{name}</b> ({role === "supervisor" ? t("supervisor") : t("inspector")})</span></span>
+            <button className="btn btn-ghost btn-small" onClick={() => setEditingName(true)}>{t("Change")}</button>
           </div>
         )}
       </section>
 
       <section>
-        <h2>For supervisors</h2>
+        <h2>{t("For supervisors")}</h2>
         <div className="tiles">
           <Link to="/supervisor" className="tile">
-            <b>Review inspections</b>
-            <span>{waitingReview ? `${waitingReview} waiting for your review` : "Approve or ask for changes"}</span>
+            <b className="with-icon"><ClipboardCheck aria-hidden />{t("Review inspections")}</b>
+            <span>{waitingReview ? t("{n} waiting for your review", { n: waitingReview }) : t("Approve or ask for changes")}</span>
           </Link>
-          <Link to="/findings" className="tile"><b>Problems to fix</b><span>Assign a fix, add photos, close it</span></Link>
-          <Link to="/dashboard" className="tile"><b>Dashboard</b><span>All inspections and problems at a glance</span></Link>
+          <Link to="/findings" className="tile"><b className="with-icon"><Wrench aria-hidden />{t("Problems to fix")}</b><span>{t("Assign a fix, add photos, close it")}</span></Link>
+          <Link to="/dashboard" className="tile"><b className="with-icon"><ChartColumn aria-hidden />{t("Dashboard")}</b><span>{t("All inspections and problems at a glance")}</span></Link>
         </div>
       </section>
-      <p className="tiny muted"><Link to="/import">Add equipment from a manufacturer package (administrators)</Link></p>
+      <p className="tiny muted"><Link to="/import" className="with-icon"><Upload aria-hidden />{t("Add equipment from a manufacturer package (administrators)")}</Link></p>
     </div>
   );
 }

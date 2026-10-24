@@ -3,9 +3,11 @@
 // door) and status come from backend data keyed by stable component ids. Nothing here is asset-specific.
 import { Component as ReactComponent, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Canvas, useFrame, type ThreeEvent } from "@react-three/fiber";
+import { Rotate3d } from "lucide-react";
 import { Bounds, ContactShadows, Html, OrbitControls, useBounds, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { Component, ComponentStatus } from "../api";
+import { t } from "../i18n";
 
 export const STATUS_COLORS: Record<ComponentStatus | "selected", string> = {
   not_inspected: "#94a3b8",
@@ -215,12 +217,12 @@ export default function AssemblyViewer(props: ViewerProps) {
   // First-time gesture hint; it goes away as soon as the person touches the model.
   const [hint, setHint] = useState(!props.preserveDrawingBuffer);
   const fallback = props.fallback ?? (
-    <div className="viewer-fallback">The 3D view doesn't work on this device. Use the list of parts instead.</div>
+    <div className="viewer-fallback">{t("The 3D view doesn't work on this device. Use the list of parts instead.")}</div>
   );
   if (!webglAvailable()) return <div className="viewer">{fallback}</div>;
   return (
     <div className={props.className ?? "viewer"} onPointerDown={() => setHint(false)}>
-      {hint && <div className="viewer-hint">Drag to turn · Pinch to zoom · Tap a part</div>}
+      {hint && <div className="viewer-hint"><Rotate3d aria-hidden />{t("Drag to turn · Pinch to zoom · Tap a part")}</div>}
       <ViewerBoundary fallback={fallback}>
         <Canvas shadows camera={{ position: props.cameraPosition ?? [1.3, 1.0, 1.5], fov: 40, near: 0.01, far: 50 }}
           dpr={[1, 2]} gl={{ preserveDrawingBuffer: !!props.preserveDrawingBuffer }}
@@ -229,7 +231,7 @@ export default function AssemblyViewer(props: ViewerProps) {
           <hemisphereLight args={["#ffffff", "#8090a0", 1.1]} />
           <directionalLight position={[2, 4, 3]} intensity={1.6} castShadow shadow-mapSize={[1024, 1024]} />
           <directionalLight position={[-3, 2, -2]} intensity={0.5} />
-          <Suspense fallback={<Html center><div className="viewer-loading">Loading 3D model…</div></Html>}>
+          <Suspense fallback={<Html center><div className="viewer-loading">{t("Loading 3D model…")}</div></Html>}>
             <Bounds fit clip margin={props.margin ?? 1.7}>
               <Assembly {...props} />
             </Bounds>

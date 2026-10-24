@@ -1,0 +1,512 @@
+{
+  "language": "es",
+  "note": "Spanish display text for this package. Identifiers, part numbers, units and values are unchanged. Not part of the package content hash.",
+  "product": {
+    "product_name": "Extintor portátil",
+    "product_description": "Extintor portátil de polvo químico seco ABC, de presión contenida: modelo de ingeniería genérico e ilustrativo para identificar componentes e inspeccionar su estado a simple vista. No es un producto real; no se indican clasificaciones, capacidades ni presiones certificadas (depende del fabricante). La vista explosionada identifica los componentes y no es un procedimiento de desarmado ni de mantenimiento.",
+    "asset_category": "Equipo de seguridad contra incendios",
+    "provenance": "Modelo ilustrativo preparado por el equipo del hackathon. No se atribuye a ningún fabricante; no contiene datos técnicos certificados."
+  },
+  "procedure": {
+    "title": "Extintor - Inspección visual del estado",
+    "scope": "Revisión visual del estado y de la documentación de un extintor portátil. No determina la carga, la presión, si está listo para usarse, si está en condiciones de servicio ni el cumplimiento de normas. No se retira, no se descarga ni se desarma el extintor.",
+    "safety_notes": [
+      "Durante esta inspección no jales el pasador de seguridad, no rompas el sello de seguridad (precinto), no descargues, no retires ni desarmes el extintor.",
+      "La vista explosionada solo identifica los componentes. No es un procedimiento de desarmado ni de mantenimiento; solo técnicos calificados dan mantenimiento a los extintores presurizados.",
+      "Las fotos y las observaciones de la IA son solo orientativas y no certifican que el extintor esté listo para usarse ni que cumpla con las normas. La decisión de la inspección la toma una persona calificada."
+    ]
+  },
+  "components": {
+    "FE-001-CYL": {
+      "name": "Cilindro a presión",
+      "description": "Cilindro principal con hombros redondeados y un protector en la base. El estado interno no está representado en el modelo.",
+      "specs": [
+        {
+          "label": "Función",
+          "value": "Contiene el agente extintor a presión"
+        },
+        {
+          "label": "Objetivo de la inspección",
+          "value": "Estado exterior: corrosión, abolladuras, deformación, daños"
+        },
+        {
+          "label": "Capacidad / presión de servicio",
+          "value": "Se desconoce: depende del fabricante"
+        },
+        {
+          "label": "Limitación",
+          "value": "El estado interno no se puede determinar con una fotografía"
+        }
+      ]
+    },
+    "FE-001-VAL": {
+      "name": "Conjunto de válvula",
+      "description": "Cabeza de la válvula en el cuello del cilindro, con la salida de la manguera y la conexión del manómetro.",
+      "specs": [
+        {
+          "label": "Función",
+          "value": "Controla la descarga cuando se aprieta la palanca"
+        },
+        {
+          "label": "Objetivo de la inspección",
+          "value": "Daños visibles, corrosión o piezas faltantes"
+        },
+        {
+          "label": "Limitación",
+          "value": "El funcionamiento interno de la válvula no se puede verificar a simple vista"
+        }
+      ]
+    },
+    "FE-001-HND": {
+      "name": "Manija de transporte",
+      "description": "Manija fija inferior que se usa para cargar el extintor.",
+      "specs": [
+        {
+          "label": "Función",
+          "value": "Agarre para cargar el extintor, debajo de la palanca de accionamiento"
+        },
+        {
+          "label": "Objetivo de la inspección",
+          "value": "No está doblada, agrietada ni floja"
+        }
+      ]
+    },
+    "FE-001-LEV": {
+      "name": "Palanca de accionamiento",
+      "description": "Palanca superior que abre la válvula al apretarla (bloqueada por el pasador de seguridad).",
+      "specs": [
+        {
+          "label": "Función",
+          "value": "Acciona la válvula"
+        },
+        {
+          "label": "Objetivo de la inspección",
+          "value": "No está doblada ni dañada; no está parcialmente presionada"
+        }
+      ]
+    },
+    "FE-001-PIN": {
+      "name": "Pasador de seguridad",
+      "description": "Pasador que atraviesa la cabeza de la válvula y evita que la palanca se accione por accidente.",
+      "specs": [
+        {
+          "label": "Función",
+          "value": "Bloquea la palanca hasta que se jala el pasador"
+        },
+        {
+          "label": "Objetivo de la inspección",
+          "value": "Pasador presente y completamente insertado"
+        }
+      ]
+    },
+    "FE-001-SEA": {
+      "name": "Sello de seguridad (precinto)",
+      "description": "Sello que se rompe, pasa por el anillo del pasador e indica si el pasador fue jalado.",
+      "specs": [
+        {
+          "label": "Función",
+          "value": "Indica un posible uso o una manipulación indebida"
+        },
+        {
+          "label": "Objetivo de la inspección",
+          "value": "Sello presente y sin romper"
+        },
+        {
+          "label": "Limitación",
+          "value": "Solo considéralo 'intacto' si la foto lo muestra claramente"
+        }
+      ]
+    },
+    "FE-001-GAU": {
+      "name": "Manómetro",
+      "description": "Manómetro en el frente de la válvula que muestra una indicación visual de la presión en los modelos de presión contenida.",
+      "specs": [
+        {
+          "label": "Función",
+          "value": "Indicación visual del estado de la presión en los modelos compatibles de presión contenida"
+        },
+        {
+          "label": "Objetivo de la inspección",
+          "value": "Manómetro presente, visible y lo bastante legible para que lo revise una persona"
+        },
+        {
+          "label": "Evidencia requerida",
+          "value": "Fotografía de cerca de la carátula del manómetro"
+        },
+        {
+          "label": "Rangos de la carátula",
+          "value": "Se desconoce: depende del fabricante (la carátula del modelo es ilustrativa)"
+        },
+        {
+          "label": "Limitación",
+          "value": "Una foto por sí sola no puede determinar si el extintor está en condiciones de funcionar"
+        }
+      ]
+    },
+    "FE-001-HOS": {
+      "name": "Manguera de descarga",
+      "description": "Manguera flexible que va de la salida de la válvula a la boquilla.",
+      "specs": [
+        {
+          "label": "Función",
+          "value": "Lleva el agente de la válvula a la boquilla"
+        },
+        {
+          "label": "Objetivo de la inspección",
+          "value": "Sin grietas, cortes ni desconexión"
+        },
+        {
+          "label": "Limitación",
+          "value": "Una obstrucción interna no se puede verificar con fotografías"
+        }
+      ]
+    },
+    "FE-001-NOZ": {
+      "name": "Boquilla de descarga",
+      "description": "Boquilla en el extremo de la manguera.",
+      "specs": [
+        {
+          "label": "Función",
+          "value": "Dirige la descarga"
+        },
+        {
+          "label": "Objetivo de la inspección",
+          "value": "Presente, sin daños, con la abertura visiblemente libre de obstrucciones"
+        },
+        {
+          "label": "Limitación",
+          "value": "El desempeño y una obstrucción interna no se pueden verificar a simple vista"
+        }
+      ]
+    },
+    "FE-001-LBL": {
+      "name": "Etiqueta de instrucciones de uso",
+      "description": "Etiqueta envolvente con las instrucciones de uso. La etiqueta del modelo está marcada como etiqueta de demostración.",
+      "specs": [
+        {
+          "label": "Función",
+          "value": "Instrucciones de uso e información del producto"
+        },
+        {
+          "label": "Objetivo de la inspección",
+          "value": "Presente, legible, sin daños y sin estar tapada"
+        },
+        {
+          "label": "Clasificaciones en la etiqueta",
+          "value": "Se desconoce: depende del fabricante"
+        }
+      ]
+    },
+    "FE-001-TAG": {
+      "name": "Tarjeta de inspección",
+      "description": "Tarjeta de registro de inspección o mantenimiento que cuelga del cuello, si la hay.",
+      "specs": [
+        {
+          "label": "Función",
+          "value": "Registra las inspecciones o los mantenimientos"
+        },
+        {
+          "label": "Objetivo de la inspección",
+          "value": "Presente y legible; anota las fechas visibles tal como aparecen"
+        },
+        {
+          "label": "Limitación",
+          "value": "Una tarjeta por sí sola no demuestra el cumplimiento de normas"
+        }
+      ]
+    },
+    "FE-001-BRK": {
+      "name": "Soporte de pared",
+      "description": "Soporte de pared con correa y gancho (incluido en esta configuración).",
+      "specs": [
+        {
+          "label": "Función",
+          "value": "Sostiene el extintor en su posición de montaje"
+        },
+        {
+          "label": "Objetivo de la inspección",
+          "value": "Montado/colocado, soporte sin daños, sin obstrucciones evidentes"
+        },
+        {
+          "label": "Limitación",
+          "value": "Para saber si la altura de montaje o la accesibilidad cumplen con las normas se necesitan mediciones y las normas aplicables"
+        }
+      ]
+    }
+  },
+  "requirements": {
+    "CYL-EXTERIOR": {
+      "title": "Estado exterior general",
+      "instructions": "Revisa el exterior visible del extintor en busca de corrosión, abolladuras, deformación, daños en la superficie y componentes externos faltantes.",
+      "photo_guidance": "Toma una foto de todo el extintor, desde la base hasta la válvula, con buena luz.",
+      "inspection_points": [
+        "Sin corrosión aparente",
+        "Sin abolladuras ni deformaciones visibles",
+        "Sin daños en la superficie",
+        "Sin componentes externos faltantes"
+      ],
+      "acceptance_criteria": [
+        "Sin defectos exteriores visibles"
+      ],
+      "possible_findings": [
+        "Corrosión aparente",
+        "Abolladura o deformación",
+        "Pintura dañada que deja ver el metal",
+        "Componente externo faltante"
+      ],
+      "risks": [
+        "Cilindro debilitado (no se puede evaluar a simple vista)"
+      ],
+      "recommended_actions": [
+        "Si encuentras daños, pon el extintor fuera de servicio y pasa el caso a un técnico calificado"
+      ],
+      "visual_limitations": [
+        "El estado interno del cilindro no se puede determinar con una fotografía."
+      ]
+    },
+    "VALVE-CONDITION": {
+      "title": "Estado visible de la cabeza de la válvula",
+      "instructions": "Confirma que la cabeza de la válvula no tenga daños visibles, corrosión ni piezas faltantes. No la acciones.",
+      "inspection_points": [
+        "Sin daños visibles",
+        "Sin corrosión"
+      ],
+      "acceptance_criteria": [
+        "Cabeza de la válvula sin daños visibles"
+      ],
+      "possible_findings": [
+        "Cabeza de la válvula dañada",
+        "Corrosión en la válvula"
+      ]
+    },
+    "HANDLE-CONDITION": {
+      "title": "Manija de transporte",
+      "instructions": "Confirma que la manija de transporte no esté doblada, agrietada ni floja.",
+      "inspection_points": [
+        "No está doblada",
+        "No está agrietada",
+        "No está floja"
+      ],
+      "acceptance_criteria": [
+        "Manija intacta"
+      ],
+      "possible_findings": [
+        "Manija doblada",
+        "Manija agrietada"
+      ]
+    },
+    "LEVER-CONDITION": {
+      "title": "Palanca de accionamiento",
+      "instructions": "Confirma que la palanca no esté doblada ni dañada y que no parezca parcialmente presionada. No la aprietes.",
+      "inspection_points": [
+        "No está doblada",
+        "No está parcialmente presionada"
+      ],
+      "acceptance_criteria": [
+        "Palanca intacta y en reposo"
+      ],
+      "possible_findings": [
+        "Palanca doblada",
+        "La palanca parece presionada"
+      ]
+    },
+    "PIN-AND-SEAL": {
+      "title": "Pasador y sello de seguridad (precinto)",
+      "instructions": "Toma una foto del pasador de seguridad y del sello de seguridad juntos. Revisa que el pasador esté presente y que el sello esté presente y se vea sin romper.",
+      "photo_guidance": "Foto de cerca donde se vean el pasador con su anillo y el sello de seguridad.",
+      "inspection_points": [
+        "Pasador presente",
+        "Sello presente",
+        "Sin daños visibles",
+        "La foto muestra ambos con claridad"
+      ],
+      "acceptance_criteria": [
+        "Pasador en su lugar",
+        "Sello presente y sin roturas visibles"
+      ],
+      "possible_findings": [
+        "Pasador de seguridad faltante",
+        "Sello de seguridad faltante o roto",
+        "Pasador dañado"
+      ],
+      "risks": [
+        "Posible uso previo o manipulación indebida"
+      ],
+      "recommended_actions": [
+        "Si el sello falta o está roto, pasa el caso a un técnico calificado"
+      ],
+      "visual_limitations": [
+        "Solo se puede decir que el sello está intacto si la foto lo muestra claramente sin romper."
+      ]
+    },
+    "SEAL-CONFIRM": {
+      "title": "Sello de seguridad confirmado",
+      "instructions": "Confirma con la vista (sin tocarlo) que el sello de seguridad esté presente y sin romper.",
+      "inspection_points": [
+        "Presente",
+        "Sin romper"
+      ],
+      "acceptance_criteria": [
+        "Sello presente y sin romper"
+      ],
+      "possible_findings": [
+        "Sello faltante",
+        "Sello roto"
+      ]
+    },
+    "GAUGE-VISIBILITY": {
+      "title": "Visibilidad del manómetro",
+      "instructions": "Toma una foto clara y de cerca de la carátula del manómetro, si el extintor tiene uno. Evalúa si se ve el manómetro, si se ve la aguja, si las marcas se pueden leer y si hay daños físicos aparentes.",
+      "photo_guidance": "Foto de cerca de la carátula del manómetro, de frente y sin reflejos.",
+      "inspection_points": [
+        "Manómetro visible",
+        "Aguja visible",
+        "Marcas legibles",
+        "Sin daños físicos aparentes"
+      ],
+      "acceptance_criteria": [
+        "Manómetro lo bastante legible para que una persona lo interprete"
+      ],
+      "possible_findings": [
+        "Manómetro ilegible",
+        "La aguja parece estar fuera de la zona de operación marcada (para que lo revise una persona)",
+        "Cristal o cuerpo del manómetro dañado"
+      ],
+      "risks": [
+        "Estado de carga desconocido"
+      ],
+      "recommended_actions": [
+        "Si la indicación está fuera de la zona de operación o no se puede leer, pasa el caso a un técnico calificado"
+      ],
+      "visual_limitations": [
+        "Una foto no certifica la presión, la carga, que el extintor esté listo para usarse ni que sea seguro operarlo.",
+        "Algunos modelos de extintor no tienen manómetro; marca N/A (no aplica) con una justificación."
+      ]
+    },
+    "HOSE-NOZZLE": {
+      "title": "Estado de la manguera y la boquilla",
+      "instructions": "Revisa la manguera y la boquilla visibles en busca de grietas, daños, piezas faltantes, obstrucciones externas o desconexión.",
+      "photo_guidance": "Toma una foto de toda la manguera y de la punta de la boquilla.",
+      "inspection_points": [
+        "Sin grietas",
+        "Sin daños visibles",
+        "Conectada en ambos extremos",
+        "Sin obstrucción externa"
+      ],
+      "acceptance_criteria": [
+        "Manguera y boquilla visiblemente intactas y conectadas"
+      ],
+      "possible_findings": [
+        "Manguera agrietada",
+        "Manguera desconectada",
+        "Boquilla faltante",
+        "Abertura de la boquilla obstruida"
+      ],
+      "visual_limitations": [
+        "Las obstrucciones internas y el desempeño en operación no se pueden verificar con fotografías."
+      ]
+    },
+    "NOZZLE-OPENING": {
+      "title": "Abertura de la boquilla",
+      "instructions": "Mira la abertura de la boquilla y confirma que no haya obstrucciones ni daños visibles. No metas nada en ella.",
+      "inspection_points": [
+        "Sin obstrucción visible",
+        "No está agrietada"
+      ],
+      "acceptance_criteria": [
+        "Abertura visiblemente despejada"
+      ],
+      "possible_findings": [
+        "Obstrucción visible",
+        "Boquilla agrietada"
+      ]
+    },
+    "LABEL-LEGIBLE": {
+      "title": "Etiqueta de instrucciones de uso",
+      "instructions": "Toma una foto de la etiqueta. Revisa que esté presente y legible, si tiene daños visibles y si falta información o está tapada.",
+      "photo_guidance": "Foto de cerca de la etiqueta, que se pueda leer.",
+      "inspection_points": [
+        "Presente",
+        "Legible",
+        "Sin daños",
+        "No está tapada"
+      ],
+      "acceptance_criteria": [
+        "Etiqueta presente y legible"
+      ],
+      "possible_findings": [
+        "Etiqueta faltante",
+        "Etiqueta ilegible",
+        "Etiqueta dañada o tapada"
+      ],
+      "visual_limitations": [
+        "El texto que no se pueda leer en la foto no se debe adivinar."
+      ]
+    },
+    "TAG-DOCUMENTED": {
+      "title": "Tarjeta de inspección / mantenimiento",
+      "instructions": "Toma una foto de la tarjeta de inspección o mantenimiento, si la hay. Revisa que esté presente y legible, las fechas visibles, los datos de identificación y si tiene daños. Si no hay tarjeta, marca N/A (no aplica) y explica por qué.",
+      "photo_guidance": "Foto de cerca de ambos lados de la tarjeta, si es posible.",
+      "inspection_points": [
+        "Presente",
+        "Legible",
+        "Fechas visibles anotadas tal como están escritas",
+        "Sin daños"
+      ],
+      "acceptance_criteria": [
+        "Tarjeta documentada tal como se encontró"
+      ],
+      "possible_findings": [
+        "Tarjeta faltante",
+        "Tarjeta ilegible",
+        "No se ve un registro reciente (para que lo revise una persona)"
+      ],
+      "visual_limitations": [
+        "La tarjeta por sí sola no demuestra el cumplimiento de normas.",
+        "Las fechas faltantes o ilegibles no se deben inventar."
+      ]
+    },
+    "MOUNTING-ACCESS": {
+      "title": "Montaje y accesibilidad",
+      "instructions": "Revisa cómo está montado el extintor y lo que lo rodea: ¿está montado o colocado en su lugar?, ¿el soporte está dañado?, ¿hay obstrucciones evidentes?",
+      "photo_guidance": "Toma una foto del extintor en su lugar, junto con lo que lo rodea.",
+      "inspection_points": [
+        "Montado o colocado",
+        "Soporte sin daños",
+        "Sin obstrucciones evidentes"
+      ],
+      "acceptance_criteria": [
+        "Visiblemente montado y sin obstrucciones"
+      ],
+      "possible_findings": [
+        "No está montado",
+        "Soporte dañado",
+        "Acceso obstruido"
+      ],
+      "visual_limitations": [
+        "No se puede deducir si la altura de montaje o la accesibilidad cumplen con las normas sin mediciones y sin los requisitos aplicables."
+      ]
+    }
+  },
+  "documents": {
+    "DWG-FE-GA": "Arreglo general (ilustrativo)"
+  },
+  "demo_evidence": {
+    "DEMO-FE-GAUGE": {
+      "caption": "Carátula del manómetro (gráfico sintético del modelo)",
+      "source": "Imagen de prueba sintética generada a partir del modelo ilustrativo FE-001 el 2026-10-24. No es una fotografía de un extintor real."
+    },
+    "DEMO-FE-PIN": {
+      "caption": "Cabeza de la válvula con el pasador de seguridad y el sello retirados (sintética: simula que falta el pasador)",
+      "source": "Imagen de prueba sintética generada a partir del modelo ilustrativo FE-001 el 2026-10-24. No es una fotografía de un extintor real."
+    },
+    "DEMO-FE-FULL": {
+      "caption": "Extintor completo (imagen sintética generada con el modelo)",
+      "source": "Imagen de prueba sintética generada a partir del modelo ilustrativo FE-001 el 2026-10-24. No es una fotografía de un extintor real."
+    }
+  },
+  "locations": {
+    "FE-001-SN-0001": "Pasillo B, soporte de pared cerca de la salida (datos de muestra)",
+    "FE-001-SN-0002": "Entrada del taller, soporte de pared (datos de muestra)"
+  }
+}

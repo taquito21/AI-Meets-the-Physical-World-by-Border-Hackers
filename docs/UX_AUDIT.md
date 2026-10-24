@@ -55,9 +55,39 @@ the practice-mode notice. It is never mixed with real inspections.
   - Home, Equipment and Problems at phone width: no sideways scrolling, and the menu fits.
 - **Desktop (1280 px):** the model on the left; the step guide, progress and parts list on the right.
 
+## Icons (follow-up)
+Every action and status now has an icon next to its words, so it can be recognised at a glance, even by someone who
+doesn't read English well. The icons come from [lucide-react](https://lucide.dev) 1.52.0; only the icons used are
+bundled (about 9 KB gzipped).
+- **Menu:** on phones it is a tab bar with the icon above the word.
+- **Equipment types:**
+  - Furniture: an armchair.
+  - Electrical: a lightning bolt.
+  - Fire safety: an extinguisher.
+- **What to do, as a picture:** these appear in the step guide and on each check.
+  - A camera means take a photo.
+  - A hand means check it in person.
+  - A pointing hand means it is your turn to choose.
+  - Circular arrows mean take a new photo.
+- **Result buttons:** ✓ Looks good, ⚠ Report a problem, ⊘ Doesn't apply.
+- **Status chips (one icon per status, the same on every page):** ○ to do, ✓ done, ⚠ problem, ◌ partly done.
+- **AI feedback:**
+  - A ✓ means the photo is clear.
+  - Circular arrows mean retake the photo.
+  - An eye means something to check.
+  - Practice material always shows the graduation-cap icon.
+- **3D controls:** expand / shrink (separate parts / put back together), rotate-back (reset view), zoom (zoom to part), door open / closed.
+- **Problems page:**
+  - Each status has its own icon.
+  - So does each next action: assign, save the fix, ask for a check, close, send back.
+- **Review page:** approve, ask for changes, reject.
+- **Dashboard:** each number tile has an icon.
+
+The icons never replace the words: each one sits next to its label, and decorative icons are hidden from screen readers.
+
 ## Not done (worth doing next)
-- **Spanish (and bilingual) interface.** Every label is still English. For the target users this is probably the
-  biggest remaining barrier.
+- ~~Spanish interface~~: done. The app opens in Spanish with an ES | EN switch; equipment content and AI feedback
+  follow the language (see [LANGUAGES.md](LANGUAGES.md)).
 - A test with real non-technical people on real phones (the walkthrough above was done by us, not by them).
 - A screen-reader and keyboard pass, and a check in bright sunlight / high contrast.
 - Import Studio and Dashboard were not simplified. They are for administrators and supervisors.

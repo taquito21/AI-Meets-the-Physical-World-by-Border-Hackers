@@ -1,3 +1,5 @@
+import { getLang } from "./i18n";
+
 // Typed REST client. All workflow rules live on the server; the client only renders state.
 
 export type ItemStatus = "pending" | "evidence_submitted" | "more_evidence_requested" | "passed" | "failed" | "not_applicable";
@@ -222,8 +224,10 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
+  const headers = new Headers(init?.headers);
+  headers.set("X-Lang", getLang()); // the server answers with equipment content and AI replies in this language
   try {
-    res = await fetch(path, init);
+    res = await fetch(path, { ...init, headers });
   } catch {
     throw new ApiError(0, "Cannot reach the server. Check the network connection.");
   }

@@ -59,3 +59,4 @@ Test deployment: https://field-execution-platform.vercel.app (see [docs/DEPLOYME
 
 See [docs/DEMO.md](docs/DEMO.md) for the 2-minute pitch flow and [docs/LIMITATIONS.md](docs/LIMITATIONS.md) for what is simulated.
 The app guides first-time, non-technical users step by step; see [docs/UX_AUDIT.md](docs/UX_AUDIT.md).
+The interface opens in Spanish with an ES | EN switch; equipment content and AI feedback follow the chosen language ([docs/LANGUAGES.md](docs/LANGUAGES.md)).

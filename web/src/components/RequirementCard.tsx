@@ -1,8 +1,13 @@
 import { useState } from "react";
+import {
+  Ban, Camera, Check, CircleCheck, Eye, GraduationCap, Hand, ImagePlus, Images, Info, Lightbulb, Pointer, RefreshCw,
+  Save, TriangleAlert, WifiOff, X, type LucideIcon,
+} from "lucide-react";
 import { api, ApiError, type DemoEvidence, type InspectionState, type Item } from "../api";
+import { t } from "../i18n";
 import { EvidenceCard } from "./EvidenceCard";
 import { ProfileDetails } from "./ProfileDetails";
-import { Chip, ErrorBox, ITEM_LABEL, ITEM_TONE, SEVERITY_LABEL } from "./ui";
+import { Chip, ErrorBox, ITEM_TONE, ItemChip, SEVERITY_LABEL, when } from "./ui";
 
 interface Props {
   item: Item;
@@ -84,15 +89,16 @@ export default function RequirementCard({ item, inspectionId, editable, actor, o
     }
   };
 
-  // One plain sentence telling the person what to do right now.
-  let nowText: string;
-  if (done) nowText = "Done. You can change the result below if needed.";
-  else if (busy === "upload") nowText = "Checking your photo… this takes a few seconds.";
-  else if (supervisorRequest) nowText = needsPhoto ? "Your supervisor asked for a new photo." : "Your supervisor asked you to check this again. Write what you checked in the notes.";
-  else if (aiFlagged) nowText = "Take another photo, following the tip from the AI below.";
-  else if (needsPhoto && !latest) nowText = needsManual ? "Step 1: take a photo. Step 2: check it in person and choose a result." : "Step 1: take a photo. Step 2: choose a result.";
-  else if (needsPhoto) nowText = "Step 2: read the AI feedback, look at the part yourself, then choose a result.";
-  else nowText = "Check it in person, then choose a result.";
+  // One plain sentence, with a matching picture, telling the person what to do right now.
+  const [NowIcon, nowText]: [LucideIcon, string] =
+    done ? [CircleCheck, t("Done. You can change the result below if needed.")]
+    : busy === "upload" ? [RefreshCw, t("Checking your photo… this takes a few seconds.")]
+    : supervisorRequest ? (needsPhoto ? [Camera, t("Your supervisor asked for a new photo.")]
+      : [Hand, t("Your supervisor asked you to check this again. Write what you checked in the notes.")])
+    : aiFlagged ? [RefreshCw, t("Take another photo, following the tip from the AI below.")]
+    : needsPhoto && !latest ? [Camera, needsManual ? t("Step 1: take a photo. Step 2: check it in person and choose a result.") : t("Step 1: take a photo. Step 2: choose a result.")]
+    : needsPhoto ? [Pointer, t("Step 2: read the AI feedback, look at the part yourself, then choose a result.")]
+    : [Hand, t("Check it in person, then choose a result.")];
   const photoMissing = needsPhoto && !latest;
 
   return (
@@ -100,61 +106,61 @@ export default function RequirementCard({ item, inspectionId, editable, actor, o
       <button className="req-head" onClick={() => setOpen(!open)} aria-expanded={open}>
         <span className="req-title">{req.title}</span>
         <span className="req-chips">
-          {!item.required && <Chip>Optional</Chip>}
-          <Chip tone={ITEM_TONE[item.status]}>{ITEM_LABEL[item.status]}</Chip>
+          {!item.required && <Chip>{t("Optional")}</Chip>}
+          <ItemChip status={item.status} />
         </span>
       </button>
       {open && (
         <div className="req-body">
-          {editable && <div className={`now now-${done ? "done" : "todo"}`}>{busy === "upload" && <span className="spinner" />} {nowText}</div>}
+          {editable && <div className={`now now-${done ? "done" : "todo"}`}>{busy === "upload" ? <span className="spinner" /> : <NowIcon aria-hidden />} {nowText}</div>}
           <p>{req.instructions}</p>
           {checkList.length > 0 && (
             <>
-              <h4>Check that</h4>
+              <h4 className="with-icon"><Eye aria-hidden />{t("Check that")}</h4>
               <ul className="checklist">{checkList.map((c) => <li key={c}>{c}</li>)}</ul>
             </>
           )}
-          {needsPhoto && req.photo_guidance && <p className="small"><b>Photo tip:</b> {req.photo_guidance}</p>}
+          {needsPhoto && req.photo_guidance && <p className="small with-icon-block"><Lightbulb aria-hidden className="ico-amber" /><span><b>{t("Photo tip:")}</b> {req.photo_guidance}</span></p>}
 
           {item.evidence.map((e) => <EvidenceCard key={e.id} e={e} onOpen={onOpenImage} onChanged={editable ? onRefresh : undefined} />)}
-          {item.observation && !editable && <p className="small"><b>Notes:</b> {item.observation}</p>}
-          {item.override_note && <p className="small"><b>Photo used despite the AI tip, because:</b> {item.override_note}</p>}
-          {item.decided_by && <p className="tiny muted">Result chosen by {item.decided_by}</p>}
+          {item.observation && !editable && <p className="small"><b>{t("Notes:")}</b> {item.observation}</p>}
+          {item.override_note && <p className="small"><b>{t("Photo used despite the AI tip, because:")}</b> {item.override_note}</p>}
+          {item.decided_by && <p className="tiny muted">{t("Result chosen by {name}", { name: item.decided_by })}</p>}
 
           {editable && (
             <div className="actions">
               {needsPhoto && (
                 <div className="capture">
                   <label className={`btn btn-primary btn-big ${busy === "upload" ? "disabled" : ""}`}>
-                    {busy === "upload" ? <><span className="spinner" /> Checking photo…</> : latest ? "Take another photo" : "Take photo"}
+                    {busy === "upload" ? <><span className="spinner" /> {t("Checking photo…")}</> : <><Camera aria-hidden />{latest ? t("Take another photo") : t("Take photo")}</>}
                     <input type="file" accept="image/*" capture="environment" hidden disabled={busy === "upload"}
                       onChange={(e) => { upload(e.target.files?.[0]); e.target.value = ""; }} />
                   </label>
                   <label className={`btn btn-ghost ${busy === "upload" ? "disabled" : ""}`}>
-                    Choose from gallery
+                    <Images aria-hidden />{t("Choose from gallery")}
                     <input type="file" accept="image/*" hidden disabled={busy === "upload"}
                       onChange={(e) => { upload(e.target.files?.[0]); e.target.value = ""; }} />
                   </label>
-                  <input className="photo-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note for the photo (optional)" />
+                  <input className="photo-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("Note for the photo (optional)")} />
                 </div>
               )}
               {needsPhoto && demoEvidence.length > 0 && (
                 <div className="demo-picker">
-                  <div className="tiny"><span className="chip chip-demo">PRACTICE</span> Photos prepared in advance for practice. They are not from a real inspection.</div>
+                  <div className="tiny"><span className="chip chip-demo"><GraduationCap aria-hidden />{t("PRACTICE")}</span> {t("Photos prepared in advance for practice. They are not from a real inspection.")}</div>
                   {demoEvidence.map((d) => (
                     <div key={d.id} className="demo-item">
-                      <img src={d.url} alt={d.caption ?? "Practice photo"} onClick={() => onOpenImage(d.url)} />
+                      <img src={d.url} alt={d.caption ?? t("Practice photo")} onClick={() => onOpenImage(d.url)} />
                       <div className="small">
                         <div>{d.caption}</div>
                         <div className="tiny muted">{d.source}</div>
                         <div className="row">
                           <button className="btn btn-small btn-demo" disabled={busy === "upload"} onClick={() => attachDemo(d.id, true)}>
-                            Use this photo
+                            <ImagePlus aria-hidden />{t("Use this photo")}
                           </button>
                           {d.has_precomputed_assessment && (
                             <button className="btn btn-small btn-ghost" disabled={busy === "upload"} onClick={() => attachDemo(d.id, false)}
-                              title={`Real result captured earlier with ${d.precomputed_model} on ${d.precomputed_at}`}>
-                              No internet: use saved AI result
+                              title={t("Real result captured earlier with {model} on {when}", { model: String(d.precomputed_model), when: when(d.precomputed_at) })}>
+                              <WifiOff aria-hidden />{t("No internet: use saved AI result")}
                             </button>
                           )}
                         </div>
@@ -167,62 +173,62 @@ export default function RequirementCard({ item, inspectionId, editable, actor, o
               {needsManual && (
                 <label className="check">
                   <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
-                  <span>I checked this myself, in person</span>
+                  <span className="with-icon"><Hand aria-hidden />{t("I checked this myself, in person")}</span>
                 </label>
               )}
               {aiFlagged && !showOverride && (
-                <div className="notice small">Sure the photo is fine? <button className="link" onClick={() => setShowOverride(true)}>Use it anyway and explain why</button>.</div>
+                <div className="notice small">{t("Sure the photo is fine?")} <button className="link" onClick={() => setShowOverride(true)}>{t("Use it anyway and explain why")}</button>.</div>
               )}
               {showOverride && (
-                <input value={override} onChange={(e) => setOverride(e.target.value)} placeholder="Why this photo is good enough" />
+                <input value={override} onChange={(e) => setOverride(e.target.value)} placeholder={t("Why this photo is good enough")} />
               )}
               {failing && (
                 <div className="finding-form">
-                  <label className="small"><b>What is wrong?</b>
+                  <label className="small"><b>{t("What is wrong?")}</b>
                     <textarea value={findingText} onChange={(e) => setFindingText(e.target.value)} rows={2}
-                      placeholder="For example: crack on the front left edge, about 3 cm" />
+                      placeholder={t("For example: crack on the front left edge, about 3 cm")} />
                   </label>
-                  <label className="small"><b>How serious is it?</b>
+                  <label className="small"><b>{t("How serious is it?")}</b>
                     <select value={severity} onChange={(e) => setSeverity(e.target.value)}>
-                      {Object.entries(SEVERITY_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                      {Object.entries(SEVERITY_LABEL).map(([v, l]) => <option key={v} value={v}>{t(l)}</option>)}
                     </select>
                   </label>
                 </div>
               )}
 
               <div className="decide">
-                <span className="decide-label">{done ? "Change the result:" : "Result:"}</span>
+                <span className="decide-label">{done ? t("Change the result:") : t("Result:")}</span>
                 <div className="row">
                   {failing ? (
                     <>
-                      <button className="btn btn-red btn-big" disabled={!!busy} onClick={() => decide("fail")}>{busy === "fail" ? "Saving…" : "Save problem"}</button>
-                      <button className="btn btn-ghost" disabled={!!busy} onClick={() => setFailing(false)}>Cancel</button>
+                      <button className="btn btn-red btn-big" disabled={!!busy} onClick={() => decide("fail")}>{busy === "fail" ? t("Saving…") : <><Save aria-hidden />{t("Save problem")}</>}</button>
+                      <button className="btn btn-ghost" disabled={!!busy} onClick={() => setFailing(false)}><X aria-hidden />{t("Cancel")}</button>
                     </>
                   ) : (
                     <>
                       <button className="btn btn-green btn-big" disabled={!!busy || photoMissing} onClick={() => decide("pass")}
-                        title={photoMissing ? "Take a photo first" : undefined}>
-                        {busy === "pass" ? "Saving…" : "✓ Looks good"}
+                        title={photoMissing ? t("Take a photo first") : undefined}>
+                        {busy === "pass" ? t("Saving…") : <><Check aria-hidden />{t("Looks good")}</>}
                       </button>
-                      <button className="btn btn-red-ghost btn-big" disabled={!!busy} onClick={() => setFailing(true)}>Report a problem</button>
-                      <button className="btn btn-ghost" disabled={!!busy} onClick={() => decide("not_applicable")}>Doesn't apply</button>
+                      <button className="btn btn-red-ghost btn-big" disabled={!!busy} onClick={() => setFailing(true)}><TriangleAlert aria-hidden />{t("Report a problem")}</button>
+                      <button className="btn btn-ghost" disabled={!!busy} onClick={() => decide("not_applicable")}><Ban aria-hidden />{t("Doesn't apply")}</button>
                     </>
                   )}
                 </div>
-                {photoMissing && !failing && <p className="tiny muted">Take a photo first to enable "Looks good".</p>}
+                {photoMissing && !failing && <p className="tiny muted">{t("Take a photo first to enable \"Looks good\".")}</p>}
                 <textarea value={observation} onChange={(e) => setObservation(e.target.value)} rows={2}
-                  placeholder="Notes (optional). If it doesn't apply, say why." />
+                  placeholder={t("Notes (optional). If it doesn't apply, say why.")} />
               </div>
               <ErrorBox error={err} />
             </div>
           )}
 
           <details className="more">
-            <summary>More details about this check</summary>
+            <summary><Info aria-hidden />{t("More details about this check")}</summary>
             <div className="small">
               <ProfileDetails req={req} skipPoints={!!req.inspection_points?.length} />
               {req.visual_limitations?.length > 0 && (
-                <><h4>What a photo cannot show</h4><ul className="muted">{req.visual_limitations.map((l: string) => <li key={l}>{l}</li>)}</ul></>
+                <><h4>{t("What a photo cannot show")}</h4><ul className="muted">{req.visual_limitations.map((l: string) => <li key={l}>{l}</li>)}</ul></>
               )}
             </div>
           </details>

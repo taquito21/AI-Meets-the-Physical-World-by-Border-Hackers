@@ -7,7 +7,8 @@
    (`ANTHROPIC_API_KEY` in `backend/.env`). Do one test photo.
 4. Rehearsal inspection: on `CHAIR-001-SN-0025`, do all manual-confirmation items and the brackets photo **for real** beforehand.
    Leave **Seat surface** and **Backrest attachment** for the live demo. Never pre-fill AI results.
-5. Have a backup screen recording (`docs/` → record the rehearsal) in case of network failure.
+5. Language: the app opens in Spanish; for English-speaking judges tap **EN** in the top bar (it remembers the choice).
+6. Have a backup screen recording (`docs/` → record the rehearsal) in case of network failure.
 
 | Time | Scene | Action | Say |
 |---|---|---|---|

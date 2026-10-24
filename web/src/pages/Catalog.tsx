@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Box, GraduationCap, History, Info, MapPin, Play } from "lucide-react";
 import { api, type ApiError } from "../api";
 import { IndustryFilter } from "../components/IndustryFilter";
-import { Chip, ErrorBox, INSPECTION_LABEL, INSPECTION_TONE, IndustryChip, ModeBadge, useAsync } from "../components/ui";
+import { Chip, ErrorBox, IndustryChip, InspectionChip, ModeBadge, useAsync } from "../components/ui";
+import { t } from "../i18n";
 import { useSession } from "../session";
 
 // First sentence only: the full engineering description lives under "About this equipment".
-const firstSentence = (t: string) => (t.match(/^.*?[.!?](\s|$)/)?.[0] ?? t).trim();
+const firstSentence = (s: string) => (s.match(/^.*?[.!?](\s|$)/)?.[0] ?? s).trim();
 
 export default function Catalog() {
   const { data, error } = useAsync(() => api.products(), []);
@@ -32,11 +34,11 @@ export default function Catalog() {
   return (
     <div className="page">
       <div className="card-head">
-        <h1>Equipment</h1>
+        <h1>{t("Equipment")}</h1>
         <IndustryFilter industries={[...new Set((data ?? []).map((p) => p.industry))]} />
       </div>
-      <p className="muted">Find the unit in front of you and tap <b>Start inspection</b>. To try the app first, tap <b>Practice</b>.</p>
-      {!data && !error && <p className="muted">Loading equipment…</p>}
+      <p className="muted">{t("Find the unit in front of you and tap")} <b>{t("Start inspection")}</b>. {t("To try the app first, tap")} <b>{t("Practice")}</b>.</p>
+      {!data && !error && <p className="muted">{t("Loading equipment…")}</p>}
       {error && <ErrorBox error={{ message: error }} />}
       <ErrorBox error={err} />
       {assets.map((p) => (
@@ -55,31 +57,31 @@ export default function Catalog() {
               return (
                 <li key={i.serial_number} className="instance">
                   <div>
-                    <b>{i.metadata.location ?? i.serial_number}</b>
-                    <div className="muted small">Serial {i.serial_number}</div>
+                    <b className="with-icon"><MapPin aria-hidden className="ico-blue" />{i.metadata.location ?? i.serial_number}</b>
+                    <div className="muted small">{t("Serial {serial}", { serial: i.serial_number })}</div>
                   </div>
                   {i.last_inspection_status && (
                     <>
                       <ModeBadge mode={i.last_inspection_mode} />
-                      <Chip tone={INSPECTION_TONE[i.last_inspection_status]}>{INSPECTION_LABEL[i.last_inspection_status] ?? i.last_inspection_status}</Chip>
+                      <InspectionChip status={i.last_inspection_status} />
                     </>
                   )}
                   {i.last_inspection_status === "submitted" ? (
-                    <Link className="btn btn-ghost" to={`/p/${i.serial_number}`}>See history</Link>
+                    <Link className="btn btn-ghost" to={`/p/${i.serial_number}`}><History aria-hidden />{t("See history")}</Link>
                   ) : open ? (
                     <button className="btn btn-primary" disabled={!!busy}
                       onClick={() => start(i.serial_number, (i.last_inspection_mode as "live" | "demo") ?? "live")}>
-                      {busy?.startsWith(`${i.serial_number}:`) ? "Opening…" : "Continue"}
+                      {busy?.startsWith(`${i.serial_number}:`) ? t("Opening…") : <><Play aria-hidden />{t("Continue")}</>}
                     </button>
                   ) : (
                     <>
                       <button className="btn btn-primary" disabled={!!busy} onClick={() => start(i.serial_number, "live")}>
-                        {busy === `${i.serial_number}:live` ? "Opening…" : "Start inspection"}
+                        {busy === `${i.serial_number}:live` ? t("Opening…") : <><Play aria-hidden />{t("Start inspection")}</>}
                       </button>
                       {p.demo_evidence_count > 0 && (
                         <button className="btn btn-demo" disabled={!!busy} onClick={() => start(i.serial_number, "demo")}
-                          title="Try it with sample photos" aria-describedby="demo-hint">
-                          {busy === `${i.serial_number}:demo` ? "Opening…" : "Practice"}
+                          title={t("Try it with sample photos")} aria-describedby="demo-hint">
+                          {busy === `${i.serial_number}:demo` ? t("Opening…") : <><GraduationCap aria-hidden />{t("Practice")}</>}
                         </button>
                       )}
                     </>
@@ -89,22 +91,24 @@ export default function Catalog() {
             })}
           </ul>
           <details className="more">
-            <summary>About this equipment</summary>
+            <summary><Info aria-hidden />{t("About this equipment")}</summary>
             <p className="small">{p.description}</p>
             <p className="small muted">
-              {p.manufacturer} · {p.product_id} · engineering revision {p.revision} · {p.component_count} parts · {p.requirement_count} checks
-              {p.demo_evidence_count ? ` · ${p.demo_evidence_count} practice photos` : ""}
+              {p.manufacturer} · {p.product_id} · {t("engineering revision {rev}", { rev: p.revision })}
+              {" · "}{t(p.component_count === 1 ? "{n} part" : "{n} parts", { n: p.component_count })}
+              {" · "}{t(p.requirement_count === 1 ? "{n} check" : "{n} checks", { n: p.requirement_count })}
+              {p.demo_evidence_count ? ` · ${t(p.demo_evidence_count === 1 ? "{n} practice photo" : "{n} practice photos", { n: p.demo_evidence_count })}` : ""}
             </p>
-            {p.demonstration_package && <p className="small"><Chip tone="amber">Demonstration package</Chip> Sample engineering data, not from a real manufacturer.</p>}
+            {p.demonstration_package && <p className="small"><Chip tone="amber">{t("Demonstration package")}</Chip> {t("Sample engineering data, not from a real manufacturer.")}</p>}
             <div className="row">
-              <Link className="btn btn-ghost btn-small" to={`/products/${encodeURIComponent(p.id)}`}>{p.has_3d ? "3D model and technical data" : "Technical data"}</Link>
-              {p.instances.map((i) => <Link key={i.serial_number} className="btn btn-ghost btn-small" to={`/p/${i.serial_number}`}>History of {i.serial_number}</Link>)}
+              <Link className="btn btn-ghost btn-small" to={`/products/${encodeURIComponent(p.id)}`}><Box aria-hidden />{p.has_3d ? t("3D model and technical data") : t("Technical data")}</Link>
+              {p.instances.map((i) => <Link key={i.serial_number} className="btn btn-ghost btn-small" to={`/p/${i.serial_number}`}><History aria-hidden />{t("History of {serial}", { serial: i.serial_number })}</Link>)}
             </div>
           </details>
         </section>
       ))}
-      {data && assets.length === 0 && <p className="muted">No equipment of this kind yet.</p>}
-      <p id="demo-hint" className="tiny muted">Practice uses sample photos prepared in advance. Practice inspections are always labelled and never mixed with real ones.</p>
+      {data && assets.length === 0 && <p className="muted">{t("No equipment of this kind yet.")}</p>}
+      <p id="demo-hint" className="tiny muted">{t("Practice uses sample photos prepared in advance. Practice inspections are always labelled and never mixed with real ones.")}</p>
     </div>
   );
 }

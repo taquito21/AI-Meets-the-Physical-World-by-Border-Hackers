@@ -44,6 +44,41 @@
             "No conclusion on electrical safety or compliance can be drawn from a photo."
           ]
         }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 7389,
+        "captured_at": "2026-10-24T19:32:40+00:00",
+        "result": {
+          "summary": "La foto muestra el gabinete completo de frente con la puerta cerrada. Es una imagen 3D (render), no una foto real. No se ven abolladuras, óxido ni rastros de agua, pero no se ve la parte de abajo donde entran los cables.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": false,
+          "observations": [
+            "Se ve el frente y el costado derecho del gabinete, con la puerta cerrada.",
+            "Hay una etiqueta amarilla en la puerta, sin texto legible.",
+            "Se ve una manija oscura en el lado derecho de la puerta.",
+            "No se ven abolladuras, deformaciones ni óxido en las caras visibles.",
+            "No se ve la parte inferior ni las entradas de cables.",
+            "La imagen es un render 3D de demostración, no una foto del equipo real."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Parte inferior del gabinete con las entradas de cables.",
+            "Costado izquierdo y parte superior.",
+            "Foto real del equipo instalado."
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Toma una foto real del gabinete instalado, de frente y con la puerta cerrada. Agáchate un poco o toma otra foto desde abajo para que se vean bien las entradas de cables y los prensaestopas. Usa buena luz y evita sombras.",
+          "uncertainty": "medium",
+          "limitations": [
+            "Es un render 3D, no muestra el estado real del equipo.",
+            "El grado IP54 no se puede comprobar con una foto.",
+            "No se puede saber si hay humedad o polvo adentro sin abrir el gabinete.",
+            "Las medidas no se pueden verificar con la foto."
+          ]
+        }
       }
     },
     {
@@ -85,6 +120,42 @@
             "Gasket compression cannot be verified from a photograph.",
             "No conclusion on electrical safety, wiring or compliance.",
             "Image appears to be a render, not the actual asset."
+          ]
+        }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6016,
+        "captured_at": "2026-10-24T19:32:46+00:00",
+        "result": {
+          "summary": "Se ve la puerta del tablero con una etiqueta amarilla, pero desde lejos no se puede leer ningún símbolo ni texto en la etiqueta.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": false,
+          "observations": [
+            "Se ve una puerta gris completa con una manija a la derecha.",
+            "Hay una etiqueta amarilla en la parte superior de la puerta.",
+            "En la etiqueta no se distingue ningún símbolo ni texto legible.",
+            "La puerta parece cerrada, pero no se ve si el pestillo está trabado.",
+            "El empaque no es visible en la foto."
+          ],
+          "conditions_for_human_review": [
+            "La etiqueta no muestra un símbolo o texto legible en esta foto."
+          ],
+          "missing_information": [
+            "Símbolo y texto de la etiqueta de advertencia legibles.",
+            "Vista del pestillo trabado.",
+            "Vista del empaque de la puerta."
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Acércate a la etiqueta y tómale una foto de frente, que llene buena parte de la imagen, con buena luz y sin reflejos, para que el símbolo y el texto se lean. Si puedes, toma otra foto del borde de la puerta para mostrar el pestillo y el empaque.",
+          "uncertainty": "medium",
+          "limitations": [
+            "La foto es una imagen de demostración (render 3D).",
+            "No se puede confirmar desde una foto que la puerta trabe bien.",
+            "La compresión del empaque no se puede verificar con una foto.",
+            "La foto no permite concluir nada sobre la seguridad eléctrica ni el cableado."
           ]
         }
       }
@@ -129,6 +200,40 @@
             "Render lacks real surface detail; subtle damage or discoloration would not appear."
           ]
         }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6140,
+        "captured_at": "2026-10-24T19:32:52+00:00",
+        "result": {
+          "summary": "Se ven cuatro módulos grises en fila junto al interruptor principal, pero ninguno tiene etiqueta de circuito visible. No se pueden revisar los criterios de identificación.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": true,
+          "observations": [
+            "Se ven cuatro módulos grises lado a lado, que parecen ser los interruptores automáticos.",
+            "No se ve ninguna etiqueta de circuito en ni cerca de los cuatro módulos.",
+            "No se ven grietas, deformaciones ni manchas de color en las carcasas visibles.",
+            "Cada módulo tiene un cable azul conectado en la parte de abajo.",
+            "La imagen es un modelo 3D simplificado, no una foto real."
+          ],
+          "conditions_for_human_review": [
+            "Posible falta de etiqueta de circuito en los 4 interruptores (0 de 4 visibles)."
+          ],
+          "missing_information": [
+            "Etiquetas de identificación de cada circuito.",
+            "Vista de las palancas y marcas frontales de cada interruptor."
+          ],
+          "recommended_action": "flag_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "medium",
+          "limitations": [
+            "La foto no permite comprobar la capacidad, la curva ni el disparo de los interruptores.",
+            "No se puede confirmar el apriete de bornes, el cableado ni el estado interno.",
+            "Al ser un render, puede no mostrar detalles reales como etiquetas o daños pequeños."
+          ]
+        }
       }
     },
     {
@@ -168,6 +273,40 @@
             "Render, not real-world evidence of product condition.",
             "Output voltage, terminal tightness, wiring correctness and electrical safety cannot be verified from a photograph.",
             "Identity of the centered module as the PSU is assumed, not confirmed."
+          ]
+        }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6639,
+        "captured_at": "2026-10-24T19:32:59+00:00",
+        "result": {
+          "summary": "La foto es un render 3D de un panel con varios dispositivos. Se ve un módulo gris con una etiqueta en blanco y dos cables azules abajo, que podría ser la fuente, pero no hay texto legible que lo identifique. No se puede confirmar que sea la fuente de 24 VDC.",
+          "correct_area_visible": "uncertain",
+          "image_quality": "acceptable",
+          "evidence_sufficient": false,
+          "observations": [
+            "Imagen nítida y bien iluminada; es un render 3D de demostración.",
+            "Módulo gris al centro con una etiqueta blanca sin texto legible.",
+            "Dos cables azules salen de la parte inferior del módulo central.",
+            "Bloque blanco de cuatro módulos a la izquierda con cuatro cables azules.",
+            "No se ven bornes ni terminales en detalle.",
+            "No se ve decoloración ni daño evidente en las superficies visibles."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Etiqueta o marca legible que identifique la fuente ICP-001-PSU-01.",
+            "Vista cercana de la zona de bornes y conexiones.",
+            "Placa de datos de la fuente."
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Toma una foto de frente y más cerca de la fuente de 24 VDC. Asegúrate de que se lea su etiqueta o placa de identificación y que se vean bien los bornes y cables conectados. Usa buena luz y evita reflejos.",
+          "uncertainty": "high",
+          "limitations": [
+            "Una foto no permite verificar el voltaje de salida ni el apriete de los bornes.",
+            "No se puede confirmar el cableado correcto ni el estado interno.",
+            "La imagen es un render, no un equipo real."
           ]
         }
       }
@@ -210,6 +349,39 @@
             "Indicator lights do not prove correct program or I/O function.",
             "Wiring correctness, voltage, terminal torque and internal condition cannot be judged from a photo.",
             "Render may not reflect real device condition."
+          ]
+        }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6375,
+        "captured_at": "2026-10-24T19:33:06+00:00",
+        "result": {
+          "summary": "La imagen es un render 3D de un tablero. Se ven módulos oscuros y un módulo azul en la fila central, pero no se puede confirmar cuál es el PLC, no se ve la etiqueta A1 legible ni indicadores de estado.",
+          "correct_area_visible": "uncertain",
+          "image_quality": "acceptable",
+          "evidence_sufficient": false,
+          "observations": [
+            "Fila central: un módulo gris oscuro grande con una franja clara sin texto legible, otro módulo gris oscuro a su lado y un módulo azul de cuatro secciones.",
+            "No se ve ninguna etiqueta legible con 'A1'.",
+            "No se ven luces ni indicadores de estado en los módulos.",
+            "No se observan daños visibles en lo que aparece en la foto.",
+            "Los cables azules se ven conectados a los módulos desde arriba y abajo."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Etiqueta de identificación A1 legible.",
+            "Confirmación de cuál módulo es la CPU y cuál el módulo de E/S.",
+            "Indicadores de estado visibles."
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Toma una foto de frente y más cerca solo del PLC (CPU y módulo de E/S), con la etiqueta A1 legible y las luces de estado visibles. Evita reflejos y que salga cortado.",
+          "uncertainty": "high",
+          "limitations": [
+            "Es un render 3D de demostración, no una foto real.",
+            "Las luces de estado no prueban que el programa o las E/S funcionen bien.",
+            "Una foto no permite confirmar cableado, tensión, apriete de bornes ni seguridad eléctrica."
           ]
         }
       }
@@ -256,6 +428,42 @@
             "No conclusion on wiring correctness, electrical safety or compliance."
           ]
         }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 7405,
+        "captured_at": "2026-10-24T19:33:13+00:00",
+        "result": {
+          "summary": "La foto es un render 3D que muestra una regleta de bornes con 16 piezas: 14 grises y 2 verdes al extremo derecho. Se ve una franja clara sobre la regleta, pero no tiene texto legible. No se puede confirmar la etiqueta X1 ni los marcadores de cada borne.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": false,
+          "observations": [
+            "Se cuentan unas 16 piezas en la regleta: 14 grises y 2 verdes a la derecha.",
+            "Las 2 piezas del extremo se ven solo verdes; no se distingue franja amarilla.",
+            "Hay una franja clara horizontal que podría ser un portamarcadores, pero sin texto visible.",
+            "No se ve ninguna etiqueta legible con 'X1'.",
+            "Dos cables azules salen por abajo de la regleta.",
+            "La foto está tomada de lejos; los bornes se ven pequeños."
+          ],
+          "conditions_for_human_review": [
+            "Confirma si las 2 piezas verdes son bornes de tierra verde-amarillo."
+          ],
+          "missing_information": [
+            "Etiqueta X1 legible.",
+            "Marcadores de cada borne legibles.",
+            "Vista clara del color verde-amarillo de los bornes de tierra."
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Acércate a la regleta X1 y toma la foto de frente, con buena luz. Asegúrate de que se lean la etiqueta X1 y los números de cada borne, y de que se vea bien el color de los bornes de tierra.",
+          "uncertainty": "medium",
+          "limitations": [
+            "La imagen es un render de demostración, no una foto real.",
+            "Una foto no permite verificar el apriete de los bornes ni qué tan metidos están los cables.",
+            "No se puede saber desde la foto si el cableado está correcto o si el tablero tiene tensión."
+          ]
+        }
       }
     },
     {
@@ -295,6 +503,40 @@
             "Green-yellow PE striping cannot be confirmed; conductor appears plain green at this scale.",
             "Small insulation damage may not be visible at overall-view resolution.",
             "No conclusion on electrical safety or compliance."
+          ]
+        }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 7094,
+        "captured_at": "2026-10-24T19:33:21+00:00",
+        "result": {
+          "summary": "La foto muestra el interior abierto del tablero con buena luz. Se ven tramos de cable azul entre equipos y canaletas, y un conductor verde-amarillo en la barra inferior. No se ven conductores expuestos ni extremos sueltos evidentes. Es una imagen renderizada (3D), no una foto real.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": true,
+          "observations": [
+            "Interior del tablero completo y bien iluminado.",
+            "Cables azules cortos salen de los equipos hacia las canaletas.",
+            "Conductor verde-amarillo conectado a una barra color cobre en la parte inferior.",
+            "No se ven cables fuera de las canaletas ni puntas sueltas a simple vista.",
+            "No se ven aislamientos dañados, quemados ni descoloridos.",
+            "La imagen es un render 3D de demostración."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Foto real del tablero (esta es un render de demostración).",
+            "Vista de cerca de los bornes y puntos de conexión."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "medium",
+          "limitations": [
+            "Una foto no permite comprobar continuidad, resistencia de aislamiento ni cableado correcto.",
+            "No se puede verificar el apriete de bornes ni la tensión.",
+            "Desde esta distancia no se distinguen daños pequeños en el aislamiento.",
+            "Los colores de la ficha técnica son datos de demostración no verificados."
           ]
         }
       }
@@ -341,6 +583,42 @@
             "Earth continuity and bonding cannot be verified from a photo.",
             "Terminal tightness/torque cannot be assessed.",
             "Photo taken from a distance; terminal details not resolvable."
+          ]
+        }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6890,
+        "captured_at": "2026-10-24T19:33:28+00:00",
+        "result": {
+          "summary": "Render 3D del interior del tablero. Se ve una barra marrón en la parte media con un solo conductor verde conectado desde arriba. No se ven etiqueta de identificación PE, tornillos ni puntos de conexión con detalle.",
+          "correct_area_visible": "uncertain",
+          "image_quality": "acceptable",
+          "evidence_sufficient": false,
+          "observations": [
+            "Se ve una barra marrón horizontal que podría ser la barra PE.",
+            "Un conductor verde llega a la barra desde arriba.",
+            "No se ve ninguna etiqueta o marca de tierra en la barra.",
+            "No se distinguen tornillos ni puntos de conexión en la barra.",
+            "La barra se ve pequeña y lejana en la foto; gran parte de la imagen muestra el piso del gabinete.",
+            "Es una imagen de demostración (render 3D), no una foto real."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Identificación visible de la barra como PE (etiqueta o símbolo de tierra).",
+            "Vista cercana de los puntos de conexión y terminales de los conductores.",
+            "Detalle de la superficie de la barra para revisar corrosión.",
+            "Unión visible entre la barra y el gabinete."
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Acércate a la barra de tierra y toma la foto de frente, llenando el cuadro con la barra. Muestra todos los puntos de conexión, los conductores verde-amarillo y cualquier etiqueta o símbolo de tierra. Usa buena luz y evita sombras.",
+          "uncertainty": "medium",
+          "limitations": [
+            "La continuidad de tierra solo se verifica con medición, no con foto.",
+            "El apriete de los tornillos no se puede confirmar con una foto.",
+            "No se puede confirmar el cableado ni la conformidad desde la imagen.",
+            "La imagen es un render de demostración."
           ]
         }
       }

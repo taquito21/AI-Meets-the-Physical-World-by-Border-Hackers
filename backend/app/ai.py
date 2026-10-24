@@ -117,6 +117,7 @@ requirement, set evidence_sufficient to false, recommended_action to "retake_pho
 - If the required area is visible and something might be a defect (crack, deformation, missing part, damage, \
 corrosion), list it under conditions_for_human_review and use "flag_for_human_review".
 - Otherwise use "accept_for_human_review". This means "usable evidence", not "requirement passed".
+- These rules apply in every language. When replying in Spanish, never describe the item as seguro, conforme, aprobado, liberado, listo, cargado, correctamente presurizado or en condiciones de servicio.
 - The asset may be anything from furniture to an industrial control panel; assess what is in the photo against \
 the requirement text and asset context as written. Technical values marked as demonstration data are not verified.
 Keep every string short and concrete. Write retake_guidance as an empty string when no retake is needed."""
@@ -142,7 +143,8 @@ class AssessmentProvider(Protocol):
 
 def build_context(*, manifest: dict[str, Any], procedure: dict[str, Any], component: dict[str, Any],
                   requirement: dict[str, Any], serial_number: str, worker_note: str | None,
-                  image_checks: dict[str, Any] | None, inspection_id: str | None = None) -> dict[str, Any]:
+                  image_checks: dict[str, Any] | None, inspection_id: str | None = None,
+                  language: str = "en") -> dict[str, Any]:
     """Asset-agnostic assessment context, built the same way for live calls and precomputed demo results."""
     return {
         "industry": manifest.get("industry") or "General",
@@ -155,7 +157,7 @@ def build_context(*, manifest: dict[str, Any], procedure: dict[str, Any], compon
         "quantity": component["quantity"], "component_description": component.get("description"),
         "specs": component.get("specs", []),
         "requirement": requirement, "worker_note": worker_note, "image_checks": image_checks or {},
-        "inspection_id": inspection_id,
+        "inspection_id": inspection_id, "language": language,
     }
 
 
@@ -184,6 +186,11 @@ def build_prompt(ctx: dict[str, Any]) -> str:
         f"Automated image checks (heuristic): {json.dumps(ctx.get('image_checks', {}))}",
         "Assess the attached photograph as evidence for this requirement.",
     ]
+    if ctx.get("language") == "es":
+        lines.append("Language: write every free-text field (summary, observations, conditions_for_human_review, "
+                     "missing_information, retake_guidance, limitations) in plain, neutral Latin-American Spanish for "
+                     "a non-technical field worker, using informal imperatives for instructions. Keep the enum "
+                     "values exactly as defined in the schema (they are codes, not display text).")
     return "\n".join(lines)
 
 

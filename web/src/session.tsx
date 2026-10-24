@@ -1,6 +1,7 @@
 // Lightweight demo identity (no authentication in the MVP). Names are recorded on every action.
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { api, type Health } from "./api";
+import { t } from "./i18n";
 
 export type Role = "inspector" | "supervisor";
 
@@ -49,7 +50,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return () => { stop = true; clearTimeout(timer); };
   }, []);
 
-  const label = health?.app_label ?? "Field Assistant";
+  const label = t(health?.app_label ?? "Field Assistant");
   useEffect(() => {
     document.title = label;
   }, [label]);

@@ -1,0 +1,427 @@
+{
+  "language": "es",
+  "note": "Spanish display text for this package. Identifiers, part numbers, units and values are unchanged. Not part of the package content hash.",
+  "product": {
+    "product_name": "Silla de conferencias UTEP — Demostración del mundo real",
+    "product_description": "Silla giratoria de trabajo a altura de banco, tal como se usa en la sede del evento: estructura gris claro, asiento tapizado azul oscuro, respaldo de malla azul oscuro, descansabrazos integrados en forma de arco, aro reposapiés circular, pistón de gas negro y base de cinco puntas con rodajas. Modelo 3D aproximado hecho por el equipo a partir de cinco fotografías de la silla real; no es un modelo CAD del fabricante y las medidas son estimadas.",
+    "asset_category": "Mobiliario de la sede (demostración del mundo real)",
+    "provenance": "Modelado por el equipo del hackathon a partir de cinco fotografías de la silla física en la sede (2026-10-24). No lo proporcionó el fabricante; no se usan especificaciones del fabricante. Todas las medidas son estimadas."
+  },
+  "procedure": {
+    "title": "Silla de trabajo de la sede - revisión visual y de funcionamiento",
+    "scope": "Revisión del estado visible y comprobaciones sencillas a mano de una silla giratoria de trabajo. No incluye pruebas de carga, medición de dimensiones ni verificación contra las especificaciones del fabricante.",
+    "safety_notes": [
+      "No te pares sobre la silla ni sobre el aro reposapiés durante la inspección.",
+      "Voltea la silla solo sobre una superficie despejada y suave."
+    ]
+  },
+  "components": {
+    "UTEP-CHAIR-RW-SEAT-CUSHION": {
+      "name": "Cojín del asiento",
+      "description": "Cojín grueso de asiento tapizado, con bordes redondeados.",
+      "specs": [
+        {
+          "label": "Ancho x fondo del asiento",
+          "value": "≈ 0.48 x 0.46 m (valor estimado a partir de fotos)"
+        },
+        {
+          "label": "Altura del asiento",
+          "value": "≈ 0.65 m, altura de banco (valor estimado a partir de fotos)"
+        }
+      ]
+    },
+    "UTEP-CHAIR-RW-SEAT-SUPPORT": {
+      "name": "Soporte del asiento (carcasa)",
+      "description": "Carcasa con costillas de refuerzo debajo del cojín, que sostiene el asiento y el mecanismo.",
+      "specs": [
+        {
+          "label": "Elementos visibles",
+          "value": "Parte de abajo con costillas de refuerzo; etiqueta y mecanismo montados debajo (observado)"
+        }
+      ]
+    },
+    "UTEP-CHAIR-RW-BACK-MESH": {
+      "name": "Malla del respaldo",
+      "description": "Panel de malla transpirable, tensado dentro del marco del respaldo.",
+      "specs": [
+        {
+          "label": "Área de la malla",
+          "value": "≈ 0.42 x 0.47 m (valor estimado a partir de fotos)"
+        }
+      ]
+    },
+    "UTEP-CHAIR-RW-BACK-FRAME": {
+      "name": "Marco del respaldo",
+      "description": "Marco rectangular alrededor de la malla; el logotipo está en el travesaño inferior, en la parte trasera.",
+      "specs": [
+        {
+          "label": "Marca visible",
+          "value": "Logotipo HON en el travesaño inferior trasero (observado)"
+        },
+        {
+          "label": "Altura del respaldo sobre el asiento",
+          "value": "≈ 0.55 m (valor estimado a partir de fotos)"
+        }
+      ]
+    },
+    "UTEP-CHAIR-RW-ARMREST-L": {
+      "name": "Descansabrazos izquierdo",
+      "description": "Descansabrazos integrado en forma de arco que une el marco del respaldo con el costado del asiento (a la izquierda de quien está sentado).",
+      "specs": [
+        {
+          "label": "Altura del descansabrazos sobre el asiento",
+          "value": "≈ 0.18 m (valor estimado a partir de fotos)"
+        }
+      ]
+    },
+    "UTEP-CHAIR-RW-ARMREST-R": {
+      "name": "Descansabrazos derecho",
+      "description": "Descansabrazos integrado en forma de arco que une el marco del respaldo con el costado del asiento (a la derecha de quien está sentado).",
+      "specs": [
+        {
+          "label": "Altura del descansabrazos sobre el asiento",
+          "value": "≈ 0.18 m (valor estimado a partir de fotos)"
+        }
+      ]
+    },
+    "UTEP-CHAIR-RW-FOOT-RING": {
+      "name": "Aro de soporte circular (aro reposapiés)",
+      "description": "Aro reposapiés debajo del asiento, sujeto a la columna con un collarín y tres rayos.",
+      "specs": [
+        {
+          "label": "Diámetro del aro",
+          "value": "≈ 0.41 m (valor estimado a partir de fotos)"
+        },
+        {
+          "label": "Rayos",
+          "value": "3 (observado desde abajo)"
+        }
+      ]
+    },
+    "UTEP-CHAIR-RW-GAS-LIFT": {
+      "name": "Pistón de gas central",
+      "description": "Columna central de altura ajustable, entre la base y el mecanismo del asiento.",
+      "specs": [
+        {
+          "label": "Ajuste",
+          "value": "Altura ajustable (no probado en este modelo)"
+        }
+      ]
+    },
+    "UTEP-CHAIR-RW-BASE": {
+      "name": "Base de cinco puntas",
+      "description": "Base de cinco brazos con una pieza central.",
+      "specs": [
+        {
+          "label": "Brazos",
+          "value": "5 (observado)"
+        },
+        {
+          "label": "Diámetro de la base",
+          "value": "≈ 0.70 m (valor estimado a partir de fotos)"
+        }
+      ]
+    },
+    "UTEP-CHAIR-RW-CASTERS": {
+      "name": "Rodajas (ruedas)",
+      "description": "Una rodaja en la punta de cada brazo de la base.",
+      "specs": [
+        {
+          "label": "Cantidad",
+          "value": "5 (observado)"
+        }
+      ]
+    },
+    "UTEP-CHAIR-RW-MECHANISM": {
+      "name": "Mecanismo de ajuste bajo el asiento",
+      "description": "Mecanismo debajo del asiento, con una placa de montaje negra y orificios visibles para tornillos. Las piezas internas no están incluidas en el modelo.",
+      "specs": [
+        {
+          "label": "Sujeción visible",
+          "value": "Placa de montaje con posiciones para tornillos (observado)"
+        }
+      ]
+    },
+    "UTEP-CHAIR-RW-LABEL": {
+      "name": "Etiqueta de identificación bajo el asiento",
+      "description": "Etiqueta del fabricante o de inventario debajo del asiento. Su contenido no se transcribe aquí.",
+      "specs": [
+        {
+          "label": "Contenido",
+          "value": "No se leyó; documéntalo a partir de la foto"
+        }
+      ]
+    }
+  },
+  "requirements": {
+    "SEAT-CUSHION-SURFACE": {
+      "title": "Tapicería del cojín del asiento",
+      "instructions": "Revisa la tapicería del asiento por si tiene rasgaduras, cortes, perforaciones, partes que se pelan, costuras abiertas o zonas aplastadas.",
+      "photo_guidance": "Toma una foto de todo el asiento desde el frente, un poco desde arriba y con buena luz.",
+      "inspection_points": [
+        "Sin rasgaduras ni cortes",
+        "La funda no se pela ni está agrietada",
+        "Costuras cerradas",
+        "Sin zonas hundidas"
+      ],
+      "acceptance_criteria": [
+        "Tapicería intacta",
+        "Sin espuma expuesta"
+      ],
+      "possible_findings": [
+        "Tapicería rota",
+        "Funda pelada",
+        "Costura abierta",
+        "Mancha (solo estética)"
+      ],
+      "recommended_actions": [
+        "Repórtalo para retapizar o reemplazar"
+      ],
+      "visual_limitations": [
+        "El estado de la espuma dentro del cojín no se puede ver."
+      ]
+    },
+    "SEAT-SUPPORT-SECURE": {
+      "title": "Asiento fijo y estable",
+      "instructions": "Mece el asiento suavemente con la mano y confirma que no se tambalea ni se mueve sobre la columna.",
+      "inspection_points": [
+        "No se tambalea",
+        "No rechina ni tiene juego"
+      ],
+      "acceptance_criteria": [
+        "Asiento firme sobre la columna"
+      ],
+      "possible_findings": [
+        "El asiento se tambalea",
+        "Asiento flojo"
+      ]
+    },
+    "BACK-MESH-CONDITION": {
+      "title": "Estado de la malla del respaldo",
+      "instructions": "Revisa la malla por si tiene hoyos, hilos corridos, partes flojas o bordes salidos del marco.",
+      "photo_guidance": "Toma una foto de todo el respaldo de forma recta (sin ángulo), por delante o por detrás.",
+      "inspection_points": [
+        "Sin hoyos ni hilos corridos",
+        "Malla tensa",
+        "Bordes bien metidos en el marco"
+      ],
+      "acceptance_criteria": [
+        "Malla intacta y tensa"
+      ],
+      "possible_findings": [
+        "Hoyo o hilo corrido en la malla",
+        "Malla floja",
+        "Borde de la malla desprendido"
+      ],
+      "recommended_actions": [
+        "Repórtalo para reemplazar la malla o el respaldo"
+      ],
+      "visual_limitations": [
+        "La tensión de la malla solo se puede juzgar de forma aproximada en una foto."
+      ]
+    },
+    "BACK-FRAME-CONDITION": {
+      "title": "Estado del marco del respaldo",
+      "instructions": "Revisa el marco del respaldo, sobre todo las esquinas y el travesaño inferior, por si tiene grietas o deformaciones.",
+      "photo_guidance": "Toma una foto de la parte trasera del respaldo, incluyendo el travesaño inferior.",
+      "inspection_points": [
+        "Sin grietas en las esquinas",
+        "Sin deformaciones",
+        "Logotipo/marca documentado"
+      ],
+      "acceptance_criteria": [
+        "Marco intacto"
+      ],
+      "possible_findings": [
+        "Marco agrietado",
+        "Marco deformado"
+      ],
+      "visual_limitations": [
+        "Es posible que las grietas muy finas no se vean en una foto."
+      ]
+    },
+    "ARMREST-L-SECURE": {
+      "title": "Descansabrazos izquierdo firme",
+      "instructions": "Empuja y jala el descansabrazos izquierdo; confirma que está firme, sin grietas y sin bordes filosos.",
+      "inspection_points": [
+        "Firme",
+        "Sin grietas",
+        "Sin bordes filosos"
+      ],
+      "acceptance_criteria": [
+        "Descansabrazos firme e intacto"
+      ],
+      "possible_findings": [
+        "Descansabrazos flojo",
+        "Descansabrazos agrietado"
+      ]
+    },
+    "ARMREST-R-SECURE": {
+      "title": "Descansabrazos derecho firme",
+      "instructions": "Empuja y jala el descansabrazos derecho; confirma que está firme, sin grietas y sin bordes filosos.",
+      "inspection_points": [
+        "Firme",
+        "Sin grietas",
+        "Sin bordes filosos"
+      ],
+      "acceptance_criteria": [
+        "Descansabrazos firme e intacto"
+      ],
+      "possible_findings": [
+        "Descansabrazos flojo",
+        "Descansabrazos agrietado"
+      ]
+    },
+    "FOOT-RING-SECURE": {
+      "title": "Aro reposapiés y rayos",
+      "instructions": "Revisa el aro reposapiés y sus tres rayos por si tienen grietas, y confirma con la mano que el aro no se mueve sobre la columna.",
+      "photo_guidance": "Toma una foto del aro desde abajo o de lado, de modo que se vean los rayos y el collarín.",
+      "inspection_points": [
+        "Aro sin grietas",
+        "Los 3 rayos intactos",
+        "El aro no se resbala hacia abajo por la columna"
+      ],
+      "acceptance_criteria": [
+        "Aro intacto y fijo"
+      ],
+      "possible_findings": [
+        "Aro o rayo agrietado",
+        "El aro se resbala sobre la columna"
+      ],
+      "visual_limitations": [
+        "Con una foto no se puede juzgar qué tan firme está sujeto el aro."
+      ]
+    },
+    "GAS-LIFT-FUNCTION": {
+      "title": "El ajuste de altura funciona",
+      "instructions": "Sube y baja el asiento con la palanca; confirma que se mueve y que mantiene la altura sin hundirse.",
+      "inspection_points": [
+        "Sube",
+        "Baja",
+        "Mantiene la altura"
+      ],
+      "acceptance_criteria": [
+        "Se ajusta y mantiene la altura"
+      ],
+      "possible_findings": [
+        "El asiento se hunde",
+        "La palanca no funciona"
+      ]
+    },
+    "MECHANISM-UNDERSIDE": {
+      "title": "Mecanismo y tornillos bajo el asiento",
+      "instructions": "Mira debajo del asiento: el mecanismo y su placa de montaje deben estar presentes y sin grietas, y los tornillos visibles deben estar en su lugar.",
+      "photo_guidance": "Foto de cerca del mecanismo y de la placa de montaje, tomada desde abajo.",
+      "inspection_points": [
+        "Mecanismo presente",
+        "Placa de montaje sin grietas",
+        "Tornillos visibles en su lugar"
+      ],
+      "acceptance_criteria": [
+        "No falta ningún tornillo visible",
+        "Sin grietas"
+      ],
+      "possible_findings": [
+        "Falta un tornillo",
+        "Carcasa del mecanismo o placa agrietada"
+      ],
+      "visual_limitations": [
+        "El apriete de los tornillos y el estado interno del mecanismo no se pueden verificar con una foto."
+      ]
+    },
+    "UNDERSIDE-LABEL": {
+      "title": "Etiqueta de identificación documentada",
+      "instructions": "Toma una foto de la etiqueta que está debajo del asiento, de modo que se pueda leer, para tener un registro (trazabilidad).",
+      "photo_guidance": "Foto de cerca y nítida de la etiqueta, que ocupe casi todo el encuadre.",
+      "inspection_points": [
+        "Etiqueta presente",
+        "Etiqueta legible en la foto"
+      ],
+      "acceptance_criteria": [
+        "Etiqueta documentada"
+      ],
+      "possible_findings": [
+        "Falta la etiqueta",
+        "Etiqueta ilegible"
+      ],
+      "visual_limitations": [
+        "El contenido de la etiqueta se registra tal como está y no se verifica contra ninguna base de datos."
+      ]
+    },
+    "BASE-CONDITION": {
+      "title": "Base de cinco puntas",
+      "instructions": "Revisa los cinco brazos de la base y la pieza central por si tienen grietas o deformaciones.",
+      "photo_guidance": "Toma una foto de la base de lado o un poco desde arriba, de modo que se vean todos los brazos.",
+      "inspection_points": [
+        "Los 5 brazos intactos",
+        "Sin grietas en la pieza central"
+      ],
+      "acceptance_criteria": [
+        "Base intacta"
+      ],
+      "possible_findings": [
+        "Brazo de la base agrietado",
+        "Pieza central agrietada"
+      ],
+      "visual_limitations": [
+        "Las grietas en la parte de abajo de los brazos no se ven desde arriba."
+      ]
+    },
+    "CASTERS-FUNCTION": {
+      "title": "Rodajas completas y rodando",
+      "instructions": "Confirma que están las cinco rodajas, que ruedan y giran libremente, y que ninguna está dañada.",
+      "inspection_points": [
+        "5 de 5 presentes",
+        "Ruedan y giran libremente"
+      ],
+      "acceptance_criteria": [
+        "Todas las rodajas presentes y funcionando"
+      ],
+      "possible_findings": [
+        "Falta una rodaja",
+        "Una rodaja no rueda"
+      ]
+    }
+  },
+  "documents": {
+    "DWG-UTEP-GA": "Plano general (aproximado)",
+    "REF-FRONT": "Foto de referencia: frente",
+    "REF-REAR": "Foto de referencia: parte trasera",
+    "REF-SIDE": "Foto de referencia: costado",
+    "REF-UNDER": "Foto de referencia: parte de abajo",
+    "REF-MECH": "Foto de referencia: acercamiento del mecanismo"
+  },
+  "demo_evidence": {
+    "DEMO-RW-SEAT": {
+      "caption": "Asiento y respaldo, vista de frente (foto real)",
+      "source": "Fotografía real de la silla de la sede, tomada por el equipo en la sede del evento el 2026-10-24. Preparada para el modo demo (no se tomó durante esta inspección)."
+    },
+    "DEMO-RW-MESH": {
+      "caption": "Malla del respaldo, vista trasera (foto real)",
+      "source": "Fotografía real de la silla de la sede, tomada por el equipo en la sede del evento el 2026-10-24. Preparada para el modo demo (no se tomó durante esta inspección)."
+    },
+    "DEMO-RW-FRAME": {
+      "caption": "Marco del respaldo, vista trasera (foto real)",
+      "source": "Fotografía real de la silla de la sede, tomada por el equipo en la sede del evento el 2026-10-24. Preparada para el modo demo (no se tomó durante esta inspección)."
+    },
+    "DEMO-RW-RING": {
+      "caption": "Aro reposapiés y rayos vistos desde abajo (foto real)",
+      "source": "Fotografía real de la silla de la sede, tomada por el equipo en la sede del evento el 2026-10-24. Preparada para el modo demo (no se tomó durante esta inspección)."
+    },
+    "DEMO-RW-MECH": {
+      "caption": "Acercamiento del mecanismo bajo el asiento (foto real)",
+      "source": "Fotografía real de la silla de la sede, tomada por el equipo en la sede del evento el 2026-10-24. Preparada para el modo demo (no se tomó durante esta inspección)."
+    },
+    "DEMO-RW-LABEL": {
+      "caption": "Etiqueta y mecanismo bajo el asiento (foto real)",
+      "source": "Fotografía real de la silla de la sede, tomada por el equipo en la sede del evento el 2026-10-24. Preparada para el modo demo (no se tomó durante esta inspección)."
+    },
+    "DEMO-RW-BASE": {
+      "caption": "Base y rodajas, vista lateral (foto real)",
+      "source": "Fotografía real de la silla de la sede, tomada por el equipo en la sede del evento el 2026-10-24. Preparada para el modo demo (no se tomó durante esta inspección)."
+    }
+  },
+  "locations": {
+    "UTEP-CHAIR-RW-01": "Sala de presentaciones (la silla real que se usa en la demostración en vivo)"
+  }
+}

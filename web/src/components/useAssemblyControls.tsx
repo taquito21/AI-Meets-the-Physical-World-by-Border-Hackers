@@ -15,7 +15,7 @@ export function useAssemblyControls(components: Component[] | undefined, selecte
     <ExplodeControl value={explode} onChange={setExplode}
       articulationLabel={articulated ? articulated.articulation?.label ?? articulated.name : null}
       articulation={articulation} onArticulation={setArticulation}
-      onFocus={fit} focusLabel={selectedId ? "Zoom to part" : "Reset view"} />
+      onFocus={fit} partSelected={!!selectedId} />
   );
   return { viewerProps, controls, setArticulation };
 }

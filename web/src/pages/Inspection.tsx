@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowDown, ArrowLeft, ArrowRight, Camera, CircleCheck, FileText, Flag, GraduationCap, Hand, Info, ListChecks, Pointer,
+  RefreshCw, Send, ShieldAlert, SkipForward, TriangleAlert, Undo2, type LucideIcon,
+} from "lucide-react";
 import { api, ApiError, type InspectionState, type Issue, type Item, type Revision } from "../api";
 import AssemblyViewer from "../components/AssemblyViewer";
 import { StatusLegend } from "../components/ExplodeControl";
 import { TechSheet } from "../components/TechSheet";
 import { useAssemblyControls } from "../components/useAssemblyControls";
 import RequirementCard from "../components/RequirementCard";
-import { Chip, COMPONENT_LABEL, COMPONENT_TONE, ErrorBox, INSPECTION_LABEL as STATUS_LABEL, INSPECTION_TONE, Lightbox, ModeBadge, Progress, usePolling } from "../components/ui";
+import { COMPONENT_ICON, COMPONENT_TONE, Chip, ComponentChip, ErrorBox, INSPECTION_LABEL as STATUS_LABEL, InspectionChip, Lightbox, ModeBadge, Progress, usePolling } from "../components/ui";
+import { t } from "../i18n";
 import { useSession } from "../session";
 
 const FINAL = ["passed", "failed", "not_applicable"];
@@ -14,9 +19,17 @@ const FINAL = ["passed", "failed", "not_applicable"];
 // The single next thing to do for a check, in plain words.
 function actionFor(it: Item): string {
   const photo = it.requirement_snapshot.evidence_type !== "manual_confirmation";
-  if (it.status === "more_evidence_requested") return photo ? "Take a new photo, then choose a result." : "Check it again, then choose a result.";
-  if (it.status === "evidence_submitted") return "Read the AI feedback, look at the part yourself, then choose a result.";
-  return photo ? "Take a photo, then choose a result." : "Check it in person, then choose a result.";
+  if (it.status === "more_evidence_requested") return photo ? t("Take a new photo, then choose a result.") : t("Check it again, then choose a result.");
+  if (it.status === "evidence_submitted") return t("Read the AI feedback, look at the part yourself, then choose a result.");
+  return photo ? t("Take a photo, then choose a result.") : t("Check it in person, then choose a result.");
+}
+
+// The same action as a picture: camera = take a photo, hand = check it in person, pointer = your turn to choose.
+function actionIcon(it: Item): LucideIcon {
+  const photo = it.requirement_snapshot.evidence_type !== "manual_confirmation";
+  if (it.status === "more_evidence_requested") return photo ? RefreshCw : Hand;
+  if (it.status === "evidence_submitted") return Pointer;
+  return photo ? Camera : Hand;
 }
 
 export default function Inspection() {
@@ -55,11 +68,11 @@ export default function Inspection() {
   usePolling(refresh, 5000, [id]); // picks up supervisor decisions made on another device
   useEffect(() => {
     if (!scrollTo) return;
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       document.getElementById(scrollTo)?.scrollIntoView({ behavior: "smooth", block: "start" });
       setScrollTo(null);
     }, 80);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [scrollTo, selected]);
 
   const editable = !!state && ["in_progress", "changes_requested"].includes(state.inspection.status);
@@ -69,7 +82,7 @@ export default function Inspection() {
   const { viewerProps, controls } = useAssemblyControls(rev?.components, selected);
 
   if (loadErr) return <div className="page"><ErrorBox error={{ message: loadErr }} /></div>;
-  if (!state || !rev) return <div className="page muted">Loading inspection…</div>;
+  if (!state || !rev) return <div className="page muted">{t("Loading inspection…")}</div>;
 
   const select = (cid: string | null, target?: string) => {
     setSelected(cid);
@@ -109,7 +122,13 @@ export default function Inspection() {
     }
   };
   const onIssue = (i: Issue) => i.component_id && select(i.component_id, i.item_id ? `req-${i.item_id}` : undefined);
+  // Submit errors name each check in English; show the title the page already has in the reader's language.
+  const shownSubmitErr = submitErr && {
+    message: submitErr.message,
+    issues: submitErr.issues?.map((i) => ({ ...i, title: state.items.find((it) => it.id === i.item_id)?.requirement_snapshot.title ?? i.title })),
+  };
   const findingsForComp = state.findings.filter((f) => f.component_id === selected);
+  const NextIcon = nextItem ? actionIcon(nextItem) : null;
   const status = state.inspection.status;
   const compDone = items.length > 0 && items.every((i) => FINAL.includes(i.status));
 
@@ -123,7 +142,7 @@ export default function Inspection() {
           </div>
           <div className="row">
             <ModeBadge mode={state.inspection.mode} />
-            <Chip tone={INSPECTION_TONE[status]}>{STATUS_LABEL[status] ?? status.replace("_", " ")}</Chip>
+            <InspectionChip status={status} />
           </div>
         </div>
         {rev.assembly_url ? (
@@ -134,49 +153,62 @@ export default function Inspection() {
             <StatusLegend />
           </>
         ) : (
-          <div className="viewer-none">This equipment has no 3D model. Choose a part from the list.</div>
+          <div className="viewer-none with-icon"><Info aria-hidden />{t("This equipment has no 3D model. Choose a part from the list.")}</div>
         )}
       </div>
 
       <div className="split-panel">
-        {editable && nextItem && (
+        {editable && nextItem && NextIcon && (
           <section className="coach">
-            <div className="coach-step">Step {requiredItems.indexOf(nextItem) + 1} of {requiredItems.length}</div>
-            <div className="coach-title">{stepTitle(nextItem)}</div>
-            <div className="coach-action">{actionFor(nextItem)}</div>
+            <div className="coach-step">{t("Step {n} of {total}", { n: requiredItems.indexOf(nextItem) + 1, total: requiredItems.length })}</div>
+            <div className="coach-main">
+              <span className="coach-icon" aria-hidden><NextIcon /></span>
+              <div>
+                <div className="coach-title">{stepTitle(nextItem)}</div>
+                <div className="coach-action">{actionFor(nextItem)}</div>
+              </div>
+            </div>
             <button className="btn btn-primary btn-big" onClick={goNext}>
-              {selected === nextItem.component_id ? "Show me where" : "Go to this step"}
+              {selected === nextItem.component_id ? <>{t("Show me where")} <ArrowDown aria-hidden /></> : <>{t("Go to this step")} <ArrowRight aria-hidden /></>}
             </button>
           </section>
         )}
         {editable && !nextItem && (
           <section className="coach coach-done">
-            <div className="coach-title">All required checks are done ✓</div>
-            <div className="coach-action">
-              Send the inspection so a supervisor can review it.
-              {optionalLeft > 0 && ` ${optionalLeft} optional check${optionalLeft > 1 ? "s are" : " is"} left; you can skip ${optionalLeft > 1 ? "them" : "it"}.`}
+            <div className="coach-main">
+              <span className="coach-icon" aria-hidden><CircleCheck /></span>
+              <div className="coach-title">{t("All required checks are done")}</div>
             </div>
-            <button className="btn btn-green btn-big" disabled={submitting} onClick={submit}>{submitting ? "Sending…" : "Send for review"}</button>
+            <div className="coach-action">
+              {t("Send the inspection so a supervisor can review it.")}
+              {optionalLeft > 0 && " " + (optionalLeft > 1
+                ? t("{n} optional checks are left; you can skip them.", { n: optionalLeft })
+                : t("{n} optional check is left; you can skip it.", { n: optionalLeft }))}
+            </div>
+            <button className="btn btn-green btn-big" disabled={submitting} onClick={submit}>{submitting ? t("Sending…") : <><Send aria-hidden />{t("Send for review")}</>}</button>
           </section>
         )}
         <Progress done={state.progress.required_done} total={state.progress.required_total} />
         {state.inspection.mode === "demo" && (
-          <div className="notice notice-demo"><b>Practice mode.</b> You can use photos prepared in advance. They are always labelled as practice and never count as a real inspection.</div>
+          <div className="notice notice-demo with-icon-block"><GraduationCap aria-hidden /><span><b>{t("Practice mode.")}</b> {t("You can use photos prepared in advance. They are always labelled as practice and never count as a real inspection.")}</span></div>
         )}
         {rev.procedure?.safety_notes?.length > 0 && !selected && (
-          <div className="notice small"><b>Before you start:</b> {rev.procedure.safety_notes.join(" ")}</div>
+          <div className="notice small with-icon-block"><ShieldAlert aria-hidden className="ico-amber" /><span><b>{t("Before you start:")}</b> {rev.procedure.safety_notes.join(" ")}</span></div>
         )}
         {!editable && (
-          <div className="notice">
-            {status === "submitted" ? "Sent for review. A supervisor will check it; you don't need to do anything else."
-              : status === "approved" ? "A supervisor approved this inspection."
-              : status === "rejected" ? "A supervisor rejected this inspection."
-              : `This inspection is ${STATUS_LABEL[status] ?? status} and can't be changed.`}{" "}
-            <Link to={`/inspections/${id}/summary`}>See the report</Link>
+          <div className="notice with-icon-block">
+            <Info aria-hidden />
+            <span>
+            {status === "submitted" ? t("Sent for review. A supervisor will check it; you don't need to do anything else.")
+              : status === "approved" ? t("A supervisor approved this inspection.")
+              : status === "rejected" ? t("A supervisor rejected this inspection.")
+              : t("This inspection is {status} and can't be changed.", { status: t(STATUS_LABEL[status] ?? status) })}{" "}
+            <Link to={`/inspections/${id}/summary`}>{t("See the report")}</Link>
+            </span>
           </div>
         )}
         {status === "changes_requested" && (
-          <div className="notice">Your supervisor asked for changes: “{state.reviews[state.reviews.length - 1]?.comments}”. The step above shows what to redo.</div>
+          <div className="notice with-icon-block"><Undo2 aria-hidden className="ico-amber" /><span>{t("Your supervisor asked for changes: “{comments}”. The step above shows what to redo.", { comments: state.reviews[state.reviews.length - 1]?.comments ?? "" })}</span></div>
         )}
 
         {comp ? (
@@ -184,14 +216,12 @@ export default function Inspection() {
             <div className="card-head">
               <div>
                 <h2>{comp.name}</h2>
-                {comp.quantity > 1 && <div className="muted small">{comp.quantity} pieces</div>}
+                {comp.quantity > 1 && <div className="muted small">{t("{n} pieces", { n: comp.quantity })}</div>}
               </div>
-              <Chip tone={COMPONENT_TONE[state.component_status[comp.id] ?? "not_inspected"]}>
-                {COMPONENT_LABEL[state.component_status[comp.id] ?? "not_inspected"]}
-              </Chip>
+              <ComponentChip status={state.component_status[comp.id] ?? "not_inspected"} />
             </div>
             <p className="small">{comp.description}</p>
-            {items.length === 0 && <p className="muted small">Nothing to check on this part.</p>}
+            {items.length === 0 && <p className="muted small">{t("Nothing to check on this part.")}</p>}
             {items.map((it) => (
               <RequirementCard key={it.id} item={it} inspectionId={id} editable={editable} actor={name}
                 onState={setState} onOpenImage={setLightbox} onRefresh={refresh}
@@ -199,19 +229,19 @@ export default function Inspection() {
             ))}
             {findingsForComp.map((f) => (
               <div key={f.id} className="finding-inline">
-                <Chip tone="red">Problem reported</Chip> {f.description}
+                <Chip tone="red" icon={TriangleAlert}>{t("Problem reported")}</Chip> {f.description}
               </div>
             ))}
             {editable && compDone && (
               <div className="next-bar">
                 {nextItem
-                  ? <><span>✓ This part is done.</span><button className="btn btn-primary" onClick={goNext}>Next: {partName(nextItem.component_id)} →</button></>
-                  : <><span>✓ All required checks are done.</span><button className="btn btn-green" disabled={submitting} onClick={submit}>Send for review</button></>}
+                  ? <><span className="with-icon"><CircleCheck aria-hidden />{t("This part is done.")}</span><button className="btn btn-primary" onClick={goNext}>{t("Next: {part}", { part: partName(nextItem.component_id) })} <ArrowRight aria-hidden /></button></>
+                  : <><span className="with-icon"><CircleCheck aria-hidden />{t("All required checks are done.")}</span><button className="btn btn-green" disabled={submitting} onClick={submit}><Send aria-hidden />{t("Send for review")}</button></>}
               </div>
             )}
             <details className="techsheet-wrap">
-              <summary>Technical details and documents</summary>
-              <div className="muted small">Part number {comp.part_number} · ID {comp.id}</div>
+              <summary><Info aria-hidden />{t("Technical details and documents")}</summary>
+              <div className="muted small">{t("Part number {number} · ID {id}", { number: comp.part_number, id: comp.id })}</div>
               <TechSheet comp={comp} />
               <div className="row small">
                 {rev.documents.filter((d) => comp.documents.includes(d.id)).map((d) => (
@@ -220,23 +250,24 @@ export default function Inspection() {
               </div>
             </details>
             <div className="row">
-              <button className="btn btn-ghost" onClick={() => select(null)}>← All parts</button>
-              <button className="btn btn-ghost" onClick={nextComponent}>Another part</button>
+              <button className="btn btn-ghost" onClick={() => select(null)}><ArrowLeft aria-hidden />{t("All parts")}</button>
+              <button className="btn btn-ghost" onClick={nextComponent}><SkipForward aria-hidden />{t("Another part")}</button>
             </div>
           </section>
         ) : (
           <section className="card">
-            <h2>Parts to check</h2>
-            <p className="muted small">Follow the step above, or tap any part here or on the 3D model.</p>
+            <h2 className="with-icon"><ListChecks aria-hidden />{t("Parts to check")}</h2>
+            <p className="muted small">{t("Follow the step above, or tap any part here or on the 3D model.")}</p>
             <ul className="list comp-list">
               {compOrder.map((c) => {
                 const st = state.component_status[c.id] ?? "not_inspected";
                 const its = state.items.filter((i) => i.component_id === c.id);
+                const StatusIcon = COMPONENT_ICON[st];
                 return (
                   <li key={c.id} onClick={() => select(c.id)}>
-                    <span className={`dot dot-${COMPONENT_TONE[st]}`} />
+                    <StatusIcon aria-hidden className={`ico-${COMPONENT_TONE[st]}`} />
                     <span className="grow"><b>{c.name}</b></span>
-                    <span className="small muted">{its.filter((i) => FINAL.includes(i.status)).length} of {its.length} done</span>
+                    <span className="small muted">{t("{done} of {total} done", { done: its.filter((i) => FINAL.includes(i.status)).length, total: its.length })}</span>
                   </li>
                 );
               })}
@@ -246,23 +277,25 @@ export default function Inspection() {
 
         {editable && (
           <section className="card">
-            <h2>Finish</h2>
+            <h2 className="with-icon"><Flag aria-hidden />{t("Finish")}</h2>
             {state.readiness.ready
-              ? <p className="small">Everything required is done. You can send it now.</p>
-              : <p className="small muted">{state.readiness.blocking.length} required check{state.readiness.blocking.length === 1 ? "" : "s"} still to do. If you try to send now, the app shows you which ones.</p>}
+              ? <p className="small">{t("Everything required is done. You can send it now.")}</p>
+              : <p className="small muted">{state.readiness.blocking.length === 1
+                ? t("{n} required check still to do. If you try to send now, the app shows you which ones.", { n: state.readiness.blocking.length })
+                : t("{n} required checks still to do. If you try to send now, the app shows you which ones.", { n: state.readiness.blocking.length })}</p>}
             {state.readiness.warnings.length > 0 && (
               <details className="small">
-                <summary>Notes for the supervisor ({state.readiness.warnings.length})</summary>
-                <ul className="warn-list">{state.readiness.warnings.map((w, i) => <li key={i}>{w.title ? <b>{w.title}: </b> : null}{w.reason}</li>)}</ul>
+                <summary>{t("Notes for the supervisor ({n})", { n: state.readiness.warnings.length })}</summary>
+                <ul className="warn-list">{state.readiness.warnings.map((w, i) => <li key={i}>{w.title ? <b>{w.title}: </b> : null}{t(w.reason)}</li>)}</ul>
               </details>
             )}
             <button className="btn btn-primary" disabled={submitting} onClick={submit}>
-              {submitting ? "Sending…" : "Send for review"}
+              {submitting ? t("Sending…") : <><Send aria-hidden />{t("Send for review")}</>}
             </button>
-            <div id="submit-error"><ErrorBox error={submitErr} onSelect={onIssue} /></div>
+            <div id="submit-error"><ErrorBox error={shownSubmitErr} onSelect={onIssue} /></div>
           </section>
         )}
-        <Link className="btn btn-ghost" to={`/inspections/${id}/summary`}>See the report</Link>
+        <Link className="btn btn-ghost" to={`/inspections/${id}/summary`}><FileText aria-hidden />{t("See the report")}</Link>
       </div>
       <Lightbox src={lightbox} onClose={() => setLightbox(null)} />
     </div>
