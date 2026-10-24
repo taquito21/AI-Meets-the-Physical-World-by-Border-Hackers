@@ -1,0 +1,612 @@
+{
+  "language": "es",
+  "note": "Spanish display text for this package. Identifiers, part numbers, units and values are unchanged. Not part of the package content hash.",
+  "product": {
+    "product_name": "Tablero de control industrial",
+    "product_description": "Tablero de control industrial de baja tensión: gabinete para montaje en pared con interruptor principal (seccionador), interruptores termomagnéticos, fuente de alimentación de 24 VDC, PLC, contactores, relevadores y bloques de terminales. Modelo representativo simplificado para una demostración de inspección visual y de documentación. No es un diseño eléctrico certificado y no declara cumplimiento con ninguna norma.",
+    "asset_category": "Tablero de control industrial",
+    "provenance": "Preparado por el equipo del hackathon para demostrar una segunda industria. El fabricante del tablero es ficticio; todos los valores nominales son de demostración y no vienen de hojas de datos reales."
+  },
+  "procedure": {
+    "title": "ICP-001 - Inspección visual y de documentación",
+    "scope": "Solo inspección visual y de documentación. No incluye pruebas eléctricas, mediciones, trabajo con el equipo energizado ni verificación de cumplimiento con ninguna norma.",
+    "safety_notes": [
+      "Solo personal calificado y autorizado puede abrir el tablero. Sigue las reglas de bloqueo y etiquetado del sitio.",
+      "Este procedimiento nunca establece que el tablero esté desenergizado, que sea seguro ni que esté correctamente cableado.",
+      "No toques conductores ni terminales durante la inspección."
+    ]
+  },
+  "components": {
+    "ICP-001-ENCLOSURE": {
+      "name": "Gabinete",
+      "description": "Cuerpo del gabinete para montaje en pared: fondo, costados, parte superior y parte inferior.",
+      "specs": [
+        {
+          "label": "Dimensiones (ancho x alto x fondo)",
+          "value": "600 x 800 x 250 mm"
+        },
+        {
+          "label": "Grado de protección contra ingreso",
+          "value": "IP54"
+        }
+      ]
+    },
+    "ICP-001-DOOR": {
+      "name": "Puerta del gabinete",
+      "description": "Puerta frontal con bisagras, con manija y etiqueta de advertencia de riesgo eléctrico.",
+      "specs": [
+        {
+          "label": "Lado de las bisagras",
+          "value": "Izquierdo"
+        },
+        {
+          "label": "Etiqueta de advertencia",
+          "value": "Símbolo de riesgo eléctrico"
+        }
+      ]
+    },
+    "ICP-001-MOUNTING-PLATE": {
+      "name": "Placa de montaje",
+      "description": "Placa desmontable que sostiene los rieles DIN, las canaletas y los dispositivos.",
+      "specs": [
+        {
+          "label": "Espesor",
+          "value": "2 mm"
+        }
+      ]
+    },
+    "ICP-001-MAIN-SWITCH": {
+      "name": "Interruptor principal (seccionador)",
+      "description": "Seccionador principal rotativo con manija roja sobre placa amarilla.",
+      "specs": [
+        {
+          "label": "Corriente nominal",
+          "value": "40 A"
+        },
+        {
+          "label": "Polos",
+          "value": "3"
+        }
+      ]
+    },
+    "ICP-001-MCB": {
+      "name": "Interruptores termomagnéticos",
+      "description": "Cuatro interruptores termomagnéticos miniatura que protegen los circuitos de salida.",
+      "specs": [
+        {
+          "label": "Corriente nominal / curva",
+          "value": "C10"
+        },
+        {
+          "label": "Polos",
+          "value": "1"
+        }
+      ]
+    },
+    "ICP-001-PSU-01": {
+      "name": "Fuente de alimentación de 24 VDC",
+      "description": "Fuente de alimentación conmutada para riel DIN, para el circuito de control.",
+      "specs": [
+        {
+          "label": "Salida nominal",
+          "value": "24 VDC"
+        },
+        {
+          "label": "Corriente nominal de salida",
+          "value": "5 A"
+        }
+      ]
+    },
+    "ICP-001-PLC-01": {
+      "name": "PLC (CPU + módulo de E/S)",
+      "description": "Controlador lógico programable: CPU con un módulo de expansión de entradas/salidas (E/S) digitales.",
+      "specs": [
+        {
+          "label": "Alimentación",
+          "value": "24 VDC"
+        },
+        {
+          "label": "E/S digitales",
+          "value": "16 entradas (DI) / 16 salidas (DO)"
+        }
+      ]
+    },
+    "ICP-001-CONTACTORS": {
+      "name": "Contactores K1, K2",
+      "description": "Contactores de motor para los dos accionamientos de salida.",
+      "specs": [
+        {
+          "label": "Voltaje de bobina",
+          "value": "24 VDC"
+        },
+        {
+          "label": "Corriente nominal de operación (AC-3)",
+          "value": "9 A"
+        }
+      ]
+    },
+    "ICP-001-RELAYS": {
+      "name": "Relevadores auxiliares",
+      "description": "Relevadores de interfaz enchufables, montados en bases.",
+      "specs": [
+        {
+          "label": "Voltaje de bobina",
+          "value": "24 VDC"
+        }
+      ]
+    },
+    "ICP-001-TERMINALS": {
+      "name": "Bloques de terminales X1",
+      "description": "Regleta de terminales (clemas) de campo X1: 14 terminales de paso y 2 terminales de tierra física de protección (verde-amarillo).",
+      "specs": [
+        {
+          "label": "Sección transversal del conductor",
+          "value": "2.5 mm²"
+        },
+        {
+          "label": "Terminales PE (tierra física)",
+          "value": "2"
+        }
+      ]
+    },
+    "ICP-001-CABLE-DUCTS": {
+      "name": "Canaletas para cables",
+      "description": "Tres canaletas ranuradas horizontales y dos verticales para el cableado.",
+      "specs": [
+        {
+          "label": "Tamaño",
+          "value": "40 x 60 mm"
+        }
+      ]
+    },
+    "ICP-001-DIN-RAILS": {
+      "name": "Rieles DIN",
+      "description": "Tres rieles tipo omega de 35 mm, uno por cada fila de dispositivos.",
+      "specs": [
+        {
+          "label": "Perfil",
+          "value": "35 x 7.5 mm"
+        }
+      ]
+    },
+    "ICP-001-WIRING": {
+      "name": "Cableado interno (representativo)",
+      "description": "Recorridos de cable representativos entre dispositivos y canaletas, incluido un conductor de tierra física de protección. No es un diagrama de cableado.",
+      "specs": [
+        {
+          "label": "Color del cableado de control",
+          "value": "Azul (24 VDC)"
+        },
+        {
+          "label": "Color del conductor PE (tierra física)",
+          "value": "Verde-amarillo"
+        }
+      ]
+    },
+    "ICP-001-LABELS": {
+      "name": "Etiquetas de identificación de dispositivos",
+      "description": "Etiquetas de los dispositivos: Q1 interruptor principal, G1 fuente de alimentación, A1 PLC, K1, K2, X1 terminales.",
+      "specs": [
+        {
+          "label": "Etiquetas",
+          "value": "Q1, G1, A1, K1, K2, X1"
+        }
+      ]
+    },
+    "ICP-001-PE-BAR": {
+      "name": "Barra de tierra física (PE)",
+      "description": "Barra colectora de tierra física de protección (PE), unida eléctricamente al gabinete.",
+      "specs": [
+        {
+          "label": "Puntos de conexión",
+          "value": "8"
+        }
+      ]
+    }
+  },
+  "requirements": {
+    "ENCLOSURE-EXTERIOR": {
+      "title": "Estado exterior del gabinete",
+      "instructions": "Revisa el exterior del gabinete en busca de daños por golpes, corrosión, fijaciones faltantes y señales de entrada de agua o polvo.",
+      "photo_guidance": "Toma una foto de todo el gabinete de frente, con la puerta cerrada, incluyendo las entradas de cable de la parte de abajo si se ven.",
+      "inspection_points": [
+        "Sin abolladuras ni deformaciones",
+        "Sin corrosión",
+        "Entradas de cable cerradas",
+        "Sin rastros visibles de entrada de agua o polvo"
+      ],
+      "acceptance_criteria": [
+        "Gabinete intacto",
+        "Sin corrosión",
+        "Sin entradas abiertas"
+      ],
+      "possible_findings": [
+        "Daño por golpe",
+        "Corrosión",
+        "Prensacables abierto o faltante",
+        "Señales de entrada de agua"
+      ],
+      "risks": [
+        "Pérdida de la protección contra entrada de polvo y agua"
+      ],
+      "recommended_actions": [
+        "Reporta a mantenimiento",
+        "Sella las entradas que no se usan"
+      ],
+      "visual_limitations": [
+        "El grado de protección IP no se puede verificar con una fotografía."
+      ]
+    },
+    "DOOR-LABEL-LATCH": {
+      "title": "Puerta, cerradura y etiqueta de advertencia",
+      "instructions": "Revisa que la puerta cierre y quede asegurada con su cerradura, que el empaque esté intacto y que la etiqueta de advertencia de riesgo eléctrico esté presente y se pueda leer.",
+      "photo_guidance": "Toma una foto de la etiqueta de advertencia de la puerta de forma que el símbolo y el texto se puedan leer.",
+      "inspection_points": [
+        "Etiqueta de advertencia presente y legible",
+        "La puerta queda asegurada con la cerradura",
+        "Empaque sin daños"
+      ],
+      "acceptance_criteria": [
+        "Etiqueta presente y legible",
+        "La puerta cierra por completo"
+      ],
+      "possible_findings": [
+        "Etiqueta de advertencia faltante o ilegible",
+        "Empaque dañado",
+        "La puerta no queda asegurada con la cerradura"
+      ],
+      "risks": [
+        "Acceso sin advertencia a partes energizadas"
+      ],
+      "recommended_actions": [
+        "Reemplaza la etiqueta de advertencia",
+        "Repara la cerradura"
+      ],
+      "visual_limitations": [
+        "La compresión del empaque no se puede verificar con una fotografía."
+      ]
+    },
+    "MAIN-SWITCH-ID": {
+      "title": "Identificación y manija del interruptor principal",
+      "instructions": "Revisa que el interruptor principal esté identificado (Q1), que la manija esté intacta y que las posiciones ON/OFF (encendido/apagado) estén marcadas.",
+      "photo_guidance": "Foto de frente del interruptor principal donde se vean la manija, la placa y la etiqueta.",
+      "inspection_points": [
+        "Etiqueta Q1 visible",
+        "Manija sin daños",
+        "Marcas de posición visibles"
+      ],
+      "acceptance_criteria": [
+        "Identificación presente",
+        "Manija intacta"
+      ],
+      "possible_findings": [
+        "Falta la identificación",
+        "Manija rota",
+        "Faltan las marcas de posición"
+      ],
+      "risks": [
+        "Se usa el punto de desconexión (seccionamiento) equivocado"
+      ],
+      "recommended_actions": [
+        "Coloca la etiqueta de identificación",
+        "Reemplaza la manija"
+      ],
+      "visual_limitations": [
+        "La posición del interruptor no comprueba que el circuito esté desenergizado."
+      ]
+    },
+    "MCB-CIRCUIT-ID": {
+      "title": "Identificación y estado de los interruptores termomagnéticos",
+      "instructions": "Revisa que cada interruptor termomagnético tenga una etiqueta de circuito y que no muestre daños visibles ni decoloración por calor.",
+      "photo_guidance": "Toma una foto de frente a la fila de interruptores termomagnéticos, lo bastante cerca para leer las etiquetas.",
+      "inspection_points": [
+        "Etiquetas de circuito presentes",
+        "Carcasas sin grietas",
+        "Sin decoloración"
+      ],
+      "acceptance_criteria": [
+        "4 de 4 etiquetados",
+        "Sin daños visibles"
+      ],
+      "possible_findings": [
+        "Falta la etiqueta de circuito",
+        "Carcasa agrietada",
+        "Sospecha de sobrecalentamiento (decoloración)"
+      ],
+      "risks": [
+        "Se desconecta el circuito equivocado",
+        "Sobrecalentamiento"
+      ],
+      "recommended_actions": [
+        "Etiqueta los circuitos",
+        "Reporta la decoloración a un electricista"
+      ],
+      "visual_limitations": [
+        "Las características de disparo y los valores nominales no se pueden verificar con una fotografía."
+      ]
+    },
+    "PSU-VISUAL": {
+      "title": "Revisión visual de la fuente de alimentación de 24 VDC",
+      "instructions": "Revisa la fuente de alimentación: identificación, daños externos, señales de sobrecalentamiento, etiquetas y conexiones visibles.",
+      "photo_guidance": "Foto de frente de la fuente de alimentación que incluya su etiqueta y la zona de terminales.",
+      "inspection_points": [
+        "Verifica que la identificación sea visible",
+        "Revisa si hay daños externos",
+        "Revisa si hay señales visibles de sobrecalentamiento",
+        "Verifica que las etiquetas estén presentes",
+        "Documenta las conexiones visibles"
+      ],
+      "acceptance_criteria": [
+        "Identificación presente",
+        "Sin daños visibles",
+        "Sin decoloración"
+      ],
+      "possible_findings": [
+        "Falta la identificación",
+        "Daño físico visible",
+        "Sospecha de sobrecalentamiento",
+        "Evidencia fotográfica poco clara o insuficiente"
+      ],
+      "risks": [
+        "Pérdida de la alimentación del circuito de control"
+      ],
+      "recommended_actions": [
+        "Reporta la sospecha de sobrecalentamiento a un electricista"
+      ],
+      "visual_limitations": [
+        "El voltaje de salida y el apriete de las terminales no se pueden verificar con una fotografía."
+      ]
+    },
+    "PLC-VISUAL": {
+      "title": "Revisión visual y de documentación del PLC",
+      "instructions": "Revisa que el PLC y el módulo de E/S estén identificados (A1) y sin daños, y documenta los indicadores de estado visibles.",
+      "photo_guidance": "Foto de frente de la CPU del PLC y del módulo de E/S, con los indicadores visibles.",
+      "inspection_points": [
+        "Etiqueta A1 visible",
+        "Sin daños",
+        "Indicadores de estado documentados"
+      ],
+      "acceptance_criteria": [
+        "Identificación presente",
+        "Sin daños visibles"
+      ],
+      "possible_findings": [
+        "Falta la identificación",
+        "Daño visible",
+        "Indicador de falla visible (para revisión humana)"
+      ],
+      "risks": [
+        "Paro no programado"
+      ],
+      "recommended_actions": [
+        "Reporta las indicaciones de falla al ingeniero de control"
+      ],
+      "visual_limitations": [
+        "Las luces indicadoras no comprueban que el programa sea correcto ni que las E/S funcionen correctamente."
+      ]
+    },
+    "CONTACTORS-VISUAL": {
+      "title": "Revisión visual de los contactores",
+      "instructions": "Revisa que los contactores K1 y K2 estén identificados y que no tengan grietas, partes derretidas ni decoloración.",
+      "photo_guidance": "Foto de frente de los dos contactores con sus etiquetas.",
+      "inspection_points": [
+        "Etiquetas K1/K2 visibles",
+        "Sin grietas",
+        "Sin decoloración"
+      ],
+      "acceptance_criteria": [
+        "Identificados",
+        "Sin daños visibles"
+      ],
+      "possible_findings": [
+        "Falta la identificación",
+        "Sospecha de sobrecalentamiento",
+        "Carcasa agrietada"
+      ],
+      "risks": [
+        "Contactos soldados (pegados) o sobrecalentamiento"
+      ],
+      "recommended_actions": [
+        "Reporta la decoloración a un electricista"
+      ],
+      "visual_limitations": [
+        "El desgaste de los contactos y el estado de la bobina no son visibles."
+      ]
+    },
+    "RELAYS-SEATED": {
+      "title": "Relevadores auxiliares bien asentados",
+      "instructions": "Confirma que los cuatro relevadores estén presentes y completamente asentados en sus bases (solo revisión visual, no los toques).",
+      "inspection_points": [
+        "4 de 4 presentes",
+        "Completamente asentados"
+      ],
+      "acceptance_criteria": [
+        "4 de 4 presentes y asentados"
+      ],
+      "possible_findings": [
+        "Falta un relevador",
+        "Relevador no asentado en su base"
+      ]
+    },
+    "TERMINAL-MARKING": {
+      "title": "Marcado de la regleta de terminales",
+      "instructions": "Revisa que la regleta de terminales X1 esté etiquetada, que los marcadores de las terminales estén presentes y que las terminales PE (tierra física) se puedan identificar.",
+      "photo_guidance": "Foto de cerca de la regleta de terminales, con los marcadores legibles.",
+      "inspection_points": [
+        "Etiqueta X1 presente",
+        "Marcadores de terminales presentes",
+        "Terminales PE de color verde-amarillo"
+      ],
+      "acceptance_criteria": [
+        "Regleta y terminales identificadas"
+      ],
+      "possible_findings": [
+        "Faltan marcadores de terminales",
+        "Conductor expuesto en una terminal (para revisión humana)"
+      ],
+      "risks": [
+        "Errores de cableado durante el mantenimiento"
+      ],
+      "recommended_actions": [
+        "Coloca los marcadores que faltan"
+      ],
+      "visual_limitations": [
+        "El par de apriete de las terminales y la profundidad de inserción de los conductores no se pueden verificar con una fotografía."
+      ]
+    },
+    "DUCT-COVERS": {
+      "title": "Tapas de canaletas colocadas",
+      "instructions": "Confirma que todas las tapas de las canaletas estén colocadas y que los cables vayan por dentro de las canaletas.",
+      "inspection_points": [
+        "Tapas colocadas",
+        "Cables dentro de las canaletas"
+      ],
+      "acceptance_criteria": [
+        "Todas las tapas colocadas"
+      ],
+      "possible_findings": [
+        "Falta una tapa de canaleta",
+        "Cables fuera de las canaletas"
+      ]
+    },
+    "DIN-RAILS-SECURE": {
+      "title": "Rieles DIN bien fijos",
+      "instructions": "Confirma que los rieles estén fijos y que los dispositivos no se vean desplazados (solo revisión visual).",
+      "inspection_points": [
+        "Rieles fijos",
+        "Dispositivos alineados"
+      ],
+      "acceptance_criteria": [
+        "Ningún dispositivo desplazado"
+      ],
+      "possible_findings": [
+        "Riel flojo",
+        "Dispositivo desplazado"
+      ]
+    },
+    "WIRING-VISUAL": {
+      "title": "Estado del cableado visible",
+      "instructions": "Busca conductores expuestos, aislamiento dañado, cables fuera de las canaletas o extremos de cable que se vean desconectados.",
+      "photo_guidance": "Foto general del interior del tablero abierto, con buena luz.",
+      "inspection_points": [
+        "No se ven conductores expuestos",
+        "Aislamiento intacto",
+        "No se ven extremos desconectados"
+      ],
+      "acceptance_criteria": [
+        "Sin anomalías visibles"
+      ],
+      "possible_findings": [
+        "Conductor expuesto",
+        "Aislamiento dañado",
+        "Cable visiblemente desconectado",
+        "Aislamiento dañado por calor"
+      ],
+      "risks": [
+        "Riesgo de descarga eléctrica o cortocircuito"
+      ],
+      "recommended_actions": [
+        "Detente y repórtalo a un electricista calificado"
+      ],
+      "visual_limitations": [
+        "La continuidad, la resistencia de aislamiento y que el cableado sea correcto no se pueden verificar con una fotografía."
+      ]
+    },
+    "LABELS-PRESENT": {
+      "title": "Etiquetas de identificación de dispositivos presentes",
+      "instructions": "Confirma que las etiquetas Q1, G1, A1, K1, K2 y X1 estén presentes y legibles.",
+      "inspection_points": [
+        "6 de 6 etiquetas presentes",
+        "Legibles"
+      ],
+      "acceptance_criteria": [
+        "Todas las etiquetas presentes y legibles"
+      ],
+      "possible_findings": [
+        "Falta una etiqueta",
+        "Etiqueta ilegible"
+      ]
+    },
+    "PE-BAR-VISUAL": {
+      "title": "Barra de tierra física (PE)",
+      "instructions": "Revisa que la barra PE esté presente e identificada y que los conductores PE (tierra física) se vean conectados (solo revisión visual).",
+      "photo_guidance": "Foto de cerca de la barra PE y sus conductores.",
+      "inspection_points": [
+        "Barra PE presente",
+        "Conductores PE visiblemente conectados",
+        "Sin corrosión"
+      ],
+      "acceptance_criteria": [
+        "Barra PE presente y conductores visiblemente conectados"
+      ],
+      "possible_findings": [
+        "Conductor PE visiblemente desconectado",
+        "Corrosión en la barra PE"
+      ],
+      "risks": [
+        "Pérdida de la conexión a tierra física de protección"
+      ],
+      "recommended_actions": [
+        "Pide a un electricista calificado que haga una prueba de continuidad"
+      ],
+      "visual_limitations": [
+        "La continuidad de la tierra física solo se puede verificar con una medición, nunca con una fotografía."
+      ]
+    },
+    "MOUNTING-PLATE": {
+      "title": "Placa de montaje bien fija",
+      "instructions": "Confirma que la placa de montaje esté fija y que no tenga deformaciones.",
+      "inspection_points": [
+        "Placa fija",
+        "Sin deformación"
+      ],
+      "acceptance_criteria": [
+        "Placa bien fija"
+      ],
+      "possible_findings": [
+        "Placa floja"
+      ]
+    }
+  },
+  "documents": {
+    "DWG-ICP-GA": "Plano de arreglo general"
+  },
+  "demo_evidence": {
+    "DEMO-ENCLOSURE": {
+      "caption": "Exterior del gabinete, puerta cerrada (render 3D)",
+      "source": "Render generado a partir del modelo de demostración ICP-001, 2026-10-24. No es una fotografía."
+    },
+    "DEMO-DOOR-LABEL": {
+      "caption": "Puerta con etiqueta de advertencia (render 3D)",
+      "source": "Render generado a partir del modelo de demostración ICP-001, 2026-10-24. No es una fotografía."
+    },
+    "DEMO-MCB": {
+      "caption": "Interruptor principal e interruptores termomagnéticos (render 3D)",
+      "source": "Render generado a partir del modelo de demostración ICP-001, 2026-10-24. No es una fotografía."
+    },
+    "DEMO-PSU": {
+      "caption": "Fuente de alimentación de 24 VDC (render 3D)",
+      "source": "Render generado a partir del modelo de demostración ICP-001, 2026-10-24. No es una fotografía."
+    },
+    "DEMO-PLC": {
+      "caption": "CPU del PLC y módulo de E/S (render 3D)",
+      "source": "Render generado a partir del modelo de demostración ICP-001, 2026-10-24. No es una fotografía."
+    },
+    "DEMO-TERMINALS": {
+      "caption": "Regleta de terminales X1 (render 3D)",
+      "source": "Render generado a partir del modelo de demostración ICP-001, 2026-10-24. No es una fotografía."
+    },
+    "DEMO-INTERIOR": {
+      "caption": "Interior del tablero abierto (render 3D)",
+      "source": "Render generado a partir del modelo de demostración ICP-001, 2026-10-24. No es una fotografía."
+    },
+    "DEMO-PE-BAR": {
+      "caption": "Barra de tierra física PE (render 3D)",
+      "source": "Render generado a partir del modelo de demostración ICP-001, 2026-10-24. No es una fotografía."
+    }
+  },
+  "locations": {
+    "ICP-001-SN-0001": "Línea de empaque 1, celda 3 (datos de ejemplo)",
+    "ICP-001-SN-0002": "Línea de empaque 2, celda 1 (datos de ejemplo)"
+  }
+}

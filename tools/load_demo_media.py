@@ -2,11 +2,15 @@
 
 Each model keeps its full engineering parts list (names, part numbers, specs, explosion vectors, the hinged
 door of the electrical panel), so tasks can point at specific parts and the viewer can explode the assembly.
-A model whose title already exists in that company is skipped; pass --replace to upload it again.
+The package's display translations (translations/<lang>.json: product name, part names, descriptions, specs) are
+stored with it, so the app shows them in the reader's language.
+A model whose title already exists in that company is skipped; pass --replace to upload it again
+(also to pick up edited translations).
 
 Usage:
     backend/.venv/bin/python tools/load_demo_media.py [--replace]
 """
+import json
 import sys
 from pathlib import Path
 
@@ -31,6 +35,15 @@ def parts_of(report) -> list[dict]:
             for c in report.components]
 
 
+def translations_of(pkg: Path) -> dict:
+    """{lang: {"product": {...}, "components": {...}}} from the package's translation files."""
+    out = {}
+    for f in sorted((pkg / "translations").glob("*.json")):
+        doc = json.loads(f.read_text(encoding="utf-8"))
+        out[f.stem] = {"product": doc.get("product") or {}, "components": doc.get("components") or {}}
+    return out
+
+
 def main(replace: bool) -> int:
     for company_name, packages in ASSIGNMENTS.items():
         company = db.first("companies", {"name": company_name})
@@ -51,7 +64,11 @@ def main(replace: bool) -> int:
                 media.delete_media(existing[title])
             glb = settings.packages_dir / pkg_name / report.manifest["assembly_file"]
             row = media.create_media(company["id"], glb.name, glb.read_bytes(), title, parts_of(report))
-            print(f"  {company_name}: {title} loaded ({len(row['metadata']['parts'])} parts)")
+            langs = translations_of(settings.packages_dir / pkg_name)
+            if langs:
+                db.update("media", {"metadata": {**row["metadata"], "translations": langs}}, {"id": row["id"]})
+            print(f"  {company_name}: {title} loaded ({len(row['metadata']['parts'])} parts"
+                  f"{', translations: ' + ', '.join(langs) if langs else ''})")
     return 0
 
 

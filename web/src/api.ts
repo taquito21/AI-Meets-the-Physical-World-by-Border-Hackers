@@ -1,4 +1,5 @@
 // Typed REST client. Every access rule lives on the server; the client only renders what it returns.
+import { getLang } from "./i18n";
 import { accessToken } from "./supabase";
 
 export type TaskStatus = "pending" | "passed" | "failed" | "flagged";
@@ -111,6 +112,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = await accessToken().catch(() => null);
   const headers = new Headers(init.headers);
   if (token) headers.set("Authorization", `Bearer ${token}`);
+  headers.set("X-Lang", getLang()); // the server answers with media text and AI replies in this language
   let res: Response;
   try {
     res = await fetch(path, { ...init, headers });

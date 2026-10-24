@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { LogIn } from "lucide-react";
+import { LanguageSwitch } from "../components/LanguageSwitch";
 import { ErrorBox } from "../components/ui";
+import { t } from "../i18n";
 import { useSession } from "../session";
 
 export default function Login() {
@@ -23,13 +26,13 @@ export default function Login() {
   };
   return (
     <div className="page login">
-      <h1>Field Assistant</h1>
-      <p className="muted">Jobs, tasks and photo evidence for field work.</p>
+      <div className="card-head"><h1>{t("Field Assistant")}</h1><LanguageSwitch /></div>
+      <p className="muted">{t("Your jobs, step by step: take photos, write notes, and mark each task done.")}</p>
       <form className="card" onSubmit={submit}>
-        <label>Email<input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
-        <label>Password<input type="password" autoComplete="current-password" value={password}
+        <label>{t("Email")}<input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
+        <label>{t("Password")}<input type="password" autoComplete="current-password" value={password}
           onChange={(e) => setPassword(e.target.value)} required /></label>
-        <button className="btn btn-primary" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
+        <button className="btn btn-big btn-primary" disabled={busy}><LogIn aria-hidden />{busy ? t("Signing in…") : t("Sign in")}</button>
         <ErrorBox error={error ?? sessionError} />
       </form>
     </div>

@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Check, Plus, Trash2 } from "lucide-react";
 import { api, type MediaItem } from "../api";
 import { ErrorBox, useAsync } from "../components/ui";
+import { t } from "../i18n";
 
 interface DraftTask { description: string; mediaId: string; parts: string[] }
 
 const blank = (): DraftTask => ({ description: "", mediaId: "", parts: [] });
+
+const KIND_PREFIX: Record<MediaItem["kind"], string> = { model_3d: "3D model", document: "Document", image: "Image" };
 
 export default function NewJob() {
   const nav = useNavigate();
@@ -19,7 +23,7 @@ export default function NewJob() {
   const [error, setError] = useState<string | null>(null);
 
   const update = (i: number, patch: Partial<DraftTask>) =>
-    setTasks((ts) => ts.map((t, n) => (n === i ? { ...t, ...patch } : t)));
+    setTasks((ts) => ts.map((task, n) => (n === i ? { ...task, ...patch } : task)));
   const mediaById = (id: string): MediaItem | undefined => media?.find((m) => m.id === id);
 
   const submit = async (e: React.FormEvent) => {
@@ -29,9 +33,9 @@ export default function NewJob() {
     try {
       const job = await api.createJob({
         title, assigned_to: assignee || employees[0]?.id || "",
-        tasks: tasks.filter((t) => t.description.trim()).map((t) => ({
-          description: t.description,
-          media: t.mediaId ? [{ media_id: t.mediaId, node_ids: t.parts }] : [],
+        tasks: tasks.filter((task) => task.description.trim()).map((task) => ({
+          description: task.description,
+          media: task.mediaId ? [{ media_id: task.mediaId, node_ids: task.parts }] : [],
         })),
       });
       nav(`/jobs/${job.id}`);
@@ -44,45 +48,46 @@ export default function NewJob() {
 
   return (
     <div className="page">
-      <h1>New job</h1>
+      <h1>{t("New job")}</h1>
       <form onSubmit={submit}>
         <section className="card">
-          <label>Title<input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Monthly extinguisher check, building A" required /></label>
-          <label>Assign to
+          <label>{t("Title")}<input value={title} onChange={(e) => setTitle(e.target.value)}
+            placeholder={t("e.g. Monthly extinguisher check, building A")} required /></label>
+          <label>{t("Assign to")}
             <select value={assignee || employees[0]?.id || ""} onChange={(e) => setAssignee(e.target.value)}>
-              {employees.length === 0 && <option value="">No employees in your company yet</option>}
+              {employees.length === 0 && <option value="">{t("No employees in your company yet")}</option>}
               {employees.map((u) => <option key={u.id} value={u.id}>{u.username}</option>)}
             </select>
           </label>
         </section>
 
-        {tasks.map((t, i) => {
-          const linked = mediaById(t.mediaId);
+        {tasks.map((task, i) => {
+          const linked = mediaById(task.mediaId);
           return (
             <section className="card" key={i}>
               <div className="card-head">
-                <h2>Task {i + 1}</h2>
+                <h2>{t("Task {n}", { n: i + 1 })}</h2>
                 {tasks.length > 1 && (
-                  <button type="button" className="btn btn-small btn-ghost" onClick={() => setTasks(tasks.filter((_, n) => n !== i))}>Remove</button>
+                  <button type="button" className="btn btn-small btn-ghost" onClick={() => setTasks(tasks.filter((_, n) => n !== i))}>
+                    <Trash2 aria-hidden />{t("Remove")}
+                  </button>
                 )}
               </div>
-              <textarea rows={2} value={t.description} placeholder="What should be checked or done?"
+              <textarea rows={2} value={task.description} placeholder={t("What should be checked or done?")}
                 onChange={(e) => update(i, { description: e.target.value })} />
-              <label className="small">Reference material (optional)
-                <select value={t.mediaId} onChange={(e) => update(i, { mediaId: e.target.value, parts: [] })}>
-                  <option value="">None</option>
-                  {(media ?? []).map((m) => (
-                    <option key={m.id} value={m.id}>{m.kind === "model_3d" ? "3D" : m.kind === "document" ? "Document" : "Image"}: {m.title}</option>
-                  ))}
+              <label className="small">{t("Reference material (optional)")}
+                <select value={task.mediaId} onChange={(e) => update(i, { mediaId: e.target.value, parts: [] })}>
+                  <option value="">{t("None")}</option>
+                  {(media ?? []).map((m) => <option key={m.id} value={m.id}>{t(KIND_PREFIX[m.kind])}: {m.title}</option>)}
                 </select>
               </label>
               {linked?.kind === "model_3d" && (linked.metadata.parts?.length ?? 0) > 0 && (
                 <fieldset className="parts">
-                  <legend className="small">Parts this task is about (highlighted in the 3D view)</legend>
+                  <legend className="small">{t("Parts this task is about (highlighted in the 3D view)")}</legend>
                   {linked.metadata.parts!.map((p) => (
                     <label key={p.id} className="check small">
-                      <input type="checkbox" checked={t.parts.includes(p.id)} onChange={(e) =>
-                        update(i, { parts: e.target.checked ? [...t.parts, p.id] : t.parts.filter((x) => x !== p.id) })} />
+                      <input type="checkbox" checked={task.parts.includes(p.id)} onChange={(e) =>
+                        update(i, { parts: e.target.checked ? [...task.parts, p.id] : task.parts.filter((x) => x !== p.id) })} />
                       {p.name}
                     </label>
                   ))}
@@ -92,8 +97,10 @@ export default function NewJob() {
           );
         })}
         <div className="row">
-          <button type="button" className="btn" onClick={() => setTasks([...tasks, blank()])}>Add task</button>
-          <button className="btn btn-primary" disabled={busy || !employees.length}>{busy ? "Creating…" : "Create job"}</button>
+          <button type="button" className="btn btn-big" onClick={() => setTasks([...tasks, blank()])}><Plus aria-hidden />{t("Add task")}</button>
+          <button className="btn btn-big btn-primary" disabled={busy || !employees.length}>
+            <Check aria-hidden />{busy ? t("Creating…") : t("Create job")}
+          </button>
         </div>
         <ErrorBox error={error} />
       </form>

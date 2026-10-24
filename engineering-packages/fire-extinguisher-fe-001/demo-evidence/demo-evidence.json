@@ -43,6 +43,39 @@
             "Internal condition and pressure cannot be verified from a photo."
           ]
         }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 9187,
+        "captured_at": "2026-10-24T19:31:41+00:00",
+        "result": {
+          "summary": "La imagen muestra una carátula de manómetro sintética (gráfico de demostración), no una foto real del extintor. Se ve la aguja apuntando a la franja verde, pero no hay números ni textos de presión legibles.",
+          "correct_area_visible": "uncertain",
+          "image_quality": "good",
+          "evidence_sufficient": false,
+          "observations": [
+            "Es un gráfico ilustrativo marcado 'DEMO illustrative', no una fotografía real.",
+            "Se ve una carátula con franjas rojas a los lados y una franja verde al centro.",
+            "La aguja se ve apuntando dentro de la franja verde.",
+            "No hay números, unidades ni rótulos de escala legibles.",
+            "No se ve el cuerpo del extintor, la válvula ni la mica real del manómetro."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Foto real del manómetro instalado en el extintor FE-001-DEMO.",
+            "Estado real de la mica y del cuerpo del manómetro.",
+            "Marcas y textos reales de la carátula."
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Toma una foto real y de cerca del manómetro en el extintor, de frente, sin reflejos, con buena luz, mostrando la carátula completa, la aguja, las marcas y el borde del manómetro.",
+          "uncertainty": "high",
+          "limitations": [
+            "Una foto no confirma la presión, la carga ni el estado de funcionamiento del extintor.",
+            "Los rangos del dial dependen del fabricante; el gráfico es solo ilustrativo.",
+            "No se puede revisar el estado interno ni bloqueos con una foto."
+          ]
+        }
       }
     },
     {
@@ -87,6 +120,41 @@
             "Synthetic demo image."
           ]
         }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 5436,
+        "captured_at": "2026-10-24T19:31:46+00:00",
+        "result": {
+          "summary": "Se ve la cabeza de la válvula, la palanca, el manómetro y una etiqueta colgante. No se ve un pasador de seguridad con anillo ni un sello de seguridad en la palanca.",
+          "correct_area_visible": "yes",
+          "image_quality": "good",
+          "evidence_sufficient": true,
+          "observations": [
+            "La cabeza de la válvula y la palanca se ven con claridad.",
+            "No se ve ningún pasador con anillo atravesando la cabeza de la válvula.",
+            "No se ve ningún sello de seguridad (precinto) en la palanca o el pasador.",
+            "Hay una etiqueta gris colgando de un alambre; su texto no se puede leer.",
+            "La imagen parece sintética (foto de demostración)."
+          ],
+          "conditions_for_human_review": [
+            "Posible falta del pasador de seguridad.",
+            "Posible falta del sello de seguridad."
+          ],
+          "missing_information": [
+            "Confirmación en sitio de si el pasador y el sello están realmente ausentes o fuera del encuadre.",
+            "Contenido de la etiqueta colgante (no legible)."
+          ],
+          "recommended_action": "flag_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "low",
+          "limitations": [
+            "La foto no permite verificar la presión, la carga ni el estado interno del extintor.",
+            "No se puede leer la etiqueta ni el manómetro en esta imagen.",
+            "El inspector y el supervisor deciden el resultado."
+          ]
+        }
       }
     },
     {
@@ -127,6 +195,40 @@
             "Pressure, charge and serviceability cannot be verified from a photo.",
             "Small subject size may hide minor dents or corrosion.",
             "Demo render; does not represent a real asset condition."
+          ]
+        }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6030,
+        "captured_at": "2026-10-24T19:31:53+00:00",
+        "result": {
+          "summary": "La foto muestra el extintor completo, de la base a la válvula, sobre fondo blanco. Es una imagen sintética de demostración. No se ven abolladuras, corrosión ni partes faltantes evidentes, pero el extintor ocupa poca parte de la imagen y no se ven detalles finos.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": true,
+          "observations": [
+            "Se ve el cilindro rojo completo con hombros redondeados y base negra.",
+            "Se ven la manguera, la manija, el pasador con sello y una etiqueta colgante.",
+            "No se ve corrosión, abolladuras ni pintura dañada a esta resolución.",
+            "El extintor es pequeño en la imagen; los detalles de la superficie son limitados.",
+            "El control automático marcó la imagen como sobreexpuesta por el fondo blanco; el cilindro se distingue bien.",
+            "Solo se ve un lado del cilindro."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Vista del lado trasero del cilindro.",
+            "Vista más cercana de la superficie y de la base."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "medium",
+          "limitations": [
+            "Es una imagen sintética de demostración, no un extintor real.",
+            "No se puede saber el estado interior, la presión ni la carga con una foto.",
+            "Defectos pequeños o en el lado no visible pueden pasar desapercibidos.",
+            "Esta revisión no indica que el extintor esté en condiciones de uso."
           ]
         }
       }

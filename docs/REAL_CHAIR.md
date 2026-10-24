@@ -36,12 +36,12 @@ These are stored as precomputed demo results and also reproduce live: the same p
 inspection gave the same verdicts in 6–8 s.
 
 ## Demo with the physical chair (about 40 s)
-1. Assets → Furniture → **UTEP Conference Chair → Inspect** (live) on `UTEP-CHAIR-RW-01`.
-2. Point at the real chair, then rotate the model and tap **Explode** (seat up, back away, ring forward, base down).
-3. Tap the seat → **Take photo** of the real seat → AI: usable evidence → **Pass**: the seat turns green.
+1. Home → **Chairs and tables** → UTEP Conference Chair → **Start inspection** on `UTEP-CHAIR-RW-01`.
+2. Point at the real chair, then rotate the model and tap **Separate parts** (seat up, back away, ring forward, base down).
+3. Tap the seat → **Take photo** of the real seat → AI: "Clear photo" → **Looks good**: the seat turns green.
 4. Optional: tap the mechanism → photograph the underside → AI flags the empty holes for human review.
    This is a genuine observation on this chair; confirm it by hand before calling it a finding.
-5. Offline fallback: start a **Demo inspection** instead and use the prepared real photos (results labelled precomputed).
+5. Offline fallback: tap **Practice** instead and use the prepared real photos (results labelled as saved practice results).
 
 ## Limitations
 - Approximate geometry: rounded edges, the curved back profile and the exact loop shape of the armrests are simplified.

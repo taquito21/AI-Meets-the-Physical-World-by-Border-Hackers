@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { api, type Job } from "../api";
 import { AskBox } from "../components/AskBox";
 import { TaskCard } from "../components/TaskCard";
 import { CountChips, ErrorBox, Lightbox, Progress, usePolling } from "../components/ui";
+import { t } from "../i18n";
 import { useSession } from "../session";
 
 export default function JobDetail() {
@@ -29,11 +31,11 @@ export default function JobDetail() {
     api.job(id).then((j) => { if (version.current === started) setJob(j); }).catch(() => undefined);
   }, 6000, [id]); // picks up changes made on the other person's device
 
-  if (error) return <div className="page"><ErrorBox error={error} /><Link to="/">Back to jobs</Link></div>;
-  if (!job || !me) return <div className="page muted">Loading job…</div>;
+  if (error) return <div className="page"><ErrorBox error={error} /><Link to="/">{t("Back to jobs")}</Link></div>;
+  if (!job || !me) return <div className="page muted">{t("Loading…")}</div>;
 
   const remove = async () => {
-    if (!confirm(`Delete "${job.title}" with all its tasks and evidence? This cannot be undone.`)) return;
+    if (!confirm(t("Delete \"{title}\" with all its tasks, photos and notes? This cannot be undone.", { title: job.title }))) return;
     try {
       await api.deleteJob(job.id);
       nav("/");
@@ -43,21 +45,21 @@ export default function JobDetail() {
   };
   return (
     <div className="page">
-      <Link to="/" className="small">← Jobs</Link>
+      <Link to="/" className="small with-icon"><ArrowLeft aria-hidden />{t("Jobs")}</Link>
       <div className="card-head">
         <div>
           <h1>{job.title}</h1>
-          <div className="small muted">Assigned to {job.assigned_to?.username ?? "nobody"}</div>
+          <div className="small muted">{t("Assigned to {name}", { name: job.assigned_to?.username ?? t("Nobody") })}</div>
         </div>
         <CountChips counts={job.counts} />
       </div>
       <Progress counts={job.counts} />
-      {job.tasks.map((t) => (
-        <TaskCard key={t.id} task={t} role={me.user_class} onJob={setJob} onOpenImage={setLightbox} />
+      {job.tasks.map((task) => (
+        <TaskCard key={task.id} task={task} role={me.user_class} onJob={setJob} onOpenImage={setLightbox} />
       ))}
       <AskBox />
       {me.user_class === "employer" && (
-        <button className="btn btn-red-ghost" onClick={remove}>Delete job</button>
+        <button className="btn btn-red-ghost" onClick={remove}><Trash2 aria-hidden />{t("Delete job")}</button>
       )}
       <Lightbox src={lightbox} onClose={() => setLightbox(null)} />
     </div>

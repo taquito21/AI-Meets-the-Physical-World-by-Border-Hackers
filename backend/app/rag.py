@@ -12,7 +12,7 @@ from typing import Any
 
 import httpx
 
-from . import ai, db
+from . import ai, db, i18n
 from .config import settings
 
 CHUNK_CHARS = 1500
@@ -114,7 +114,8 @@ def answer(question: str, hits: list[dict[str, Any]]) -> dict[str, Any]:
     """Claude's answer from the retrieved chunks, with numbered sources it actually cited."""
     import anthropic
     if not hits:
-        return {"answer": "No documents have been uploaded for your company yet.", "sources": []}
+        return {"answer": ("Tu empresa todavía no ha subido documentos." if i18n.current_lang.get() == "es"
+                           else "No documents have been uploaded for your company yet."), "sources": []}
     ok, why = ai.claude_available()
     if not ok:
         raise RagError(why)
@@ -123,7 +124,9 @@ def answer(question: str, hits: list[dict[str, Any]]) -> dict[str, Any]:
             for h in hits]
     try:
         response = ai.claude_client().messages.create(
-            model=settings.ai_model, max_tokens=4000, system=ANSWER_SYSTEM,
+            model=settings.ai_model, max_tokens=4000,
+            system=ANSWER_SYSTEM + (" Answer in plain, neutral Latin-American Spanish, even if the documents are in "
+                                    "English." if i18n.current_lang.get() == "es" else ""),
             output_config={"effort": settings.ai_effort},
             messages=[{"role": "user", "content": [*docs, {"type": "text", "text": question}]}],
             **ai.request_options())

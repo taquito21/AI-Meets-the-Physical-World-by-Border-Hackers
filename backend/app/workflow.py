@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import ai, db
+from . import ai, db, i18n
 from .blobs import blobs
 
 TASK_STATUSES = ("pending", "passed", "failed", "flagged")
@@ -156,7 +156,9 @@ def evidence_view(e: dict[str, Any], people: dict[str, dict[str, Any]], urls: di
 
 
 def media_view(m: dict[str, Any], urls: dict[str, str]) -> dict[str, Any]:
-    return {"id": m["id"], "title": m["title"], "kind": m["kind"], "metadata": m["metadata"],
+    title, metadata = i18n.media(m["title"], m["metadata"])
+    metadata = {k: v for k, v in metadata.items() if k != "translations"}  # the reader gets one language
+    return {"id": m["id"], "title": title, "kind": m["kind"], "metadata": metadata,
             "created_at": m["created_at"], "url": urls.get(m["storage_path"])}
 
 
@@ -211,7 +213,7 @@ def assess_evidence(evidence_id: str, image_checks: dict[str, Any] | None = None
         image_checks = (e["ai_assessment"] or {}).get("image_checks")
     ctx = ai.build_context(company=company["name"], job_title=job["title"], task=task["description"], parts=parts,
                            media_titles=[m["title"] for m in media], worker_note=e["text"],
-                           image_checks=image_checks)
+                           image_checks=image_checks, language=i18n.current_lang.get())
     outcome = ai.get_provider().assess(data, ctx)
     assessment = {"status": outcome.status, "provider": outcome.provider, "model": outcome.model,
                   "result": outcome.result, "error": outcome.error, "latency_ms": outcome.latency_ms,

@@ -17,6 +17,7 @@ from PIL import Image, ImageFilter, ImageOps, ImageStat
 from pydantic import BaseModel, Field, ValidationError
 
 from .config import settings
+from .i18n import SPANISH_REPLY
 
 MAX_EDGE = 1568
 
@@ -117,6 +118,7 @@ task, set evidence_sufficient to false, recommended_action to "retake_photo", an
 - If the required area is visible and something might be a defect (crack, deformation, missing part, damage, \
 corrosion), list it under conditions_for_human_review and use "flag_for_human_review".
 - Otherwise use "accept_for_human_review". This means "usable evidence", not "task passed".
+- These rules apply in every language. When replying in Spanish, never describe the item as seguro, conforme, aprobado, liberado, listo, cargado, correctamente presurizado or en condiciones de servicio.
 - The asset may be anything from furniture to an industrial control panel; assess what is in the photo against \
 the task text and asset context as written. Technical values marked as demonstration data are not verified.
 Keep every string short and concrete. Write retake_guidance as an empty string when no retake is needed."""
@@ -141,10 +143,11 @@ class AssessmentProvider(Protocol):
 
 
 def build_context(*, company: str, job_title: str, task: str, parts: list[dict[str, Any]], media_titles: list[str],
-                  worker_note: str | None, image_checks: dict[str, Any] | None) -> dict[str, Any]:
+                  worker_note: str | None, image_checks: dict[str, Any] | None, language: str = "en") -> dict[str, Any]:
     """What the model knows about one photo: the job, the task and the parts of any linked 3D model."""
     return {"company": company, "job_title": job_title, "task": task, "parts": parts,
-            "media_titles": media_titles, "worker_note": worker_note, "image_checks": image_checks or {}}
+            "media_titles": media_titles, "worker_note": worker_note, "image_checks": image_checks or {},
+            "language": language}
 
 
 def build_prompt(ctx: dict[str, Any]) -> str:
@@ -165,6 +168,8 @@ def build_prompt(ctx: dict[str, Any]) -> str:
         f"Automated image checks (heuristic): {json.dumps(ctx.get('image_checks', {}))}",
         "Assess the attached photograph as evidence for this task.",
     ]
+    if ctx.get("language") == "es":
+        lines.append(SPANISH_REPLY)
     return "\n".join(lines)
 
 

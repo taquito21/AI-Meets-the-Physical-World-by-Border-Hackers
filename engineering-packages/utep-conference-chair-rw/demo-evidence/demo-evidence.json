@@ -40,6 +40,38 @@
             "Load capacity and mechanism condition cannot be assessed from a photo."
           ]
         }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 8092,
+        "captured_at": "2026-10-24T19:34:08+00:00",
+        "result": {
+          "summary": "La foto muestra el asiento completo de frente y con buena luz. No se ven roturas, cortes, costuras abiertas ni espuma expuesta en la parte visible del tapizado.",
+          "correct_area_visible": "yes",
+          "image_quality": "good",
+          "evidence_sufficient": true,
+          "observations": [
+            "Se ve el asiento azul oscuro completo, de frente.",
+            "La superficie superior y el borde delantero se ven lisos y continuos.",
+            "No se ve espuma expuesta en la parte visible.",
+            "Se notan arrugas leves en el borde delantero, propias del tapizado.",
+            "Hay algunas marcas claras pequeñas en la superficie, posiblemente polvo o reflejo de luz."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "No se ven los costados ni la parte trasera del asiento junto al respaldo.",
+            "La toma es casi a la altura del asiento y no desde un poco más arriba."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "low",
+          "limitations": [
+            "No se puede ver el estado de la espuma dentro del cojín.",
+            "Una foto no permite confirmar si hay zonas hundidas al sentarse.",
+            "Detalles muy pequeños de las costuras pueden no notarse a esta distancia."
+          ]
+        }
       }
     },
     {
@@ -77,6 +109,37 @@
             "Small snags or runs may not be resolvable at this distance.",
             "Front face of the mesh is not shown.",
             "Mesh area dimensions cannot be verified from the photo."
+          ]
+        }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 5562,
+        "captured_at": "2026-10-24T19:34:14+00:00",
+        "result": {
+          "summary": "La foto muestra el respaldo completo desde atrás, de frente y con buena luz. La malla se ve continua, sin agujeros ni bordes sueltos visibles. Sirve como evidencia para revisión humana.",
+          "correct_area_visible": "yes",
+          "image_quality": "good",
+          "evidence_sufficient": true,
+          "observations": [
+            "Se ve todo el respaldo de malla desde atrás, centrado y de frente.",
+            "La malla se ve continua, sin agujeros ni hilos corridos visibles.",
+            "Los bordes de la malla se ven dentro del marco en todo el contorno.",
+            "No se nota hundimiento evidente en la malla.",
+            "Hay un reflejo de luz en la parte superior de la malla."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "No se ve el lado delantero de la malla."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "low",
+          "limitations": [
+            "La tensión de la malla solo se puede estimar de forma aproximada con una foto.",
+            "Agujeros muy pequeños podrían no verse a esta distancia.",
+            "La foto no permite confirmar la resistencia ni el estado interno del respaldo."
           ]
         }
       }
@@ -118,6 +181,38 @@
             "Backrest height value is unverified demonstration data."
           ]
         }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 5969,
+        "captured_at": "2026-10-24T19:34:20+00:00",
+        "result": {
+          "summary": "La foto muestra la parte trasera completa del respaldo, con el marco, las esquinas y el riel inferior con el logo HON visible. No se ven grietas ni deformaciones evidentes. La foto sirve como evidencia para revisión humana.",
+          "correct_area_visible": "yes",
+          "image_quality": "good",
+          "evidence_sufficient": true,
+          "observations": [
+            "Se ve el respaldo completo desde atrás, con marco gris claro alrededor de la malla.",
+            "Las cuatro esquinas del marco se ven sin grietas evidentes.",
+            "El riel inferior se ve completo, con el logo HON legible.",
+            "No se observa deformación visible del marco.",
+            "La malla se ve tensa y sin roturas visibles."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "No hay acercamiento a las esquinas para buscar grietas finas."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "low",
+          "limitations": [
+            "Las grietas muy finas pueden no verse en esta foto.",
+            "La foto no muestra el frente ni los bordes laterales internos del marco.",
+            "No se puede evaluar la resistencia, la carga ni el ajuste de tornillos con una foto.",
+            "La altura del respaldo es un valor de demostración no verificado."
+          ]
+        }
       }
     },
     {
@@ -156,6 +251,38 @@
             "Hairline cracks may not be visible due to backlighting and distance.",
             "Ring diameter cannot be measured from the image.",
             "Load capacity and gas-lift condition not assessed."
+          ]
+        }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6203,
+        "captured_at": "2026-10-24T19:34:26+00:00",
+        "result": {
+          "summary": "La foto muestra desde abajo el aro para pies, sus tres rayos y el collar en la columna. La imagen es clara y sirve como evidencia para revisión humana. No se ven grietas evidentes.",
+          "correct_area_visible": "yes",
+          "image_quality": "good",
+          "evidence_sufficient": true,
+          "observations": [
+            "Se ve el aro completo desde abajo, a contraluz.",
+            "Se ven tres rayos que unen el aro con el collar central.",
+            "El collar está montado sobre la columna negra.",
+            "No se observan grietas ni deformaciones visibles en el aro ni en los rayos.",
+            "La base de estrella tapa parte de la parte inferior de la columna."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Falta confirmar a mano que el aro no se mueve ni se desliza en la columna.",
+            "La cara superior del aro no se ve en esta foto."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "low",
+          "limitations": [
+            "Una foto no muestra qué tan firme está sujeto el aro a la columna.",
+            "Grietas finas o en la cara superior podrían no verse a contraluz.",
+            "No se puede juzgar la capacidad de carga ni el estado interno."
           ]
         }
       }
@@ -201,6 +328,42 @@
             "Angle and slight blur limit detection of fine cracks."
           ]
         }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6687,
+        "captured_at": "2026-10-24T19:34:33+00:00",
+        "result": {
+          "summary": "La foto muestra desde abajo el mecanismo bajo el asiento, la placa negra de montaje y la base de la columna. Se ven varios orificios de la placa que parecen vacíos; revísalo en persona.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": true,
+          "observations": [
+            "Se ve el mecanismo gris bajo el asiento y la placa negra de montaje.",
+            "La placa tiene orificios redondos y orificios en forma de estrella.",
+            "En la foto no se distinguen claramente cabezas de tornillo dentro de los orificios.",
+            "La placa tiene una etiqueta redonda blanca con números.",
+            "No se ven grietas evidentes en la placa ni en la carcasa visible.",
+            "La imagen está algo inclinada y un poco borrosa en los bordes."
+          ],
+          "conditions_for_human_review": [
+            "Confirma si los orificios de la placa deben llevar tornillos o si están vacíos por diseño.",
+            "Revisa en persona que no falte ningún tornillo de fijación del mecanismo al asiento."
+          ],
+          "missing_information": [
+            "No se ve con claridad si hay tornillos instalados en los orificios de la placa.",
+            "No se ven todos los puntos de fijación del mecanismo al asiento."
+          ],
+          "recommended_action": "flag_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "medium",
+          "limitations": [
+            "No se puede verificar el apriete de los tornillos con una foto.",
+            "No se puede evaluar el estado interno del mecanismo ni del pistón.",
+            "No se puede confirmar la capacidad de carga con una foto."
+          ]
+        }
       }
     },
     {
@@ -238,6 +401,36 @@
             "Label content cannot be read or verified from this photo",
             "Label content is not checked against any database",
             "Photo cannot establish mechanism, gas-lift or fastener condition"
+          ]
+        }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 5782,
+        "captured_at": "2026-10-24T19:34:39+00:00",
+        "result": {
+          "summary": "Se ve la parte de abajo del asiento y una etiqueta blanca con código de barras en el borde izquierdo, pero está cortada, girada y borrosa; no se puede leer.",
+          "correct_area_visible": "yes",
+          "image_quality": "poor",
+          "evidence_sufficient": false,
+          "observations": [
+            "Hay una etiqueta blanca con código de barras en el borde izquierdo de la foto.",
+            "La etiqueta sale cortada, de lado y desenfocada; el texto no se lee.",
+            "La foto se centra en el mecanismo, la placa negra y el poste, no en la etiqueta.",
+            "Hay una pequeña etiqueta redonda en la placa negra con números poco claros."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Texto legible de la etiqueta de identificación.",
+            "Etiqueta completa dentro de la foto."
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Voltea la silla o agáchate bajo el asiento y acércate a la etiqueta blanca con código de barras. Que la etiqueta llene casi toda la foto, derecha y completa. Usa buena luz sin reflejos, toca la pantalla para enfocar y verifica que el texto se lea antes de enviarla.",
+          "uncertainty": "low",
+          "limitations": [
+            "El contenido de la etiqueta se documenta tal como aparece y no se verifica contra ninguna base de datos.",
+            "La foto no permite evaluar el estado del mecanismo, del pistón ni el apriete de los tornillos."
           ]
         }
       }
@@ -278,6 +471,38 @@
             "Hairline cracks may not be resolvable at this distance.",
             "Load capacity, fastener condition and gas-lift condition cannot be judged from a photo.",
             "Base diameter is a demonstration estimate and not verified."
+          ]
+        }
+      },
+      "precomputed_assessment_es": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6155,
+        "captured_at": "2026-10-24T19:34:45+00:00",
+        "result": {
+          "summary": "La foto muestra la base de cinco brazos del silla en primer plano, vista de lado y un poco desde arriba. Se ven los cinco brazos, el centro y las ruedas, con buena luz y nitidez. No se ven grietas ni deformaciones evidentes desde este ángulo.",
+          "correct_area_visible": "yes",
+          "image_quality": "good",
+          "evidence_sufficient": true,
+          "observations": [
+            "Se ven los cinco brazos de la base, todos presentes.",
+            "El centro de la base y la columna se ven sin grietas visibles en la parte superior.",
+            "Las cinco ruedas están colocadas en las puntas de los brazos.",
+            "No se notan brazos doblados ni piezas faltantes en la foto.",
+            "El brazo trasero queda parcialmente detrás de la columna, pero se distingue."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "No se ve la parte de abajo de los brazos ni del centro."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "low",
+          "limitations": [
+            "Las grietas en la parte de abajo de los brazos no se ven desde arriba.",
+            "Grietas muy finas pueden no notarse en una foto.",
+            "La foto no permite saber la capacidad de carga, el estado del pistón ni el ajuste de piezas.",
+            "El diámetro de la base es un valor de demostración, no verificado."
           ]
         }
       }

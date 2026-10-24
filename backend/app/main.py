@@ -16,7 +16,7 @@ from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, Field, StringConstraints
 from starlette.concurrency import run_in_threadpool
 
-from . import ai, db, media, rag, workflow
+from . import ai, db, i18n, media, rag, workflow
 from .auth import current_user, employer
 from .blobs import blobs
 from .config import settings
@@ -63,6 +63,7 @@ app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_me
 
 @app.middleware("http")
 async def readiness(request: Request, call_next):
+    i18n.current_lang.set(i18n.pick(request.headers.get("x-lang") or request.query_params.get("lang")))
     if request.url.path.startswith("/api/") and (not _ready or _local_db_missing()):
         try:
             await run_in_threadpool(ensure_ready)

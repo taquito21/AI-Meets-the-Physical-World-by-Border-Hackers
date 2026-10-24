@@ -1,6 +1,7 @@
 // Login state: the Supabase session (in the browser) plus the user's profile from /api/me.
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { api, setUnauthorizedHandler, type Me } from "./api";
+import { t } from "./i18n";
 import { supabase } from "./supabase";
 
 interface Session {
@@ -56,7 +57,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    document.title = me ? `${me.company.name} · Field Assistant` : "Field Assistant";
+    document.title = me ? `${me.company.name} · ${t("Field Assistant")}` : t("Field Assistant");
   }, [me]);
 
   return <Ctx.Provider value={{ me, loading, error, signIn, signOut }}>{children}</Ctx.Provider>;

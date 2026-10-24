@@ -10,6 +10,8 @@ interactive, explodable **3D models** with the relevant parts highlighted, docum
 text files are **searchable**: "Ask the documents" answers questions with citations to document and page.
 
 Data, files and logins live in **Supabase**, reached over HTTPS only. Each company only ever sees its own data.
+The interface is in **Spanish by default** with an ES | EN switch; AI replies follow the chosen language
+(see [docs/LANGUAGES.md](docs/LANGUAGES.md)).
 
 ## Quick start (macOS / Linux)
 
@@ -64,6 +66,6 @@ docs/                 architecture, database, API, deployment, limitations
 
 Docs describing the previous inspection prototype (kept for reference, no longer match the app):
 DEMO.md, MULTI_INDUSTRY.md, FIRE_EXTINGUISHER.md, REAL_CHAIR.md, MODEL_REPLACEMENT.md, PHOTO_CAPTURE_CHECKLIST.md,
-AUDIT.md. ENGINEERING_PACKAGE_SPEC.md still describes the format of the demo packages in `engineering-packages/`.
+AUDIT.md. UX_AUDIT.md describes the plain-language principles (still applied) as reviewed on the old screens. ENGINEERING_PACKAGE_SPEC.md still describes the format of the demo packages in `engineering-packages/`.
 
 Test deployment: https://field-execution-platform.vercel.app (see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)).

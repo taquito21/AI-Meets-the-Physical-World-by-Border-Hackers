@@ -77,3 +77,10 @@
 - Media library with 3D models (parts lists), documents and images; signed Storage URLs.
 - Document search: Voyage AI embeddings + pgvector function + Claude answers with citations.
 - New web client: login, jobs, job detail with tasks/evidence/3D, new job, media library, ask the documents.
+
+## 2026-10-24: merged main (UX audit 3, Spanish interface) into the rebuild
+- Kept from main: ES | EN switch (Spanish default), `t()` dictionaries, lucide icons, plain-language AI card and
+  wording, bigger touch targets and contrast, Spanish AI replies, package `translations/es.json` (now stored with
+  the demo 3D models and applied per request).
+- Dropped with the old screens: their page-specific changes, inspection/requirement translations, Spanish practice
+  results. New-screen strings translated in `web/src/i18n/es-app.ts` / `es-server.ts`.

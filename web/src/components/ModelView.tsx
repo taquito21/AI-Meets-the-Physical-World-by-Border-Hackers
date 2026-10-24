@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { MediaItem, TaskStatus } from "../api";
+import { t } from "../i18n";
 import AssemblyViewer from "./AssemblyViewer";
 import { TechSheet } from "./TechSheet";
 import { useAssemblyControls } from "./useAssemblyControls";
@@ -12,7 +13,7 @@ export function ModelView({ model, highlight = [], status = "pending" }:
   const tint = useMemo(() => Object.fromEntries(highlight.map((id) => [id, status])), [highlight, status]);
   const { viewerProps, controls } = useAssemblyControls(parts, selected);
   const part = parts.find((p) => p.id === selected);
-  if (!model.url) return <div className="viewer-fallback">Model file unavailable.</div>;
+  if (!model.url) return <div className="viewer-fallback">{t("The 3D model file is not available.")}</div>;
   return (
     <div className="model-view">
       <AssemblyViewer assemblyUrl={model.url} components={parts} status={tint} selectedId={selected}
@@ -20,7 +21,7 @@ export function ModelView({ model, highlight = [], status = "pending" }:
       {controls}
       {highlight.length > 0 && (
         <div className="tiny muted pad">
-          This task is about: {highlight.map((id) => parts.find((p) => p.id === id)?.name ?? id).join(", ")}
+          {t("This task is about:")} {highlight.map((id) => parts.find((p) => p.id === id)?.name ?? id).join(", ")}
         </div>
       )}
       {part && <div className="pad"><TechSheet comp={part} /></div>}

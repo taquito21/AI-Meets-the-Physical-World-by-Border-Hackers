@@ -93,8 +93,8 @@ def _hash_dir(pkg: Path) -> str:
     h = hashlib.sha256()
     for f in sorted(p for p in pkg.rglob("*") if p.is_file()):
         rel = f.relative_to(pkg).as_posix()
-        if rel.startswith(("reference-images/", "demo-evidence/")):
-            continue  # reference/demo photos may be added without changing the engineering content
+        if rel.startswith(("reference-images/", "demo-evidence/", "translations/")):
+            continue  # photos and display translations may be added without changing the engineering content
         h.update(rel.encode())
         h.update(f.read_bytes())
     return h.hexdigest()
@@ -276,15 +276,37 @@ def validate_package(package_dir: Path) -> PackageReport:
             report.errors.append(f"demo evidence {entry.get('id')}: unknown requirement {entry.get('requirement_id')}")
         if not (pkg / "demo-evidence" / str(entry.get("file", ""))).is_file():
             report.errors.append(f"demo evidence {entry.get('id')}: file not found ({entry.get('file')})")
-        pre = entry.get("precomputed_assessment")
-        if pre is not None:
+        for key in [k for k in entry if k.startswith("precomputed_assessment")]:  # one per language
+            pre = entry[key]
             from .ai import AssessmentResult  # local import: keeps package validation light for tools
             try:
                 AssessmentResult.model_validate(pre.get("result"))
                 if not pre.get("model") or not pre.get("captured_at"):
                     raise ValueError("model and captured_at are required")
             except Exception as exc:  # noqa: BLE001 - report any schema problem as a validation error
-                report.errors.append(f"demo evidence {entry.get('id')}: invalid precomputed assessment ({str(exc)[:120]})")
+                report.errors.append(f"demo evidence {entry.get('id')}: invalid {key} ({str(exc)[:120]})")
+
+    # --- optional display translations (translations/<lang>.json, outside the content hash): ids must exist and
+    # translated lists must line up item for item, otherwise the app silently falls back to the English text.
+    reqs_by_id = {r.get("requirement_id"): r for r in report.procedure.get("requirements", [])}
+    tr_dir = pkg / "translations"
+    for tf in sorted(tr_dir.glob("*.json")) if tr_dir.is_dir() else []:
+        try:
+            tr = json.loads(tf.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            report.errors.append(f"translations/{tf.name}: invalid JSON ({exc})")
+            continue
+        for cid in tr.get("components") or {}:
+            if cid not in seen_ids:
+                report.warnings.append(f"translations/{tf.name}: unknown component {cid}")
+        for rid, t in (tr.get("requirements") or {}).items():
+            if rid not in reqs_by_id:
+                report.warnings.append(f"translations/{tf.name}: unknown requirement {rid}")
+                continue
+            for key, value in t.items():
+                if isinstance(value, list) and len(value) != len(reqs_by_id[rid].get(key) or []):
+                    report.warnings.append(f"translations/{tf.name}: {rid}.{key} has {len(value)} items, "
+                                           f"source has {len(reqs_by_id[rid].get(key) or [])}")
 
     report.content_hash = _hash_dir(pkg)
     return report
