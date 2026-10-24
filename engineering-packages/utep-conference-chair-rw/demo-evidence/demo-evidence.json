@@ -1,0 +1,286 @@
+{
+  "description": "Real photographs of the physical venue chair, prepared for demo-mode inspections. Precomputed AI results are produced with tools/precompute_demo_assessments.py.",
+  "items": [
+    {
+      "id": "DEMO-RW-SEAT",
+      "requirement_id": "SEAT-CUSHION-SURFACE",
+      "file": "photo-front.jpg",
+      "caption": "Seat and backrest, front view (real photo)",
+      "source": "Real photograph of the venue chair, taken by the team at the venue on 2026-10-24. Prepared for demo mode (not captured during this inspection).",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 7000,
+        "captured_at": "2026-10-24T16:44:54+00:00",
+        "result": {
+          "summary": "Front view shows the whole seat cushion clearly in good light. The upholstery top surface and front edge show no visible tears, peeling, open seams or exposed foam. The photo is usable evidence.",
+          "correct_area_visible": "yes",
+          "image_quality": "good",
+          "evidence_sufficient": true,
+          "observations": [
+            "Dark blue smooth upholstered seat is fully in frame from the front, slightly above.",
+            "No visible tears, cuts, punctures or peeling on the top surface or front edge.",
+            "No exposed foam visible.",
+            "Seat surface appears evenly contoured; no obvious collapsed area visible.",
+            "Light creasing and sheen near the front edge, consistent with normal cover texture.",
+            "Seams are not distinctly visible from this angle."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Side edges and underside seams are not shown up close.",
+            "Rear of the seat where it meets the backrest is partly hidden."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "low",
+          "limitations": [
+            "Internal foam condition cannot be judged from a photo.",
+            "Small cuts or seam gaps on the sides or underside may not be visible.",
+            "Seat dimensions are demonstration values and were not verified.",
+            "Load capacity and mechanism condition cannot be assessed from a photo."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-RW-MESH",
+      "requirement_id": "BACK-MESH-CONDITION",
+      "file": "photo-rear.jpg",
+      "caption": "Backrest mesh, rear view (real photo)",
+      "source": "Real photograph of the venue chair, taken by the team at the venue on 2026-10-24. Prepared for demo mode (not captured during this inspection).",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 4764,
+        "captured_at": "2026-10-24T16:44:59+00:00",
+        "result": {
+          "summary": "Rear, straight-on view of the full backrest mesh in its frame. Mesh appears continuous with no visible holes, runs or detached edges. Usable evidence for human review.",
+          "correct_area_visible": "yes",
+          "image_quality": "good",
+          "evidence_sufficient": true,
+          "observations": [
+            "Full backrest visible from the rear, roughly straight on.",
+            "Mesh weave looks uniform across the panel; no visible holes or runs.",
+            "Mesh edges appear seated along the full frame perimeter.",
+            "No obvious sagging or wrinkling visible from this angle.",
+            "Backlighting from the room shows through the mesh, making weave gaps visible."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Front (seated-side) view of the mesh not provided."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "low",
+          "limitations": [
+            "Mesh tension can only be judged approximately from a photo.",
+            "Small snags or runs may not be resolvable at this distance.",
+            "Front face of the mesh is not shown.",
+            "Mesh area dimensions cannot be verified from the photo."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-RW-FRAME",
+      "requirement_id": "BACK-FRAME-CONDITION",
+      "file": "photo-rear.jpg",
+      "caption": "Backrest frame, rear view (real photo)",
+      "source": "Real photograph of the venue chair, taken by the team at the venue on 2026-10-24. Prepared for demo mode (not captured during this inspection).",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 4469,
+        "captured_at": "2026-10-24T16:45:03+00:00",
+        "result": {
+          "summary": "Rear view of the backrest shows the full frame, all four corners and the lower rail with the HON logo. No visible cracks or deformation; usable evidence for inspector review.",
+          "correct_area_visible": "yes",
+          "image_quality": "good",
+          "evidence_sufficient": true,
+          "observations": [
+            "Full rear of backrest frame visible, including top corners and lower rail.",
+            "HON logo legible on lower rear rail.",
+            "Frame appears continuous with no visible cracks or bends at this resolution.",
+            "Mesh appears seated in the frame with no visible tears.",
+            "Lighting even; image sharp."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "No close-up of corners to check for hairline cracks.",
+            "Front side and inner frame edges not shown."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "low",
+          "limitations": [
+            "Hairline cracks may not be visible at this distance.",
+            "Structural strength and attachment tightness cannot be judged from a photo.",
+            "Backrest height value is unverified demonstration data."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-RW-RING",
+      "requirement_id": "FOOT-RING-SECURE",
+      "file": "photo-underside.jpg",
+      "caption": "Foot ring and spokes from below (real photo)",
+      "source": "Real photograph of the venue chair, taken by the team at the venue on 2026-10-24. Prepared for demo mode (not captured during this inspection).",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 5750,
+        "captured_at": "2026-10-24T16:45:09+00:00",
+        "result": {
+          "summary": "Underside view clearly shows the foot ring, its three spokes and the collar on the column. No obvious cracks visible. Clamp firmness requires the hand check.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": true,
+          "observations": [
+            "Grey circular foot ring visible from below, nearly full circumference.",
+            "Three spokes connect ring to collar on the black column.",
+            "No visible cracks, breaks or deformation on ring or spokes at this resolution.",
+            "Bright ceiling lights backlight the ring; some surfaces are in shadow.",
+            "Seat underside label visible but not legible."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Result of hand check that ring does not slip on column.",
+            "Close-up of the spoke-to-ring joints and the collar if fine cracks are a concern."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "low",
+          "limitations": [
+            "Clamp firmness and slip resistance cannot be judged from a photo.",
+            "Hairline cracks may not be visible due to backlighting and distance.",
+            "Ring diameter cannot be measured from the image.",
+            "Load capacity and gas-lift condition not assessed."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-RW-MECH",
+      "requirement_id": "MECHANISM-UNDERSIDE",
+      "file": "photo-mechanism.jpg",
+      "caption": "Under-seat mechanism close-up (real photo)",
+      "source": "Real photograph of the venue chair, taken by the team at the venue on 2026-10-24. Prepared for demo mode (not captured during this inspection).",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 7561,
+        "captured_at": "2026-10-24T16:45:17+00:00",
+        "result": {
+          "summary": "Underside of seat shows the black mounting plate, mechanism housing and gas-lift top. Plate has several holes: some appear to be empty star-shaped (Torx-like) recesses, others hold socket-head fasteners or threaded holes. Whether the empty positions are missing fasteners or unused holes needs human judgement.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": true,
+          "observations": [
+            "Black mounting plate visible with a round sticker reading '1889 / 1'.",
+            "Plate shows about seven holes: three star-shaped recesses and three or four round holes.",
+            "Round holes appear to contain recessed socket-head screws or threads; this is not certain.",
+            "Grey seat-frame arm and gas-lift top with ribbed collar are visible.",
+            "Mechanism housing behind the plate is partly shadowed and slightly blurred.",
+            "No obvious crack is visible on the plate surface."
+          ],
+          "conditions_for_human_review": [
+            "The star-shaped holes appear empty; confirm whether fasteners are required there.",
+            "Confirm that the round holes contain installed screws rather than empty threaded holes."
+          ],
+          "missing_information": [
+            "Reference showing the required fastener positions on the plate.",
+            "Clear view of the plate-to-seat attachment screws at the plate edges."
+          ],
+          "recommended_action": "flag_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "medium",
+          "limitations": [
+            "Fastener torque and tightness cannot be verified from a photo.",
+            "Internal mechanism and gas-lift condition cannot be assessed.",
+            "Angle and slight blur limit detection of fine cracks."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-RW-LABEL",
+      "requirement_id": "UNDERSIDE-LABEL",
+      "file": "photo-mechanism.jpg",
+      "caption": "Underside label and mechanism (real photo)",
+      "source": "Real photograph of the venue chair, taken by the team at the venue on 2026-10-24. Prepared for demo mode (not captured during this inspection).",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 5500,
+        "captured_at": "2026-10-24T16:45:22+00:00",
+        "result": {
+          "summary": "Underside of chair seat shown; a white barcode label is visible at the left edge but is cut off, angled and too small to read. Photo centers on the mechanism, not the label.",
+          "correct_area_visible": "uncertain",
+          "image_quality": "acceptable",
+          "evidence_sufficient": false,
+          "observations": [
+            "White label with barcode partially visible at left edge of frame",
+            "Label text is small, rotated and not legible",
+            "Frame is dominated by gas-lift column, seat plate and mechanism",
+            "Small round sticker reading '1589 / 1' visible on mounting plate",
+            "Label is partly cropped by the image border"
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Full view of identification label",
+            "Legible label text and barcode"
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Photograph the white barcode label under the seat straight-on and close, so the whole label fills most of the frame and its text is sharp. Avoid glare and keep the column out of the shot.",
+          "uncertainty": "medium",
+          "limitations": [
+            "Label content cannot be read or verified from this photo",
+            "Label content is not checked against any database",
+            "Photo cannot establish mechanism, gas-lift or fastener condition"
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-RW-BASE",
+      "requirement_id": "BASE-CONDITION",
+      "file": "photo-side.jpg",
+      "caption": "Base and casters, side view (real photo)",
+      "source": "Real photograph of the venue chair, taken by the team at the venue on 2026-10-24. Prepared for demo mode (not captured during this inspection).",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 5063,
+        "captured_at": "2026-10-24T16:45:27+00:00",
+        "result": {
+          "summary": "Side/slightly-above view shows the five-star base of the foreground chair with all five arms, hub and casters visible. No obvious cracks or deformation seen on top surfaces.",
+          "correct_area_visible": "yes",
+          "image_quality": "good",
+          "evidence_sufficient": true,
+          "observations": [
+            "Five base arms visible, each ending in a caster.",
+            "Central hub and lower gas-lift column visible; hub top surface appears intact.",
+            "No visible cracks, bends or missing arms on upper surfaces.",
+            "Rear arm partly in shadow under seat but discernible.",
+            "Foot ring and casters visible; not part of this requirement."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Underside of arms and hub not visible.",
+            "Close-up of hub-to-arm junctions not provided."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "low",
+          "limitations": [
+            "Underside cracks cannot be seen from this angle.",
+            "Hairline cracks may not be resolvable at this distance.",
+            "Load capacity, fastener condition and gas-lift condition cannot be judged from a photo.",
+            "Base diameter is a demonstration estimate and not verified."
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -48,7 +48,7 @@ backend/.venv/Scripts/python tools/reset_demo_data.py --yes      # wipe local DB
 backend/app/        FastAPI app: packages.py (validation), catalog.py (import), workflow.py (rules), ai.py, main.py (REST)
 backend/tests/      end-to-end API tests
 web/src/            React + Three.js (React Three Fiber) client; AssemblyViewer.tsx is the reusable 3D viewer
-engineering-packages/  chair-model-001, table-model-001, electrical-panel-icp-001 (demo asset packages)
+engineering-packages/  chair-model-001, table-model-001, electrical-panel-icp-001, utep-conference-chair-rw (real venue chair)
 tools/              package builder, validator, data reset, demo AI precompute
 docs/               architecture, package spec, API, demo script, limitations, model replacement, photo checklist
 ```

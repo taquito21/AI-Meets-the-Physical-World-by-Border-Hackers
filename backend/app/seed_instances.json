@@ -58,5 +58,15 @@
       "commissioned": "2026-02 (sample data)",
       "note": "Demonstration asset instance"
     }
+  },
+  {
+    "serial_number": "UTEP-CHAIR-RW-01",
+    "product_model_id": "UTEP-CHAIR-RW",
+    "product_revision_id": "UTEP-CHAIR-RW@A",
+    "metadata": {
+      "location": "Pitch room (the physical chair used in the live demo)",
+      "identified_by": "Team photos, 2026-10-24",
+      "note": "Real venue chair; asset tag not recorded"
+    }
   }
 ]

@@ -69,6 +69,25 @@ def cylinder_mesh(r: float, h: float, segments: int = 20):
     return pos, nrm, idx
 
 
+def torus_mesh(radius: float, tube: float, radial: int = 48, tubular: int = 12):
+    """Ring lying in the local XZ plane (axis = local Y), e.g. a chair foot ring."""
+    pos, nrm, idx = [], [], []
+    for i in range(radial + 1):
+        u = 2 * math.pi * i / radial
+        cu, su = math.cos(u), math.sin(u)
+        for j in range(tubular + 1):
+            v = 2 * math.pi * j / tubular
+            cv, sv = math.cos(v), math.sin(v)
+            pos.append(((radius + tube * cv) * cu, tube * sv, (radius + tube * cv) * su))
+            nrm.append((cv * cu, sv, cv * su))
+    row = tubular + 1
+    for i in range(radial):
+        for j in range(tubular):
+            a, b = i * row + j, (i + 1) * row + j
+            idx += [a, a + 1, b + 1, a, b + 1, b]
+    return pos, nrm, idx
+
+
 def euler_deg_to_quat(rx: float, ry: float, rz: float):
     """XYZ intrinsic euler (degrees) -> glTF quaternion [x, y, z, w]."""
     x, y, z = (math.radians(v) / 2 for v in (rx, ry, rz))
@@ -128,6 +147,8 @@ def build_glb(geometry: dict) -> bytes:
             pos, nrm, idx = box_mesh(*node["size"])
         elif node["shape"] == "cylinder":
             pos, nrm, idx = cylinder_mesh(node["radius"], node["height"])
+        elif node["shape"] == "torus":
+            pos, nrm, idx = torus_mesh(node["radius"], node["tube"])
         else:
             raise ValueError(f"unsupported shape {node['shape']} on {nid}")
 
@@ -172,6 +193,9 @@ def node_bounds(node: dict):
     """Axis-aligned extents (ignores rotation except 90-degree swaps for cylinders)."""
     if node["shape"] == "box":
         sx, sy, sz = node["size"]
+    elif node["shape"] == "torus":
+        d = 2 * (node["radius"] + node["tube"])
+        sx, sy, sz = d, 2 * node["tube"], d
     else:
         r, h = node["radius"], node["height"]
         sx, sy, sz = 2 * r, h, 2 * r

@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 943 590" font-family="monospace">
+<rect width="943" height="590" fill="#fff"/>
+<rect x="4" y="4" width="935" height="582" fill="none" stroke="#000" stroke-width="2"/>
+<text x="40" y="28" font-size="13" font-weight="bold">FRONT VIEW (looking -Z)</text>
+<rect x="125.7" y="358.5" width="28.8" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_hub</title></rect>
+<rect x="95.1" y="369.8" width="90.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_1</title></rect>
+<rect x="134.1" y="382.5" width="12.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_1</title></rect>
+<rect x="40.9" y="369.8" width="90.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_2</title></rect>
+<rect x="40.0" y="382.5" width="12.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_2</title></rect>
+<rect x="61.6" y="369.8" width="90.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_3</title></rect>
+<rect x="75.9" y="382.5" width="12.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_3</title></rect>
+<rect x="128.7" y="369.8" width="90.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_4</title></rect>
+<rect x="192.3" y="382.5" width="12.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_4</title></rect>
+<rect x="149.4" y="369.8" width="90.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_5</title></rect>
+<rect x="228.3" y="382.5" width="12.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_5</title></rect>
+<rect x="132.9" y="248.4" width="14.4" height="110.1" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>gas_lift</title></rect>
+<rect x="78.3" y="248.7" width="123.6" height="9.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring</title></rect>
+<rect x="128.1" y="246.8" width="24.0" height="13.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring_collar</title></rect>
+<rect x="116.9" y="250.5" width="46.5" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring_spoke_1</title></rect>
+<rect x="146.1" y="250.5" width="46.5" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring_spoke_2</title></rect>
+<rect x="87.7" y="250.5" width="46.5" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring_spoke_3</title></rect>
+<rect x="71.1" y="228.9" width="138.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_support</title></rect>
+<rect x="68.1" y="206.4" width="144.0" height="22.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_cushion</title></rect>
+<rect x="113.1" y="237.9" width="54.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>mechanism</title></rect>
+<rect x="165.6" y="237.9" width="21.0" height="1.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>underside_label</title></rect>
+<rect x="80.1" y="216.0" width="120.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_bottom</title></rect>
+<rect x="197.1" y="47.3" width="10.5" height="186.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_left</title></rect>
+<rect x="72.6" y="47.3" width="10.5" height="186.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_right</title></rect>
+<rect x="129.6" y="233.4" width="21.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_spine</title></rect>
+<rect x="72.6" y="40.0" width="135.0" height="13.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_top</title></rect>
+<rect x="83.1" y="55.0" width="114.0" height="160.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_mesh</title></rect>
+<rect x="216.0" y="147.0" width="9.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_l_top</title></rect>
+<rect x="216.0" y="150.7" width="9.0" height="70.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_l_post</title></rect>
+<rect x="216.0" y="215.4" width="9.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_l_lower</title></rect>
+<rect x="55.2" y="147.0" width="9.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_r_top</title></rect>
+<rect x="55.2" y="150.7" width="9.0" height="70.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_r_post</title></rect>
+<rect x="55.2" y="215.4" width="9.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_r_lower</title></rect>
+<text x="40" y="422.54" font-size="11">overall 668 x 1202 mm (nominal)</text>
+<text x="300.28000000000003" y="28" font-size="13" font-weight="bold">SIDE VIEW (looking -X)</text>
+<rect x="393.9" y="358.5" width="28.8" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_hub</title></rect>
+<rect x="343.8" y="369.8" width="15.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_1</title></rect>
+<rect x="300.3" y="382.5" width="18.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_1</title></rect>
+<rect x="383.2" y="369.8" width="15.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_2</title></rect>
+<rect x="368.7" y="382.5" width="18.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_2</title></rect>
+<rect x="446.9" y="369.8" width="15.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_3</title></rect>
+<rect x="479.4" y="382.5" width="18.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_3</title></rect>
+<rect x="446.9" y="369.8" width="15.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_4</title></rect>
+<rect x="479.4" y="382.5" width="18.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_4</title></rect>
+<rect x="383.2" y="369.8" width="15.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_5</title></rect>
+<rect x="368.7" y="382.5" width="18.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_5</title></rect>
+<rect x="401.1" y="248.4" width="14.4" height="110.1" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>gas_lift</title></rect>
+<rect x="346.5" y="248.7" width="123.6" height="9.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring</title></rect>
+<rect x="396.3" y="246.8" width="24.0" height="13.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring_collar</title></rect>
+<rect x="437.8" y="250.5" width="8.4" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring_spoke_1</title></rect>
+<rect x="387.2" y="250.5" width="8.4" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring_spoke_2</title></rect>
+<rect x="387.2" y="250.5" width="8.4" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring_spoke_3</title></rect>
+<rect x="342.3" y="228.9" width="132.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_support</title></rect>
+<rect x="336.3" y="206.4" width="138.0" height="22.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_cushion</title></rect>
+<rect x="378.3" y="237.9" width="66.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>mechanism</title></rect>
+<rect x="434.5" y="237.9" width="13.5" height="1.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>underside_label</title></rect>
+<rect x="467.1" y="216.0" width="10.5" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_bottom</title></rect>
+<rect x="478.8" y="47.3" width="10.5" height="186.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_left</title></rect>
+<rect x="478.8" y="47.3" width="10.5" height="186.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_right</title></rect>
+<rect x="421.8" y="233.4" width="51.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_spine</title></rect>
+<rect x="491.2" y="40.0" width="12.0" height="13.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_top</title></rect>
+<rect x="484.2" y="55.0" width="3.0" height="160.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_mesh</title></rect>
+<rect x="369.3" y="147.0" width="113.2" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_l_top</title></rect>
+<rect x="372.3" y="150.7" width="9.0" height="70.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_l_post</title></rect>
+<rect x="384.3" y="215.4" width="84.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_l_lower</title></rect>
+<rect x="369.3" y="147.0" width="113.2" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_r_top</title></rect>
+<rect x="372.3" y="150.7" width="9.0" height="70.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_r_post</title></rect>
+<rect x="384.3" y="215.4" width="84.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_r_lower</title></rect>
+<text x="300.28000000000003" y="422.54" font-size="11">overall 676 x 1202 mm (nominal)</text>
+<text x="563.2" y="28" font-size="13" font-weight="bold">TOP VIEW</text>
+<rect x="648.9" y="120.5" width="28.8" height="28.8" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_hub</title></rect>
+<rect x="618.3" y="184.4" width="90.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_1</title></rect>
+<rect x="657.3" y="224.9" width="12.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_1</title></rect>
+<rect x="564.1" y="145.0" width="90.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_2</title></rect>
+<rect x="563.2" y="156.5" width="12.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_2</title></rect>
+<rect x="584.8" y="81.3" width="90.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_3</title></rect>
+<rect x="599.1" y="45.8" width="12.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_3</title></rect>
+<rect x="651.9" y="81.3" width="90.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_4</title></rect>
+<rect x="715.5" y="45.8" width="12.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_4</title></rect>
+<rect x="672.6" y="145.0" width="90.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>base_arm_5</title></rect>
+<rect x="751.5" y="156.5" width="12.0" height="18.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>caster_5</title></rect>
+<rect x="656.1" y="127.7" width="14.4" height="14.4" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>gas_lift</title></rect>
+<rect x="601.5" y="73.1" width="123.6" height="123.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring</title></rect>
+<rect x="651.3" y="122.9" width="24.0" height="24.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring_collar</title></rect>
+<rect x="640.1" y="97.0" width="46.5" height="8.4" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring_spoke_1</title></rect>
+<rect x="669.3" y="147.6" width="46.5" height="8.4" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring_spoke_2</title></rect>
+<rect x="610.9" y="147.6" width="46.5" height="8.4" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>foot_ring_spoke_3</title></rect>
+<rect x="594.3" y="68.9" width="138.0" height="132.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_support</title></rect>
+<rect x="591.3" y="68.9" width="144.0" height="138.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_cushion</title></rect>
+<rect x="636.3" y="98.9" width="54.0" height="66.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>mechanism</title></rect>
+<rect x="688.8" y="95.2" width="21.0" height="13.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>underside_label</title></rect>
+<rect x="603.3" y="65.6" width="120.0" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_bottom</title></rect>
+<rect x="720.3" y="53.9" width="10.5" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_left</title></rect>
+<rect x="595.8" y="53.9" width="10.5" height="10.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_right</title></rect>
+<rect x="652.8" y="70.4" width="21.0" height="51.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_spine</title></rect>
+<rect x="595.8" y="40.0" width="135.0" height="12.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_frame_top</title></rect>
+<rect x="606.3" y="56.0" width="114.0" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>back_mesh</title></rect>
+<rect x="739.2" y="60.7" width="9.0" height="113.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_l_top</title></rect>
+<rect x="739.2" y="161.9" width="9.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_l_post</title></rect>
+<rect x="739.2" y="74.9" width="9.0" height="84.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_l_lower</title></rect>
+<rect x="578.4" y="60.7" width="9.0" height="113.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_r_top</title></rect>
+<rect x="578.4" y="161.9" width="9.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_r_post</title></rect>
+<rect x="578.4" y="74.9" width="9.0" height="84.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>arm_r_lower</title></rect>
+<text x="563.2" y="422.54" font-size="11">overall 668 x 676 mm (nominal)</text>
+<line x1="4" y1="510" x2="939" y2="510" stroke="#000"/>
+<text x="16" y="532" font-size="12">Unverified (HON logo visible on backrest frame) - UTEP Conference Chair — Real-World Demo (UTEP-CHAIR-RW)</text>
+<text x="16" y="550" font-size="12">Engineering revision A - General arrangement - generated from source/geometry.json</text>
+<text x="16" y="568" font-size="12">DEMONSTRATION DRAWING - simplified projection, nominal dimensions, not for manufacture.</text>
+</svg>

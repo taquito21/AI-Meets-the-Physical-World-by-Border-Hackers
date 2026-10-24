@@ -50,3 +50,9 @@
 ## 2026-10-24: audit 2
 - 9 findings (1 high: vulnerable dependencies), all fixed or documented. See AUDIT.md "Audit 2". 31 tests passing.
 - Not redeployed and not pushed yet (pending approval).
+
+## 2026-10-24: real venue chair asset (UTEP-CHAIR-RW)
+- Built from 5 team photos: new package `utep-conference-chair-rw` (12 components, 33 nodes, 12 requirements), with a torus primitive added to the GLB builder.
+- **AI positive path verified on real photos**: 5 of 7 accept_for_human_review, 1 genuine flag (empty fastener holes on the mechanism plate), 1 retake (label cut off).
+  The same verdicts were reproduced through a live inspection upload (6–8 s).
+- 32 tests passing. The local demo data was reset (immutable revision reloaded). See REAL_CHAIR.md.

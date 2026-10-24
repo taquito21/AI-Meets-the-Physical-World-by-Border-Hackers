@@ -1,0 +1,28 @@
+{
+  "package_version": "1.0",
+  "package_id": "PKG-UTEP-CHAIR-RW-A",
+  "manufacturer": "Unverified (HON logo visible on backrest frame)",
+  "manufacturer_id": "MFR-UNVERIFIED",
+  "product_id": "UTEP-CHAIR-RW",
+  "product_name": "UTEP Conference Chair — Real-World Demo",
+  "product_description": "Swivel task chair at stool height, as used at the venue: light grey frame, dark blue upholstered seat, dark blue mesh backrest, integrated loop armrests, circular foot ring, black gas lift, five-star base on casters. Approximate 3D model built by the team from five photographs of the physical chair; not manufacturer CAD, and dimensions are estimates.",
+  "industry": "Furniture",
+  "asset_category": "Venue furniture (real-world demo)",
+  "engineering_revision": "A",
+  "released_at": "2026-10-24",
+  "units": "m",
+  "assembly_file": "assembly.glb",
+  "components_file": "components.json",
+  "bom_file": "bom.csv",
+  "inspection_procedure_file": "inspection-procedure.json",
+  "documents": [
+    {"id": "DWG-UTEP-GA", "title": "General arrangement (approximate)", "type": "drawing", "path": "drawings/general-arrangement.svg"},
+    {"id": "REF-FRONT", "title": "Reference photo: front", "type": "reference_image", "path": "reference-images/front.jpg"},
+    {"id": "REF-REAR", "title": "Reference photo: rear", "type": "reference_image", "path": "reference-images/rear.jpg"},
+    {"id": "REF-SIDE", "title": "Reference photo: side", "type": "reference_image", "path": "reference-images/side.jpg"},
+    {"id": "REF-UNDER", "title": "Reference photo: underside", "type": "reference_image", "path": "reference-images/underside.jpg"},
+    {"id": "REF-MECH", "title": "Reference photo: mechanism close-up", "type": "reference_image", "path": "reference-images/mechanism.jpg"}
+  ],
+  "demonstration_package": true,
+  "provenance": "Modelled by the hackathon team from five photographs of the physical chair at the venue (2026-10-24). Not supplied by the manufacturer; no manufacturer specifications are used. All dimensions are estimates."
+}

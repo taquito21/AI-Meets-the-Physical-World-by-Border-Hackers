@@ -30,3 +30,6 @@
 After Scene 6: Assets → **Electrical** → open the prepared ICP-001 demo inspection → **Open door** → breakers → **Zoom to part** →
 **Use demo photo (live AI)** (offline fallback: *precomputed result*, labelled) → **Fail… → Record finding** → **Dashboard → All industries**.
 The full script is in MULTI_INDUSTRY.md §6.
+
+## Real chair segment (preferred for the live demo)
+Use the UTEP Conference Chair asset with the physical chair in the room. The script is in REAL_CHAIR.md.
