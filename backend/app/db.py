@@ -93,6 +93,12 @@ CREATE TABLE IF NOT EXISTS activity_events (
   id TEXT PRIMARY KEY, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL,
   event_type TEXT NOT NULL, actor TEXT, metadata TEXT, created_at TEXT NOT NULL
 );
+-- Accounts: passwords only as PBKDF2 hashes; faces only as 128-number embeddings (never photos), with consent.
+CREATE TABLE IF NOT EXISTS users (
+  username TEXT PRIMARY KEY, display_name TEXT NOT NULL, role TEXT NOT NULL CHECK (role IN ('inspector','supervisor')),
+  salt TEXT NOT NULL, pw_hash TEXT NOT NULL, iters INTEGER NOT NULL, faces TEXT NOT NULL DEFAULT '[]',
+  face_consent_at TEXT, active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, created_by TEXT
+);
 CREATE INDEX IF NOT EXISTS ix_items_inspection ON inspection_items(inspection_id);
 CREATE INDEX IF NOT EXISTS ix_evidence_item ON evidence(inspection_item_id);
 CREATE INDEX IF NOT EXISTS ix_findings_inspection ON findings(inspection_id);
@@ -165,7 +171,7 @@ def read() -> Iterator[sqlite3.Connection]:
 
 JSON_COLUMNS = {
     "manifest", "validation", "procedure", "model_node_ids", "explosion", "documents", "definition",
-    "metadata", "requirement_snapshot", "image_checks", "result", "item_ids",
+    "metadata", "requirement_snapshot", "image_checks", "result", "item_ids", "faces",
 }
 BOOL_COLUMNS = {"required", "manual_confirmed"}
 

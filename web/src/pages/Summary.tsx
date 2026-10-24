@@ -45,7 +45,7 @@ const DECISION: Record<string, string> = {
 
 export default function Summary({ review = false }: { review?: boolean }) {
   const { id = "" } = useParams();
-  const { name } = useSession();
+  const { name, role } = useSession();
   const [state, setState] = useState<InspectionState | null>(null);
   const [rev, setRev] = useState<Revision | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
@@ -81,7 +81,7 @@ export default function Summary({ review = false }: { review?: boolean }) {
     n.has(itemId) ? n.delete(itemId) : n.add(itemId);
     setRequested(n);
   };
-  const canReview = review && s.status === "submitted";
+  const canReview = review && role === "supervisor" && s.status === "submitted";
 
   return (
     <div className="page report">

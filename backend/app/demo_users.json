@@ -1,0 +1,21 @@
+{
+  "note": "Demo accounts: username and PBKDF2-HMAC-SHA256 hash only (no passwords, no faces). Passwords are kept outside the repository.",
+  "users": [
+    {
+      "username": "jefe",
+      "display_name": "Jefe (demo)",
+      "role": "supervisor",
+      "salt": "2cCfWK+TBizl7wiW5yKOyg==",
+      "pw_hash": "5fAs0H9bEHK9pxwoJSb01lBzz5kp+7cyDvJyZuxzFr0=",
+      "iters": 200000
+    },
+    {
+      "username": "trabajador",
+      "display_name": "Trabajador (demo)",
+      "role": "inspector",
+      "salt": "I5vnWowgVVII/I458wm0+w==",
+      "pw_hash": "5F6GyRdFB1whmzeOzIpIp18fqB0l+R89FvnFVmPS53M=",
+      "iters": 200000
+    }
+  ]
+}

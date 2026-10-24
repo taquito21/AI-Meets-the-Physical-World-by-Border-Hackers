@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ChartColumn, ClipboardCheck, CloudOff, Pointer, Search, Send, Upload, UserRound, Wrench } from "lucide-react";
+import { ArrowRight, ChartColumn, ClipboardCheck, CloudOff, Pointer, ScanFace, Search, Send, Upload, UserRound, Wrench } from "lucide-react";
 import { api } from "../api";
 import { INDUSTRY_ICON, InspectionChip, ModeBadge, useAsync, when } from "../components/ui";
 import { t } from "../i18n";
@@ -13,10 +12,9 @@ const SCENARIOS = [
 ];
 
 export default function Home() {
-  const { name, setName, role, setRole, health, label, setIndustry } = useSession();
+  const { name, role, user, health, label, setIndustry } = useSession();
   const nav = useNavigate();
   const { data: all } = useAsync(() => api.inspections(), []);
-  const [editingName, setEditingName] = useState(!name.trim());
   const ongoing = (all ?? []).filter((i) => ["in_progress", "changes_requested"].includes(i.status)).slice(0, 5);
   const waitingReview = (all ?? []).filter((i) => i.status === "submitted").length;
 
@@ -81,28 +79,16 @@ export default function Home() {
       )}
 
       <section className="card">
-        {editingName ? (
-          <>
-            <h2 className="with-icon"><UserRound aria-hidden />{t("Who is working?")}</h2>
-            <div className="row">
-              <input value={name} onChange={(e) => setName(e.target.value)} aria-label={t("Your name")} placeholder={t("Your name")} />
-              <div className="segmented">
-                <button className={role === "inspector" ? "on" : ""} onClick={() => setRole("inspector")}>{t("Inspector")}</button>
-                <button className={role === "supervisor" ? "on" : ""} onClick={() => setRole("supervisor")}>{t("Supervisor")}</button>
-              </div>
-              <button className="btn btn-primary" disabled={!name.trim()} onClick={() => setEditingName(false)}>{t("Save")}</button>
-            </div>
-            <p className="muted small">{t("Your name is saved with everything you do. A supervisor must be a different person from the inspector. This demo has no passwords.")}</p>
-          </>
-        ) : (
-          <div className="row">
-            <span className="grow with-icon"><UserRound aria-hidden /><span>{t("Working as")} <b>{name}</b> ({role === "supervisor" ? t("supervisor") : t("inspector")})</span></span>
-            <button className="btn btn-ghost btn-small" onClick={() => setEditingName(true)}>{t("Change")}</button>
-          </div>
+        <div className="row">
+          <span className="grow with-icon"><UserRound aria-hidden /><span>{t("Signed in as")} <b>{name}</b> ({role === "supervisor" ? t("supervisor|role") : t("worker")})</span></span>
+          <Link className="btn btn-ghost btn-small" to="/account">{t("My account")}</Link>
+        </div>
+        {user && !user.has_face && (
+          <p className="small"><Link to="/account" className="with-icon"><ScanFace aria-hidden />{t("Register your face to sign in faster next time")}</Link></p>
         )}
       </section>
 
-      <section>
+      {role === "supervisor" && <section>
         <h2>{t("For supervisors")}</h2>
         <div className="tiles">
           <Link to="/supervisor" className="tile">
@@ -112,8 +98,8 @@ export default function Home() {
           <Link to="/findings" className="tile"><b className="with-icon"><Wrench aria-hidden />{t("Problems to fix")}</b><span>{t("Assign a fix, add photos, close it")}</span></Link>
           <Link to="/dashboard" className="tile"><b className="with-icon"><ChartColumn aria-hidden />{t("Dashboard")}</b><span>{t("All inspections and problems at a glance")}</span></Link>
         </div>
-      </section>
-      <p className="tiny muted"><Link to="/import" className="with-icon"><Upload aria-hidden />{t("Add equipment from a manufacturer package (administrators)")}</Link></p>
+      </section>}
+      {role === "supervisor" && <p className="tiny muted"><Link to="/import" className="with-icon"><Upload aria-hidden />{t("Add equipment from a manufacturer package (administrators)")}</Link></p>}
     </div>
   );
 }

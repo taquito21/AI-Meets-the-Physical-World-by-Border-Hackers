@@ -10,6 +10,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 # Must be set before app.config is imported by any test module.
 os.environ["DATA_DIR"] = str(Path(tempfile.mkdtemp(prefix="fep-test-")) / "data")
 os.environ["AI_PROVIDER"] = "none"
+# Workflow tests act through names in the request; test_auth.py switches sign-in enforcement on for itself.
+os.environ["AUTH_REQUIRED"] = "false"
 
 
 @pytest.fixture(autouse=True, scope="module")

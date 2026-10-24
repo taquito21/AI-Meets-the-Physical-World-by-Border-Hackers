@@ -74,6 +74,7 @@ export const SERVER_PATTERNS: [RegExp, (...m: string[]) => string][] = [
   [/^Unknown product instance (.*)$/, (_, s) => `Unidad desconocida ${s}`],
   [/^Inspection status is '(\w+)'$/, () => "La inspección ya no está abierta"],
   [/^Request failed \((\d+)\)$/, (_, n) => `La solicitud falló (${n})`],
+  [/^Too many attempts\. Try again in (\d+) seconds\.$/, (_, n) => `Demasiados intentos. Inténtalo de nuevo en ${n} segundos.`],
 ];
 
 export default server;

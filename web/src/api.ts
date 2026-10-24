@@ -214,7 +214,10 @@ export interface PackageSummary {
   loaded: boolean; loaded_at: string | null; loaded_matches_disk: boolean;
 }
 
-export interface Health { status: string; version: string; app_label: string; storage?: "persistent" | "ephemeral"; ai: { provider: string; available: boolean; detail: string } }
+export interface Health { status: string; version: string; app_label: string; storage?: "persistent" | "ephemeral"; auth_required?: boolean; ai: { provider: string; available: boolean; detail: string } }
+
+export type Role = "inspector" | "supervisor";
+export interface User { username: string; display_name: string; role: Role; has_face: boolean; active: boolean; created_at?: string | null; created_by?: string | null }
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public issues: Issue[] = []) {
@@ -234,6 +237,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const body = await res.json().catch(() => null);
   if (res.status === 413 && !body) {
     throw new ApiError(413, "The photo is too large to upload. Try again, or use a lower camera resolution.");
+  }
+  if (res.status === 401 && !path.startsWith("/api/auth/")) {
+    window.dispatchEvent(new Event("fep:signed-out")); // session expired or signed out elsewhere
   }
   if (!res.ok) {
     const detail = body?.detail;
@@ -293,6 +299,16 @@ const json = (method: string, data: unknown): RequestInit => ({
 
 export const api = {
   health: () => request<Health>("/api/health"),
+  me: () => request<{ user: User }>("/api/auth/me"),
+  login: (username: string, password: string, role: Role) =>
+    request<{ user: User }>("/api/auth/login", json("POST", { username, password, role })),
+  faceLogin: (embeddings: number[][], role: Role) =>
+    request<{ user: User }>("/api/auth/face-login", json("POST", { embeddings, role })),
+  logout: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
+  registerFace: (embeddings: number[][]) => request<{ user: User }>("/api/auth/face", json("POST", { embeddings, consent: true })),
+  deleteFace: () => request<{ user: User }>("/api/auth/face", { method: "DELETE" }),
+  users: () => request<User[]>("/api/users"),
+  addWorker: (body: { username: string; display_name: string; password: string }) => request<User>("/api/users", json("POST", body)),
   products: () => request<ProductSummary[]>("/api/products"),
   revision: (id: string) => request<Revision>(`/api/revisions/${encodeURIComponent(id)}`),
   passport: (serial: string) => request<any>(`/api/instances/${encodeURIComponent(serial)}`),

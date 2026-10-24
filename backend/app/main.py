@@ -13,10 +13,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, UnidentifiedImageError
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 from starlette.concurrency import run_in_threadpool
 
-from . import ai, catalog, db, i18n, workflow
+from . import ai, auth, catalog, db, i18n, workflow
 from .config import settings
 from .packages import discover_packages, validate_package
 from .workflow import WorkflowError
@@ -41,6 +41,7 @@ def ensure_ready() -> None:
         for result in catalog.bootstrap():
             print(f"[packages] {result.get('status')}: {result.get('revision_id') or result.get('package_dir')} "
                   f"{result.get('error', '')}")
+        auth.seed_demo_users()
         _ready = True
 
 
@@ -74,7 +75,21 @@ async def access_and_readiness(request: Request, call_next):
                             headers={"WWW-Authenticate": 'Basic realm="Field Assistant", charset="UTF-8"'})
     if not _ready or not settings.db_path.exists():
         await run_in_threadpool(ensure_ready)
+    # Signed-in person (session cookie). The API needs a session except to sign in and for the health check.
+    user = auth.read_token(request.cookies.get(auth.COOKIE))
+    auth.current_user.set(user)
+    path = request.url.path
+    if settings.auth_required and user is None and path.startswith("/api/") and path not in PUBLIC_API:
+        return JSONResponse(status_code=401, content={"detail": "Sign in required"})
     return await call_next(request)
+
+
+PUBLIC_API = {"/api/health", "/api/auth/login", "/api/auth/face-login", "/api/auth/me", "/api/auth/logout"}
+
+
+@app.exception_handler(auth.AuthError)
+async def auth_error_handler(_: Request, exc: auth.AuthError):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
 
 @app.exception_handler(WorkflowError)
@@ -125,6 +140,24 @@ class ReviewIn(BaseModel):
     item_ids: list[str] = []
 
 
+class LoginIn(BaseModel):
+    username: str = Field(max_length=64)
+    password: str = Field(max_length=256)
+    role: Literal["inspector", "supervisor"]
+
+
+class FaceIn(BaseModel):
+    embeddings: list[list[float]] = Field(max_length=10)
+    role: Literal["inspector", "supervisor"] | None = None
+    consent: bool = False
+
+
+class NewUser(BaseModel):
+    username: str = Field(max_length=64)
+    display_name: str = Field(max_length=60)
+    password: str = Field(max_length=256)
+
+
 class FindingTransition(BaseModel):
     to: Literal["assigned", "void", "action_recorded", "awaiting_verification", "closed"]
     actor: Name
@@ -139,8 +172,85 @@ def health() -> dict[str, Any]:
     provider = ai.get_provider()
     available, detail = provider.available()
     return {"status": "ok", "version": API_VERSION, "app_label": settings.app_label,
-            "storage": settings.storage_mode,
+            "storage": settings.storage_mode, "auth_required": settings.auth_required,
             "ai": {"provider": provider.name, "available": available, "detail": detail}}
+
+
+# -------------------------------------------------------------------- auth --
+
+def _client(request: Request) -> str:
+    return request.headers.get("x-forwarded-for", "").split(",")[0].strip() or \
+        (request.client.host if request.client else "unknown")
+
+
+def _signed_in(request: Request, user: dict[str, Any]) -> JSONResponse:
+    response = JSONResponse({"user": user})
+    secure = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
+    response.set_cookie(auth.COOKIE, auth.make_token(user), max_age=int(settings.session_hours * 3600),
+                        httponly=True, samesite="lax", secure=secure, path="/")
+    return response
+
+
+@app.post("/api/auth/login")
+def login(body: LoginIn, request: Request):
+    return _signed_in(request, auth.password_login(body.username, body.password, body.role, _client(request)))
+
+
+@app.post("/api/auth/face-login")
+def face_login(body: FaceIn, request: Request):
+    if body.role is None:
+        raise HTTPException(422, "role is required")
+    return _signed_in(request, auth.face_login(body.embeddings, body.role, _client(request)))
+
+
+@app.get("/api/auth/me")
+def me() -> dict[str, Any]:
+    u = auth.current_user.get()
+    if u is None:
+        raise HTTPException(401, "Sign in required")
+    with db.read() as conn:
+        stored = auth.get_user(conn, u["username"])
+    # Accounts created on another serverless instance may not exist here yet; the signed session still holds.
+    return {"user": auth._public(stored) if stored else {**u, "has_face": False, "active": True}}
+
+
+@app.post("/api/auth/logout")
+def logout():
+    response = JSONResponse({"ok": True})
+    response.delete_cookie(auth.COOKIE, path="/")
+    return response
+
+
+@app.post("/api/auth/face")
+def register_face(body: FaceIn) -> dict[str, Any]:
+    u = auth.current_user.get()
+    if u is None:
+        raise HTTPException(401, "Sign in required")
+    return {"user": auth.register_face(u["username"], body.embeddings, body.consent)}
+
+
+@app.delete("/api/auth/face")
+def delete_face() -> dict[str, Any]:
+    u = auth.current_user.get()
+    if u is None:
+        raise HTTPException(401, "Sign in required")
+    return {"user": auth.delete_face(u["username"])}
+
+
+@app.get("/api/users")
+def users() -> list[dict[str, Any]]:
+    auth.require_role("supervisor")
+    with db.read() as conn:
+        return auth.list_users(conn)
+
+
+@app.post("/api/users")
+def add_worker(body: NewUser) -> dict[str, Any]:
+    # Supervisors add worker accounts; the worker registers their own face after signing in.
+    auth.require_role("supervisor")
+    with db.tx() as conn:
+        return auth.create_user(conn, body.username, body.display_name, body.password, "inspector",
+                                auth.actor("system"))
 
 
 # ----------------------------------------------------------------- catalog --
@@ -243,7 +353,8 @@ def load_package(package_dir: str, body: Actor) -> dict[str, Any]:
     except FileNotFoundError:
         raise HTTPException(404, "Package not found")
     try:
-        return catalog.load_package(path, actor=body.actor)
+        auth.require_role("supervisor")
+        return catalog.load_package(path, actor=auth.actor(body.actor))
     except catalog.PackageInvalid as exc:
         raise HTTPException(422, {"message": "Package failed validation", "errors": exc.report.errors})
     except catalog.PackageConflict as exc:
@@ -329,7 +440,7 @@ def inspection_state(conn, inspection_id: str) -> dict[str, Any]:
 @app.post("/api/inspections")
 def start_inspection(body: StartInspection) -> dict[str, Any]:
     with db.tx() as conn:
-        result = workflow.start_inspection(conn, body.serial_number, body.inspector, body.mode)
+        result = workflow.start_inspection(conn, body.serial_number, auth.actor(body.inspector), body.mode)
     with db.read() as conn:
         return {**result, "state": inspection_state(conn, result["inspection_id"])}
 
@@ -415,7 +526,7 @@ def get_inspection(inspection_id: str) -> dict[str, Any]:
 @app.post("/api/inspections/{inspection_id}/items/{item_id}/decision")
 def decide(inspection_id: str, item_id: str, body: Decision) -> dict[str, Any]:
     with db.tx() as conn:
-        workflow.decide_item(conn, inspection_id, item_id, decision=body.decision, actor=body.actor.strip(),
+        workflow.decide_item(conn, inspection_id, item_id, decision=body.decision, actor=auth.actor(body.actor.strip()),
                              observation=body.observation, manual_confirmed=body.manual_confirmed,
                              override_note=body.override_note,
                              finding=body.finding.model_dump() if body.finding else None)
@@ -426,15 +537,16 @@ def decide(inspection_id: str, item_id: str, body: Decision) -> dict[str, Any]:
 @app.post("/api/inspections/{inspection_id}/submit")
 def submit(inspection_id: str, body: Actor) -> dict[str, Any]:
     with db.tx() as conn:
-        workflow.submit(conn, inspection_id, body.actor.strip())
+        workflow.submit(conn, inspection_id, auth.actor(body.actor.strip()))
     with db.read() as conn:
         return inspection_state(conn, inspection_id)
 
 
 @app.post("/api/inspections/{inspection_id}/review")
 def review(inspection_id: str, body: ReviewIn) -> dict[str, Any]:
+    auth.require_role("supervisor")
     with db.tx() as conn:
-        workflow.review(conn, inspection_id, reviewer=body.reviewer.strip(), decision=body.decision,
+        workflow.review(conn, inspection_id, reviewer=auth.actor(body.reviewer.strip()), decision=body.decision,
                         comments=body.comments, item_ids=body.item_ids)
     with db.read() as conn:
         return inspection_state(conn, inspection_id)
@@ -527,7 +639,7 @@ def _run_assessment(evidence_id: str, worker_note: str | None) -> dict[str, Any]
 async def upload_evidence(inspection_id: str, item_id: str, file: UploadFile = File(...),
                           actor: str = Form(...), note: str | None = Form(None),
                           assess: bool = Form(True)) -> dict[str, Any]:
-    actor = _form_name(actor)
+    actor = auth.actor(_form_name(actor))
     with db.read() as conn:  # validate before touching the disk (404/409 instead of FK errors)
         workflow._require_editable(workflow._inspection(conn, inspection_id))
         workflow._item(conn, inspection_id, item_id)
@@ -586,8 +698,8 @@ async def use_demo_evidence(inspection_id: str, item_id: str, body: UseDemoEvide
         with db.tx() as conn:
             conn.execute("INSERT INTO evidence VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                          (evidence_id, inspection_id, item_id, None, "demo", storage_path, "image/jpeg",
-                          note, db.dumps(checks), body.actor, db.now()))
-            workflow.record_evidence(conn, inspection_id, item_id, evidence_id, body.actor)
+                          note, db.dumps(checks), auth.actor(body.actor), db.now()))
+            workflow.record_evidence(conn, inspection_id, item_id, evidence_id, auth.actor(body.actor))
     except Exception:
         (settings.evidence_dir / storage_path).unlink(missing_ok=True)
         raise
@@ -669,7 +781,7 @@ def list_findings(status: str | None = None) -> list[dict[str, Any]]:
 @app.post("/api/findings/{finding_id}/transition")
 def finding_transition(finding_id: str, body: FindingTransition) -> dict[str, Any]:
     with db.tx() as conn:
-        return workflow.transition_finding(conn, finding_id, to=body.to, actor=body.actor.strip(),
+        return workflow.transition_finding(conn, finding_id, to=body.to, actor=auth.actor(body.actor.strip()),
                                            assigned_to=body.assigned_to, note=body.note)
 
 
@@ -683,7 +795,7 @@ async def finding_evidence(finding_id: str, file: UploadFile = File(...), actor:
         raise HTTPException(404, "Finding not found")
     if f["status"] in ("closed", "void"):
         raise HTTPException(409, "Finding is closed")
-    actor = _form_name(actor)
+    actor = auth.actor(_form_name(actor))
     jpeg, checks = await _read_image(file)
     evidence_id = db.new_id("ev")
     storage_path = _store(evidence_id, f"findings/{finding_id}", jpeg)

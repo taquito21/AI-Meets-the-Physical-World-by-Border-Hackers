@@ -57,6 +57,13 @@ class Settings:
     block_submit_on_open_critical: bool = _bool("BLOCK_SUBMIT_ON_OPEN_CRITICAL", False)
     seed_instances: bool = _bool("SEED_INSTANCES", True)
     max_upload_mb: int = int(os.environ.get("MAX_UPLOAD_MB", "15"))
+    # Sign-in (workers and supervisors). AUTH_REQUIRED=false only for automated tests and local experiments.
+    auth_required: bool = _bool("AUTH_REQUIRED", True)
+    # Key that signs session cookies. If unset: derived from ACCESS_PASSWORD on the hosted deployment, or a random
+    # key kept in the local data folder.
+    auth_secret: str = os.environ.get("AUTH_SECRET", "")
+    session_hours: float = float(os.environ.get("SESSION_HOURS", "12"))
+    face_threshold: float = float(os.environ.get("FACE_THRESHOLD", "0.40"))
     cors_origins: list[str] = field(default_factory=lambda: os.environ.get("CORS_ORIGINS", "*").split(","))
 
     @property

@@ -24,8 +24,9 @@ export const locale = (): string => (current === "es" ? "es-MX" : "en-US");
 const missing = new Set<string>();
 if (import.meta.env.DEV) (window as unknown as { __missingEs: Set<string> }).__missingEs = missing;
 
+// A key may carry a context after "|" (e.g. "Supervisor|card"): English shows the part before it.
 export function t(text: string, vars?: Record<string, string | number>): string {
-  let s = text;
+  let s = text.includes("|") ? text.slice(0, text.indexOf("|")) : text;
   if (current === "es" && text) {
     const hit = ES[text] ?? ES_PATTERNS.reduce<string | null>((acc, [re, fn]) => acc ?? (re.test(text) ? text.replace(re, fn) : null), null);
     if (hit != null) s = hit;
