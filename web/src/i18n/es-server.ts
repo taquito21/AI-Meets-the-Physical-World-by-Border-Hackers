@@ -23,6 +23,7 @@ const server: Record<string, string> = {
   "Every task needs a description": "Cada tarea necesita una descripción",
   "Status must be one of pending, passed, failed, flagged": "Ese resultado no es válido",
   "Add a photo, a note, or both": "Agrega una foto, una nota o las dos",
+  "Only the employee doing the job can add photos. Write a note instead.": "Solo el empleado que hace el trabajo puede agregar fotos. Escribe una nota.",
   "Evidence photo missing": "Falta la foto",
   "Photo evidence not found": "No se encontró la foto",
   "Uploaded file is not a supported image (use JPEG or PNG)": "El archivo no es una imagen compatible (usa JPEG o PNG)",

@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE TABLE IF NOT EXISTS jobs (
   id TEXT PRIMARY KEY, company_id TEXT NOT NULL REFERENCES companies(id),
-  assigned_to TEXT NOT NULL REFERENCES users(id), title TEXT NOT NULL, created_at TEXT NOT NULL
+  assigned_to TEXT NOT NULL REFERENCES users(id), title TEXT NOT NULL, due_date TEXT, created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS tasks (
   id TEXT PRIMARY KEY, job_id TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE, position INTEGER NOT NULL,

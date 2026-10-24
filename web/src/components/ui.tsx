@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Circle, CircleAlert, CircleCheck, CircleX, Flag, type LucideIcon } from "lucide-react";
+import { CalendarClock, Circle, CircleAlert, CircleCheck, CircleX, Flag, type LucideIcon } from "lucide-react";
 import type { Counts, TaskStatus } from "../api";
 import { locale, t } from "../i18n";
 
@@ -54,6 +54,31 @@ export function CountChips({ counts }: { counts: Counts }) {
       {counts.pending > 0 && <Chip icon={Circle}>{t("{n} pending", { n: counts.pending })}</Chip>}
     </span>
   );
+}
+
+// Today's date in the person's own time zone, as "YYYY-MM-DD" (the format due dates are stored in).
+export function today(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const DAY_MS = 86_400_000;
+export const daysUntil = (due: string) => Math.round((Date.parse(due) - Date.parse(today())) / DAY_MS);
+export const isOverdue = (job: { due_date: string | null; finished: boolean }) =>
+  !!job.due_date && !job.finished && daysUntil(job.due_date) < 0;
+
+export function shortDate(due: string): string {
+  return new Date(`${due}T00:00:00`).toLocaleDateString(locale(), { month: "short", day: "numeric" });
+}
+
+// Due date of a job: red when overdue, amber when due within 3 days. Finished jobs show no deadline.
+export function DueChip({ job }: { job: { due_date: string | null; finished: boolean } }) {
+  if (!job.due_date || job.finished) return null;
+  const days = daysUntil(job.due_date);
+  const date = shortDate(job.due_date);
+  if (days < 0) return <Chip tone="red" icon={CalendarClock}>{t("Overdue · {date}", { date })}</Chip>;
+  if (days === 0) return <Chip tone="amber" icon={CalendarClock}>{t("Due today")}</Chip>;
+  return <Chip tone={days <= 3 ? "amber" : "neutral"} icon={CalendarClock}>{t("Due {date}", { date })}</Chip>;
 }
 
 // Server and client messages are English keys; shown in the reader's language.

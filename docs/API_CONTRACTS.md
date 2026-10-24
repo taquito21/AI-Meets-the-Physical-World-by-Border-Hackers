@@ -15,8 +15,9 @@ keys and loads the profile from `users`.
 | GET | `/api/config` | anyone | Supabase URL + publishable key for the browser login |
 | GET | `/api/me` | logged in | Profile: `id, username, user_class, company_id, company{id,name}` |
 | GET | `/api/users` | logged in | People in your company (for assigning jobs) |
-| GET | `/api/jobs` | logged in | Employer: all company jobs. Employee: jobs assigned to them. Each with `counts` per task status |
-| POST | `/api/jobs` `{title, assigned_to, tasks:[{description, media:[{media_id, node_ids}]}]}` | employer | Create a job; returns the job detail |
+| GET | `/api/jobs` | logged in | Employer: all company jobs. Employee: jobs assigned to them. Each with `counts` per task status, `due_date`, `finished`; open jobs first, soonest due date first |
+| GET | `/api/dashboard` | employer | `{jobs, attention, team}`: every job, the flagged and failed tasks (with job title and employee), and each employee's open jobs and tasks done |
+| POST | `/api/jobs` `{title, assigned_to, due_date?, tasks:[{description, media:[{media_id, node_ids}]}]}` | employer | Create a job (`due_date` as `YYYY-MM-DD`); returns the job detail |
 | GET | `/api/jobs/{id}` | logged in | Job detail: tasks in order, each with `evidence` and linked `media` (signed URLs) |
 | DELETE | `/api/jobs/{id}` | employer | Delete the job, its tasks, evidence and photos |
 | POST | `/api/tasks/{id}/status` `{status}` | logged in | `pending`, `passed`, `failed` or `flagged`; returns the job detail |
@@ -28,6 +29,8 @@ keys and loads the profile from `users`.
 | POST | `/api/ask` `{question}` | logged in | Answer from the company's documents: `{answer, sources:[{n, title, page, cited_text}]}` |
 
 ## Shapes
+- **Jobs:** `finished` is true when no task is `pending` or `flagged`. The web client marks an unfinished job as
+  overdue when its `due_date` has passed (in the viewer's own time zone).
 - **Task status** is set only by people. `flagged` = escalated to the employer, who replies with a text evidence
   entry and then sets `passed` or `failed`.
 - **Evidence:** `{id, task_id, created_by{id,username,user_class}, text, photo_url, ai_assessment, created_at}`.

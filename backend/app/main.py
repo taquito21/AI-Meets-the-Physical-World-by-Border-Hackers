@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import threading
 from contextlib import asynccontextmanager
+from datetime import date
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -103,6 +104,7 @@ class TaskIn(BaseModel):
 class JobIn(BaseModel):
     title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
     assigned_to: str
+    due_date: date | None = None  # "YYYY-MM-DD"
     tasks: list[TaskIn] = Field(min_length=1, max_length=100)
 
 
@@ -151,9 +153,15 @@ def list_jobs(user: User) -> list[dict[str, Any]]:
     return workflow.list_jobs(user)
 
 
+@app.get("/api/dashboard")
+def dashboard(user: Employer) -> dict[str, Any]:
+    """Employer overview: all jobs (open first, by due date), flagged and failed tasks, each employee's workload."""
+    return workflow.dashboard(user)
+
+
 @app.post("/api/jobs")
 def create_job(body: JobIn, user: Employer) -> dict[str, Any]:
-    job_id = workflow.create_job(user, title=body.title, assigned_to=body.assigned_to,
+    job_id = workflow.create_job(user, title=body.title, assigned_to=body.assigned_to, due_date=body.due_date,
                                  tasks=[t.model_dump() for t in body.tasks])
     return workflow.job_detail(user, job_id)
 

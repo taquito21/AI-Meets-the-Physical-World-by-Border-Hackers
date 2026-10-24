@@ -52,6 +52,8 @@ const app: Record<string, string> = {
   "Waiting for your employer's reply.": "Esperando la respuesta de tu jefe.",
   "Done. You can still add a photo or change the result.": "Listo. Todavía puedes agregar una foto o cambiar el resultado.",
   "Now choose a result.": "Ahora elige un resultado.",
+  "Waiting for your employee.": "Esperando a tu empleado.",
+  "You can add a note or change the result.": "Puedes agregar una nota o cambiar el resultado.",
   "Take a photo or write a note, then choose a result.": "Toma una foto o escribe una nota y luego elige un resultado.",
   "Show 3D model": "Ver modelo 3D",
   "Hide 3D model": "Ocultar modelo 3D",
@@ -139,6 +141,21 @@ const app: Record<string, string> = {
   "Add task": "Agregar tarea",
   "Create job": "Crear trabajo",
   "Creating…": "Creando…",
+
+  // Employer overview and due dates
+  "Overview": "Resumen",
+  "Open jobs": "Trabajos abiertos",
+  "Overdue": "Vencidos",
+  "Waiting for you": "Esperan tu respuesta",
+  "Failed tasks": "Tareas con falla",
+  "Overdue and due soon": "Vencidos y por vencer",
+  "Team": "Equipo",
+  "{n} open jobs": "{n} trabajos abiertos",
+  "All jobs": "Todos los trabajos",
+  "Due date (optional)": "Fecha límite (opcional)",
+  "Overdue · {date}": "Vencido · {date}",
+  "Due today": "Vence hoy",
+  "Due {date}": "Vence el {date}",
 
   // Media library
   "Media library": "Archivos de la empresa",

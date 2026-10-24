@@ -3,18 +3,22 @@
 Who sees what: an employer sees every job of their company; an employee sees only the jobs assigned to them.
 Anything outside that answers 404, so ids from another company reveal nothing.
 
+Evidence: the employee adds photos and notes; the employer adds notes only (e.g. a reply to a flagged task).
+
 Task status (pending | passed | failed | flagged) is always set by a person. "Flagged" escalates the task to the
 employer, who answers with a text evidence entry and then sets passed or failed. The AI photo review is advisory:
 it is stored on the evidence row and never changes a status.
 """
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 from . import ai, db, i18n
 from .blobs import blobs
 
 TASK_STATUSES = ("pending", "passed", "failed", "flagged")
+OPEN_STATUSES = ("pending", "flagged")  # a job is finished when none of its tasks is still open
 MAX_TEXT = 4000
 
 
@@ -66,6 +70,18 @@ def _person(u: dict[str, Any] | None) -> dict[str, Any] | None:
     return {"id": u["id"], "username": u["username"], "user_class": u["user_class"]} if u else None
 
 
+def _summary(j: dict[str, Any], statuses: list[str], people: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    return {"id": j["id"], "title": j["title"], "created_at": j["created_at"], "due_date": j.get("due_date"),
+            "assigned_to": _person(people.get(j["assigned_to"])), "counts": _counts(statuses),
+            "finished": bool(statuses) and not any(s in OPEN_STATUSES for s in statuses)}
+
+
+def _by_due_date(jobs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Open jobs first, soonest due date first (no due date last), then newest."""
+    jobs = sorted(jobs, key=lambda j: j["created_at"], reverse=True)
+    return sorted(jobs, key=lambda j: (j["finished"], j["due_date"] is None, j["due_date"] or ""))
+
+
 def list_jobs(user: dict[str, Any]) -> list[dict[str, Any]]:
     where = ({"company_id": user["company_id"]} if user["user_class"] == "employer"
              else {"company_id": user["company_id"], "assigned_to": user["id"]})
@@ -74,12 +90,31 @@ def list_jobs(user: dict[str, Any]) -> list[dict[str, Any]]:
     for t in db.select("tasks", {"job_id": [j["id"] for j in jobs]}, columns="job_id,status"):
         statuses.setdefault(t["job_id"], []).append(t["status"])
     people = company_users(user["company_id"])
-    return [{"id": j["id"], "title": j["title"], "created_at": j["created_at"],
-             "assigned_to": _person(people.get(j["assigned_to"])), "counts": _counts(statuses.get(j["id"], []))}
-            for j in jobs]
+    return _by_due_date([_summary(j, statuses.get(j["id"], []), people) for j in jobs])
 
 
-def create_job(user: dict[str, Any], *, title: str, assigned_to: str, tasks: list[dict[str, Any]]) -> str:
+def dashboard(user: dict[str, Any]) -> dict[str, Any]:
+    """The employer's overview: every job, the tasks that need them, and each employee's workload."""
+    jobs = list_jobs(user)
+    titles = {j["id"]: j for j in jobs}
+    attention = db.select("tasks", {"job_id": list(titles), "status": ["flagged", "failed"]},
+                          columns="id,job_id,position,description,status,updated_at", order="-updated_at")
+    people = company_users(user["company_id"])
+    team = []
+    for u in sorted(people.values(), key=lambda u: u["username"]):
+        if u["user_class"] != "employee":
+            continue
+        mine = [j for j in jobs if (j["assigned_to"] or {}).get("id") == u["id"]]
+        team.append({**_person(u), "open_jobs": sum(not j["finished"] for j in mine),
+                     "tasks_done": sum(j["counts"]["passed"] + j["counts"]["failed"] for j in mine),
+                     "tasks_total": sum(j["counts"]["total"] for j in mine)})
+    return {"jobs": jobs, "team": team,
+            "attention": [{**t, "job_title": titles[t["job_id"]]["title"],
+                           "assigned_to": titles[t["job_id"]]["assigned_to"]} for t in attention]}
+
+
+def create_job(user: dict[str, Any], *, title: str, assigned_to: str, tasks: list[dict[str, Any]],
+               due_date: date | None = None) -> str:
     title = (title or "").strip()
     if not title:
         raise WorkflowError("A job needs a title", 422)
@@ -100,7 +135,7 @@ def create_job(user: dict[str, Any], *, title: str, assigned_to: str, tasks: lis
     ts = db.now()
     job_id = db.new_id()
     db.insert("jobs", {"id": job_id, "company_id": user["company_id"], "assigned_to": assigned_to,
-                       "title": title, "created_at": ts})
+                       "title": title, "due_date": due_date.isoformat() if due_date else None, "created_at": ts})
     task_rows, links = [], []
     for pos, t in enumerate(tasks):
         tid = db.new_id()
@@ -144,9 +179,7 @@ def job_detail(user: dict[str, Any], job_id: str) -> dict[str, Any]:
             "media": [{**media_view(media[l["media_id"]], urls), "node_ids": l["node_ids"]}
                       for l in links if l["task_id"] == t["id"] and l["media_id"] in media],
         })
-    return {"id": job["id"], "title": job["title"], "created_at": job["created_at"],
-            "assigned_to": _person(people.get(job["assigned_to"])),
-            "counts": _counts([t["status"] for t in tasks]), "tasks": out_tasks}
+    return {**_summary(job, [t["status"] for t in tasks], people), "tasks": out_tasks}
 
 
 def evidence_view(e: dict[str, Any], people: dict[str, dict[str, Any]], urls: dict[str, str]) -> dict[str, Any]:
@@ -173,8 +206,11 @@ def set_status(user: dict[str, Any], task_id: str, status: str) -> dict[str, Any
 
 
 def add_evidence(user: dict[str, Any], task_id: str, *, text: str | None, photo: bytes | None) -> dict[str, Any]:
-    """Store a photo and/or text on a task. Returns the evidence row (the AI review runs separately)."""
+    """Store a photo and/or text on a task. Returns the evidence row (the AI review runs separately).
+    Photos come from the employee in the field; the employer answers with notes only."""
     text = (text or "").strip()[:MAX_TEXT] or None
+    if photo and user["user_class"] != "employee":
+        raise WorkflowError("Only the employee doing the job can add photos. Write a note instead.", 403)
     if not text and not photo:
         raise WorkflowError("Add a photo, a note, or both", 422)
     _, job = task_for(user, task_id)

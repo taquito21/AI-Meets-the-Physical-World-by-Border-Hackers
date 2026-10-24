@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Plus, Trash2 } from "lucide-react";
 import { api, type MediaItem } from "../api";
-import { ErrorBox, useAsync } from "../components/ui";
+import { ErrorBox, today, useAsync } from "../components/ui";
 import { t } from "../i18n";
 
 interface DraftTask { description: string; mediaId: string; parts: string[] }
@@ -18,6 +18,7 @@ export default function NewJob() {
   const employees = (users ?? []).filter((u) => u.user_class === "employee");
   const [title, setTitle] = useState("");
   const [assignee, setAssignee] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [tasks, setTasks] = useState<DraftTask[]>([blank()]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export default function NewJob() {
     setError(null);
     try {
       const job = await api.createJob({
-        title, assigned_to: assignee || employees[0]?.id || "",
+        title, assigned_to: assignee || employees[0]?.id || "", due_date: dueDate || null,
         tasks: tasks.filter((task) => task.description.trim()).map((task) => ({
           description: task.description,
           media: task.mediaId ? [{ media_id: task.mediaId, node_ids: task.parts }] : [],
@@ -59,6 +60,8 @@ export default function NewJob() {
               {employees.map((u) => <option key={u.id} value={u.id}>{u.username}</option>)}
             </select>
           </label>
+          <label>{t("Due date (optional)")}<input type="date" value={dueDate} min={today()}
+            onChange={(e) => setDueDate(e.target.value)} /></label>
         </section>
 
         {tasks.map((task, i) => {
