@@ -102,18 +102,20 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE TABLE IF NOT EXISTS jobs (
   id TEXT PRIMARY KEY, company_id TEXT NOT NULL REFERENCES companies(id),
-  assigned_to TEXT NOT NULL REFERENCES users(id), title TEXT NOT NULL, due_date TEXT, created_at TEXT NOT NULL
+  assigned_to TEXT NOT NULL REFERENCES users(id), title TEXT NOT NULL, due_date TEXT, created_at TEXT NOT NULL,
+  lang TEXT, translations TEXT NOT NULL DEFAULT '{}'
 );
 CREATE TABLE IF NOT EXISTS tasks (
   id TEXT PRIMARY KEY, job_id TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE, position INTEGER NOT NULL,
   description TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'passed', 'failed', 'flagged')),
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL, lang TEXT, translations TEXT NOT NULL DEFAULT '{}'
 );
 CREATE TABLE IF NOT EXISTS evidence (
   id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
   created_by TEXT NOT NULL REFERENCES users(id), photo_path TEXT, text TEXT, ai_assessment TEXT,
-  created_at TEXT NOT NULL, CHECK (photo_path IS NOT NULL OR text IS NOT NULL)
+  created_at TEXT NOT NULL, lang TEXT, translations TEXT NOT NULL DEFAULT '{}',
+  CHECK (photo_path IS NOT NULL OR text IS NOT NULL)
 );
 CREATE TABLE IF NOT EXISTS media (
   id TEXT PRIMARY KEY, company_id TEXT NOT NULL REFERENCES companies(id),
@@ -133,7 +135,10 @@ CREATE TABLE IF NOT EXISTS document_chunks (
 """
 
 # Decoded from / encoded to JSON text by the SQLite store (Postgres uses jsonb and does this itself).
-JSON_COLUMNS = {"ai_assessment", "metadata", "node_ids"}
+JSON_COLUMNS = {"ai_assessment", "metadata", "node_ids", "translations"}
+# Columns added after the first release, for local databases created before them.
+ADDED_COLUMNS = {table: {"lang": "TEXT", "translations": "TEXT NOT NULL DEFAULT '{}'"}
+                 for table in ("jobs", "tasks", "evidence")}
 BOOL_COLUMNS: set[str] = set()
 
 
@@ -177,6 +182,11 @@ class SqliteStore:
             conn = self._connect()
             try:
                 conn.executescript(SCHEMA)
+                for table, columns in ADDED_COLUMNS.items():
+                    have = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+                    for name, decl in columns.items():
+                        if name not in have:
+                            conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {decl}")
                 conn.commit()
             finally:
                 conn.close()

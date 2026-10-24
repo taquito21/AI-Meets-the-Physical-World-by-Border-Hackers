@@ -185,6 +185,8 @@ const app: Record<string, string> = {
   "page {n}": "página {n}",
   "Answers come only from your company's uploaded documents. Check the source before acting.":
     "Las respuestas salen solo de los documentos que subió tu empresa. Revisa la fuente antes de actuar.",
+  "Translated · show original": "Traducido · ver original",
+  "Show translation": "Ver traducción",
 };
 
 export default app;

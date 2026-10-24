@@ -4,7 +4,7 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 import { api, type Job } from "../api";
 import { AskBox } from "../components/AskBox";
 import { TaskCard } from "../components/TaskCard";
-import { CountChips, DueChip, ErrorBox, Lightbox, Progress, usePolling } from "../components/ui";
+import { CountChips, DueChip, ErrorBox, Lightbox, Progress, Typed, usePolling } from "../components/ui";
 import { t } from "../i18n";
 import { useSession } from "../session";
 
@@ -48,7 +48,7 @@ export default function JobDetail() {
       <Link to="/" className="small with-icon"><ArrowLeft aria-hidden />{t("Jobs")}</Link>
       <div className="card-head">
         <div>
-          <h1>{job.title}</h1>
+          <h1><Typed text={job.title} original={job.original?.title} /></h1>
           <div className="small muted">{t("Assigned to {name}", { name: job.assigned_to?.username ?? t("Nobody") })} <DueChip job={job} /></div>
         </div>
         <CountChips counts={job.counts} />
