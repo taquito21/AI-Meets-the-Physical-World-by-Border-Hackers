@@ -9,6 +9,7 @@
   --amber: #d97706;
   --green: #15803d;
   --red: #dc2626;
+  --purple: #7c3aed;
   --radius: 10px;
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color: var(--ink);
@@ -215,3 +216,35 @@ textarea { resize: vertical; }
 .viewer-none { padding: 1rem; font-size: .9rem; color: var(--muted); background: #fff; border-bottom: 1px solid var(--line); }
 .chip-ind-facility-safety { background: #fee2e2; color: #991b1b; }
 .scenario-safety { background: linear-gradient(135deg, #ffffff, #fef2f2); }
+
+/* ---- jobs / tasks (Supabase rebuild) ---- */
+.chip-purple { background: #ede9fe; color: #5b21b6; }
+.btn-purple { background: var(--purple); color: #fff; border-color: var(--purple); }
+.row-inline { display: inline-flex; gap: .3rem; flex-wrap: wrap; justify-content: flex-end; }
+.signout { color: #cbd5e1; font-size: .8rem; margin-left: .6rem; }
+.login { max-width: 420px; padding-top: 12vh; }
+.login form, .card label { display: flex; flex-direction: column; gap: .3rem; }
+.login form { gap: .7rem; }
+label { font-size: .85rem; color: var(--muted); }
+label input, label select, label textarea { color: var(--ink); }
+.job-row { display: flex; gap: .8rem; align-items: center; width: 100%; color: var(--ink); text-decoration: none; }
+.job-row:hover b { color: var(--blue); }
+.job-row .progress { margin: .35rem 0 0; height: 18px; }
+.job-row .progress span { line-height: 18px; font-size: .7rem; }
+.card-flag { border-color: #c4b5fd; background: #faf5ff; }
+.task { border-left: 4px solid #94a3b8; }
+.task-passed { border-left-color: var(--green); }
+.task-failed { border-left-color: var(--red); }
+.task-flagged { border-left-color: var(--purple); }
+.notice-flag { background: #f5f3ff; border-color: #c4b5fd; }
+.evidence-text { grid-template-columns: 1fr; }
+.evidence-employer .evidence-body { background: #f5f3ff; border-radius: 8px; padding: .4rem .6rem; }
+.evidence-note { white-space: pre-wrap; margin: .2rem 0; }
+.model-view { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: .5rem 0; background: #fff; }
+.model-view .viewer { height: 320px; }
+.pad { padding: .4rem .8rem; }
+.parts { border: 1px solid var(--line); border-radius: 8px; padding: .4rem .7rem; margin: .5rem 0 0; display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .2rem .8rem; }
+.media-row .full { flex-basis: 100%; }
+.sources { margin-top: .4rem; }
+.answer { border-top: 1px dashed var(--line); margin-top: .6rem; padding-top: .4rem; }

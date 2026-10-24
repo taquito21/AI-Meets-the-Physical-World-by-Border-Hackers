@@ -1,25 +1,27 @@
 // Reusable, product-agnostic 3D assembly viewer.
-// Geometry comes from the package GLB; component identity, explosion vectors, articulations (e.g. a hinged
-// door) and status come from backend data keyed by stable component ids. Nothing here is asset-specific.
+// Geometry comes from the model's GLB; part identity, explosion vectors and articulations (e.g. a hinged door)
+// come from the model's parts list, keyed by stable part ids. Parts a task is about are tinted by its status.
 import { Component as ReactComponent, Suspense, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { Canvas, useFrame, type ThreeEvent } from "@react-three/fiber";
 import { Bounds, ContactShadows, Html, OrbitControls, useBounds, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import type { Component, ComponentStatus } from "../api";
+import type { Part, TaskStatus } from "../api";
 
-export const STATUS_COLORS: Record<ComponentStatus | "selected", string> = {
-  not_inspected: "#94a3b8",
-  in_progress: "#f59e0b",
+type Component = Part;
+export type PartStatus = TaskStatus;
+
+export const STATUS_COLORS: Record<PartStatus | "selected", string> = {
   pending: "#f59e0b",
-  accepted: "#16a34a",
-  finding: "#dc2626",
+  passed: "#16a34a",
+  failed: "#dc2626",
+  flagged: "#7c3aed",
   selected: "#2563eb",
 };
 
 interface ViewerProps {
   assemblyUrl: string;
   components: Component[];
-  status?: Record<string, ComponentStatus>;
+  status?: Record<string, PartStatus>; // part id -> status tint (parts without an entry keep their colors)
   selectedId: string | null;
   onSelect: (componentId: string | null) => void;
   explode: number; // 0 = assembled, 1 = fully exploded (target; animated)
@@ -72,11 +74,12 @@ function Assembly({ assemblyUrl, components, status, selectedId, onSelect, explo
       const material = (mesh.material as THREE.MeshStandardMaterial).clone();
       mesh.material = material;
       mesh.castShadow = true;
-      const dir = new THREE.Vector3(...comp.explosion.direction).normalize();
+      const exp = comp.explosion ?? { direction: [0, 1, 0] as [number, number, number], distance: 0 };
+      const dir = new THREE.Vector3(...exp.direction).normalize();
       const art = comp.articulation;
       entries.push({
         mesh, componentId: comp.id, base: mesh.position.clone(), baseQuat: mesh.quaternion.clone(),
-        offset: dir.multiplyScalar(comp.explosion.distance),
+        offset: dir.multiplyScalar(exp.distance),
         hinge: art ? { pivot: new THREE.Vector3(...art.pivot), axis: new THREE.Vector3(...art.axis).normalize(),
           angle: THREE.MathUtils.degToRad(art.angle_deg) } : null,
         baseColor: material.color.clone(), material,
@@ -113,7 +116,7 @@ function Assembly({ assemblyUrl, components, status, selectedId, onSelect, explo
       n.material.color.copy(n.baseColor);
       n.material.emissive.set("#000000");
       n.material.emissiveIntensity = 1;
-      if (st && st !== "not_inspected") {
+      if (st) {
         tmp.set(STATUS_COLORS[st]);
         n.material.color.lerp(tmp, 0.65);
         n.material.emissive.copy(tmp).multiplyScalar(0.18);
@@ -176,7 +179,7 @@ function Assembly({ assemblyUrl, components, status, selectedId, onSelect, explo
         onPointerOver={(e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); document.body.style.cursor = "pointer"; }}
         onPointerOut={() => { document.body.style.cursor = ""; }}
       />
-      {labelPos && selectedComp && <SelectedLabel nodes={labelPos} name={selectedComp.name} part={selectedComp.part_number} />}
+      {labelPos && selectedComp && <SelectedLabel nodes={labelPos} name={selectedComp.name} part={selectedComp.part_number ?? ""} />}
     </group>
   );
 }
@@ -213,7 +216,7 @@ class ViewerBoundary extends ReactComponent<{ fallback: ReactNode; children: Rea
 
 export default function AssemblyViewer(props: ViewerProps) {
   const fallback = props.fallback ?? (
-    <div className="viewer-fallback">3D view unavailable on this device. Use the component list below.</div>
+    <div className="viewer-fallback">3D view unavailable on this device.</div>
   );
   if (!webglAvailable()) return <div className="viewer">{fallback}</div>;
   return (

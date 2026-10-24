@@ -1,5 +1,3 @@
-import { STATUS_COLORS } from "./AssemblyViewer";
-
 interface Props {
   value: number;
   onChange: (v: number) => void;
@@ -24,23 +22,6 @@ export function ExplodeControl({ value, onChange, articulationLabel, articulatio
       <input type="range" min={0} max={1} step={0.01} value={value} aria-label="Explosion"
         onChange={(e) => onChange(parseFloat(e.target.value))} />
       {onFocus && <button className="btn btn-small btn-ghost" onClick={onFocus}>{focusLabel ?? "Fit"}</button>}
-    </div>
-  );
-}
-
-export function StatusLegend() {
-  const entries: [string, string][] = [
-    ["Pending", STATUS_COLORS.not_inspected],
-    ["Selected", STATUS_COLORS.selected],
-    ["In progress / requires review", STATUS_COLORS.pending],
-    ["Inspected", STATUS_COLORS.accepted],
-    ["Finding reported", STATUS_COLORS.finding],
-  ];
-  return (
-    <div className="legend">
-      {entries.map(([l, c]) => (
-        <span key={l}><i style={{ background: c }} />{l}</span>
-      ))}
     </div>
   );
 }

@@ -9,7 +9,6 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": backend,
-      "/package-files": backend,
     },
   },
   build: { chunkSizeWarningLimit: 2000 },

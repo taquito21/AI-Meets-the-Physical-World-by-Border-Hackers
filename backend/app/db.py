@@ -2,11 +2,11 @@
 
 - "supabase": Postgres through the Supabase REST API (PostgREST) over HTTPS, using the server-side secret key.
   The schema lives in backend/supabase/schema.sql and is applied once in the Supabase SQL editor.
-- "local": SQLite in DATA_DIR (tests, offline development). The schema below mirrors schema.sql.
+- "local": SQLite in DATA_DIR, used by the tests. The schema below mirrors schema.sql (minus Supabase Auth and
+  pgvector: embeddings are stored as JSON text and searched in Python).
 
 Callers express queries as table + equality/IN filters + order + limit; joins happen in Python. Every call is its
-own transaction (that is what the REST API offers), so multi-step workflow writes use conditional updates
-(`update(..., where={"status": expected})`) and unique indexes instead of a surrounding transaction.
+own transaction (that is what the REST API offers): validate first, then write, children after parents.
 """
 from __future__ import annotations
 
@@ -56,8 +56,8 @@ def ts_key(value: str | None) -> datetime:
     return datetime.fromisoformat(value) if value else datetime.min.replace(tzinfo=timezone.utc)
 
 
-def new_id(prefix: str) -> str:
-    return f"{prefix}_{uuid.uuid4().hex[:12]}"
+def new_id() -> str:
+    return str(uuid.uuid4())
 
 
 def _orders(order: Order) -> list[tuple[str, bool]]:
@@ -87,128 +87,54 @@ class Store(Protocol):
     def update(self, table: str, values: dict[str, Any], where: Where) -> list[dict[str, Any]]: ...
     def delete(self, table: str, where: Where) -> None: ...
     def clear(self, table: str) -> None: ...
+    def rpc(self, name: str, params: dict[str, Any]) -> list[dict[str, Any]]: ...
 
 
 # --------------------------------------------------------- local (SQLite) --
 
 SCHEMA = """
-CREATE TABLE IF NOT EXISTS manufacturers (
+CREATE TABLE IF NOT EXISTS companies (
   id TEXT PRIMARY KEY, name TEXT NOT NULL
 );
-CREATE TABLE IF NOT EXISTS product_models (
-  id TEXT PRIMARY KEY, manufacturer_id TEXT NOT NULL REFERENCES manufacturers(id),
-  name TEXT NOT NULL, description TEXT
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY, company_id TEXT NOT NULL REFERENCES companies(id), username TEXT NOT NULL,
+  user_class TEXT NOT NULL CHECK (user_class IN ('employer', 'employee'))
 );
-CREATE TABLE IF NOT EXISTS engineering_packages (
-  id TEXT PRIMARY KEY, product_model_id TEXT NOT NULL REFERENCES product_models(id),
-  revision TEXT NOT NULL, package_version TEXT NOT NULL, source_dir TEXT NOT NULL,
-  manifest TEXT NOT NULL, content_hash TEXT NOT NULL, status TEXT NOT NULL,
-  validation TEXT NOT NULL, created_at TEXT NOT NULL
+CREATE TABLE IF NOT EXISTS jobs (
+  id TEXT PRIMARY KEY, company_id TEXT NOT NULL REFERENCES companies(id),
+  assigned_to TEXT NOT NULL REFERENCES users(id), title TEXT NOT NULL, created_at TEXT NOT NULL
 );
-CREATE TABLE IF NOT EXISTS product_revisions (
-  id TEXT PRIMARY KEY, product_model_id TEXT NOT NULL REFERENCES product_models(id),
-  revision TEXT NOT NULL, engineering_package_id TEXT NOT NULL REFERENCES engineering_packages(id),
-  procedure TEXT NOT NULL, created_at TEXT NOT NULL,
-  UNIQUE (product_model_id, revision)
-);
-CREATE TABLE IF NOT EXISTS components (
-  product_revision_id TEXT NOT NULL REFERENCES product_revisions(id),
-  id TEXT NOT NULL, parent_component_id TEXT, part_number TEXT NOT NULL, name TEXT NOT NULL,
-  quantity INTEGER NOT NULL, category TEXT, material TEXT, description TEXT,
-  model_node_ids TEXT NOT NULL, explosion TEXT NOT NULL, documents TEXT NOT NULL, sort INTEGER NOT NULL,
-  definition TEXT NOT NULL DEFAULT '{}',
-  PRIMARY KEY (product_revision_id, id)
-);
-CREATE TABLE IF NOT EXISTS inspection_requirements (
-  product_revision_id TEXT NOT NULL REFERENCES product_revisions(id),
-  id TEXT NOT NULL, component_id TEXT NOT NULL, title TEXT NOT NULL, instructions TEXT NOT NULL,
-  evidence_type TEXT NOT NULL, required INTEGER NOT NULL, definition TEXT NOT NULL, sort INTEGER NOT NULL,
-  PRIMARY KEY (product_revision_id, id)
-);
-CREATE TABLE IF NOT EXISTS product_instances (
-  id TEXT PRIMARY KEY, product_model_id TEXT NOT NULL REFERENCES product_models(id),
-  product_revision_id TEXT NOT NULL REFERENCES product_revisions(id),
-  serial_number TEXT NOT NULL UNIQUE, metadata TEXT NOT NULL, created_at TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS inspections (
-  id TEXT PRIMARY KEY, product_instance_id TEXT NOT NULL REFERENCES product_instances(id),
-  product_revision_id TEXT NOT NULL REFERENCES product_revisions(id),
-  procedure_id TEXT NOT NULL, inspector TEXT NOT NULL, status TEXT NOT NULL,
-  started_at TEXT NOT NULL, submitted_at TEXT, decided_at TEXT, updated_at TEXT NOT NULL,
-  mode TEXT NOT NULL DEFAULT 'live'
-);
-CREATE TABLE IF NOT EXISTS inspection_items (
-  id TEXT PRIMARY KEY, inspection_id TEXT NOT NULL REFERENCES inspections(id),
-  requirement_id TEXT NOT NULL, component_id TEXT NOT NULL,
-  requirement_snapshot TEXT NOT NULL, required INTEGER NOT NULL, status TEXT NOT NULL, status_reason TEXT,
-  observation TEXT, manual_confirmed INTEGER NOT NULL DEFAULT 0, override_note TEXT,
-  decided_by TEXT, sort INTEGER NOT NULL, updated_at TEXT NOT NULL
+CREATE TABLE IF NOT EXISTS tasks (
+  id TEXT PRIMARY KEY, job_id TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE, position INTEGER NOT NULL,
+  description TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'passed', 'failed', 'flagged')),
+  updated_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS evidence (
-  id TEXT PRIMARY KEY, inspection_id TEXT REFERENCES inspections(id),
-  inspection_item_id TEXT REFERENCES inspection_items(id),
-  finding_id TEXT, kind TEXT NOT NULL, storage_path TEXT NOT NULL, content_type TEXT NOT NULL,
-  note TEXT, image_checks TEXT, submitted_by TEXT NOT NULL, created_at TEXT NOT NULL
+  id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  created_by TEXT NOT NULL REFERENCES users(id), photo_path TEXT, text TEXT, ai_assessment TEXT,
+  created_at TEXT NOT NULL, CHECK (photo_path IS NOT NULL OR text IS NOT NULL)
 );
-CREATE TABLE IF NOT EXISTS evidence_assessments (
-  id TEXT PRIMARY KEY, evidence_id TEXT NOT NULL REFERENCES evidence(id),
-  provider TEXT NOT NULL, model TEXT, status TEXT NOT NULL, result TEXT,
-  error TEXT, latency_ms INTEGER, created_at TEXT NOT NULL,
-  origin TEXT NOT NULL DEFAULT 'live', captured_at TEXT
+CREATE TABLE IF NOT EXISTS media (
+  id TEXT PRIMARY KEY, company_id TEXT NOT NULL REFERENCES companies(id),
+  kind TEXT NOT NULL CHECK (kind IN ('model_3d', 'document', 'image')), title TEXT NOT NULL,
+  storage_path TEXT NOT NULL, metadata TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL
 );
-CREATE TABLE IF NOT EXISTS findings (
-  id TEXT PRIMARY KEY, inspection_id TEXT NOT NULL REFERENCES inspections(id),
-  product_instance_id TEXT NOT NULL, component_id TEXT NOT NULL, requirement_id TEXT,
-  inspection_item_id TEXT, description TEXT NOT NULL, severity TEXT NOT NULL, status TEXT NOT NULL,
-  assigned_to TEXT, created_by TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, closed_at TEXT
+CREATE TABLE IF NOT EXISTS task_media (
+  task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
+  node_ids TEXT NOT NULL DEFAULT '[]', PRIMARY KEY (task_id, media_id)
 );
-CREATE TABLE IF NOT EXISTS corrective_actions (
-  id TEXT PRIMARY KEY, finding_id TEXT NOT NULL REFERENCES findings(id),
-  assigned_to TEXT, description TEXT, status TEXT NOT NULL,
-  recorded_by TEXT, verified_by TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+CREATE TABLE IF NOT EXISTS document_chunks (
+  id TEXT PRIMARY KEY, company_id TEXT NOT NULL REFERENCES companies(id),
+  media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE, chunk_index INTEGER NOT NULL,
+  content TEXT NOT NULL, embedding TEXT NOT NULL, UNIQUE (media_id, chunk_index)
 );
-CREATE TABLE IF NOT EXISTS reviews (
-  id TEXT PRIMARY KEY, inspection_id TEXT NOT NULL REFERENCES inspections(id),
-  reviewer TEXT NOT NULL, decision TEXT NOT NULL, comments TEXT, item_ids TEXT, created_at TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS activity_events (
-  id TEXT PRIMARY KEY, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL,
-  event_type TEXT NOT NULL, actor TEXT, metadata TEXT, created_at TEXT NOT NULL,
-  inspection_id TEXT
-);
-CREATE INDEX IF NOT EXISTS ix_items_inspection ON inspection_items(inspection_id);
-CREATE INDEX IF NOT EXISTS ix_evidence_item ON evidence(inspection_item_id);
-CREATE INDEX IF NOT EXISTS ix_findings_inspection ON findings(inspection_id);
-CREATE INDEX IF NOT EXISTS ix_activity_entity ON activity_events(entity_type, entity_id);
 """
 
-# Run after MIGRATIONS so older databases have the columns these refer to.
-POST_MIGRATION_SQL = [
-    # Backfill the timeline column for events recorded before it existed.
-    "UPDATE activity_events SET inspection_id = CASE WHEN entity_type = 'inspection' THEN entity_id "
-    "ELSE json_extract(metadata, '$.inspection_id') END WHERE inspection_id IS NULL",
-    "UPDATE activity_events SET inspection_id = (SELECT inspection_id FROM inspection_items i "
-    "WHERE i.id = activity_events.entity_id) WHERE inspection_id IS NULL AND entity_type = 'inspection_item'",
-    "CREATE INDEX IF NOT EXISTS ix_activity_inspection ON activity_events(inspection_id)",
-    # At most one open (or awaiting-review) inspection per unit, even under concurrent starts.
-    "CREATE UNIQUE INDEX IF NOT EXISTS ux_inspections_open ON inspections(product_instance_id) "
-    "WHERE status IN ('in_progress','changes_requested','submitted')",
-]
-
-# Columns added after the first release. Existing local databases are upgraded in place (additive only).
-MIGRATIONS: list[tuple[str, str, str]] = [
-    ("components", "definition", "TEXT NOT NULL DEFAULT '{}'"),        # full component JSON (specs, articulation)
-    ("inspections", "mode", "TEXT NOT NULL DEFAULT 'live'"),            # live | demo
-    ("evidence_assessments", "origin", "TEXT NOT NULL DEFAULT 'live'"),  # live | precomputed
-    ("evidence_assessments", "captured_at", "TEXT"),                    # when a precomputed result was produced
-    ("activity_events", "inspection_id", "TEXT"),                       # timeline lookup without JSON queries
-]
-
-JSON_COLUMNS = {
-    "manifest", "validation", "procedure", "model_node_ids", "explosion", "documents", "definition",
-    "metadata", "requirement_snapshot", "image_checks", "result", "item_ids",
-}
-BOOL_COLUMNS = {"required", "manual_confirmed"}
+# Decoded from / encoded to JSON text by the SQLite store (Postgres uses jsonb and does this itself).
+JSON_COLUMNS = {"ai_assessment", "metadata", "node_ids"}
+BOOL_COLUMNS: set[str] = set()
 
 
 class SqliteStore:
@@ -251,15 +177,6 @@ class SqliteStore:
             conn = self._connect()
             try:
                 conn.executescript(SCHEMA)
-                for table, column, decl in MIGRATIONS:
-                    cols = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
-                    if column not in cols:
-                        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
-                for sql in POST_MIGRATION_SQL:
-                    try:
-                        conn.execute(sql)
-                    except sqlite3.IntegrityError as exc:  # old data that predates the rule
-                        print(f"[db] skipped '{sql[:60]}…': {exc}", flush=True)
                 conn.commit()
             finally:
                 conn.close()
@@ -361,6 +278,20 @@ class SqliteStore:
     def clear(self, table):
         self._write(f"DELETE FROM {table}")
 
+    def rpc(self, name, params):
+        """Python versions of the Postgres functions in schema.sql (local backend only)."""
+        if name != "match_document_chunks":
+            raise ValueError(f"unknown function {name}")
+        query = json.loads(params["p_query_embedding"])
+        out = []
+        for c in self.select("document_chunks", {"company_id": params["p_company_id"]}):
+            vec = json.loads(c["embedding"])
+            dot = sum(a * b for a, b in zip(vec, query))
+            norm = (sum(a * a for a in vec) ** 0.5) * (sum(b * b for b in query) ** 0.5) or 1.0
+            out.append({k: c[k] for k in ("id", "media_id", "chunk_index", "content")} | {"similarity": dot / norm})
+        out.sort(key=lambda r: r["similarity"], reverse=True)
+        return out[:params.get("p_match_count", 5)]
+
 
 # ------------------------------------------------- supabase (REST / HTTPS) --
 
@@ -428,7 +359,7 @@ class RestStore:
         return [where]
 
     def init(self) -> None:
-        self._request("GET", "/manufacturers", params={"select": "id", "limit": "1"})  # fails early if no schema
+        self._request("GET", "/companies", params={"select": "id", "limit": "1"})  # fails early if no schema
 
     def select(self, table, where=None, *, columns="*", order=None, limit=None):
         if _empty_in(where):
@@ -496,7 +427,11 @@ class RestStore:
             self._request("DELETE", f"/{table}", params=self._params(w), headers={"Prefer": "return=minimal"})
 
     def clear(self, table):
-        self._request("DELETE", f"/{table}", params={"id": "not.is.null"}, headers={"Prefer": "return=minimal"})
+        key = "task_id" if table == "task_media" else "id"  # every other table has an id column
+        self._request("DELETE", f"/{table}", params={key: "not.is.null"}, headers={"Prefer": "return=minimal"})
+
+    def rpc(self, name, params):
+        return self._request("POST", f"/rpc/{name}", content=json.dumps(params)).json()
 
 
 # ---------------------------------------------------------------- facade --
@@ -518,21 +453,10 @@ insert = store.insert
 upsert = store.upsert
 update = store.update
 delete = store.delete
+rpc = store.rpc
 
 # Children before parents (foreign keys). Used by tools/reset_demo_data.py and the opt-in Supabase test run.
-TABLES_CHILD_FIRST = [
-    "activity_events", "reviews", "corrective_actions", "evidence_assessments", "evidence", "findings",
-    "inspection_items", "inspections", "product_instances", "inspection_requirements", "components",
-    "product_revisions", "engineering_packages", "product_models", "manufacturers",
-]
-
-
-def reset_all() -> list[str]:
-    """Delete every row (catalog included; packages reload on the next start). Returns stored photo paths."""
-    paths = [e["storage_path"] for e in select("evidence", columns="storage_path")]
-    for table in TABLES_CHILD_FIRST:
-        store.clear(table)
-    return paths
+TABLES_CHILD_FIRST = ["document_chunks", "task_media", "evidence", "tasks", "jobs", "media", "users", "companies"]
 
 
 def first(table: str, where: Where | None = None, *, columns: str = "*", order: Order = None) -> dict[str, Any] | None:
@@ -540,11 +464,12 @@ def first(table: str, where: Where | None = None, *, columns: str = "*", order: 
     return found[0] if found else None
 
 
-def log_event(entity_type: str, entity_id: str, event_type: str, actor: str | None,
-              metadata: dict | None = None, *, inspection_id: str | None = None) -> None:
-    metadata = metadata or {}
-    if inspection_id is None:
-        inspection_id = entity_id if entity_type == "inspection" else metadata.get("inspection_id")
-    insert("activity_events", {
-        "id": new_id("evt"), "entity_type": entity_type, "entity_id": entity_id, "event_type": event_type,
-        "actor": actor, "metadata": metadata, "created_at": now(), "inspection_id": inspection_id})
+def reset_all(include_accounts: bool = False) -> list[str]:
+    """Delete jobs, tasks, evidence and media (plus companies and user profiles when include_accounts).
+    Returns the storage paths of the deleted files so the caller can remove them from storage."""
+    paths = [e["photo_path"] for e in select("evidence", columns="photo_path") if e["photo_path"]]
+    paths += [m["storage_path"] for m in select("media", columns="storage_path")]
+    for table in TABLES_CHILD_FIRST:
+        if include_accounts or table not in ("users", "companies"):
+            store.clear(table)
+    return paths

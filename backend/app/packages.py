@@ -72,7 +72,13 @@ class PackageReport:
 
 def read_glb_node_names(path: Path) -> list[str]:
     """Return the names of glTF nodes that carry a mesh (selectable geometry)."""
-    data = path.read_bytes()
+    return glb_node_names(path.read_bytes())
+
+
+def glb_node_names(data: bytes) -> list[str]:
+    """Mesh node names of a GLB file given as bytes (raises ValueError if it is not glTF 2.0 binary)."""
+    if len(data) < 20:
+        raise ValueError("not a glTF 2.0 binary file")
     magic, version, _length = struct.unpack_from("<4sII", data, 0)
     if magic != b"glTF" or version != 2:
         raise ValueError("not a glTF 2.0 binary file")

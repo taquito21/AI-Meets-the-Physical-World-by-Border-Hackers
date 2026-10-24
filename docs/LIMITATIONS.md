@@ -18,17 +18,16 @@
 - Product instances and serial numbers are sample data.
 
 ## Not implemented / limits
-- No authentication: names are free text, and role separation is checked by name only. CORS is open (`*`) for LAN use.
-- No rate limiting on AI calls; each photo costs one model call (~6–9 s).
-- Photos must be JPEG/PNG/WebP. iOS normally converts camera captures to JPEG for web uploads; HEIC files from other sources are rejected (415).
-- Not the Expo/React Native app: the MVP is a mobile web app (see ARCHITECTURE.md). No offline mode.
-- Supabase is reached through its REST API, which has no multi-statement transactions; the workflow uses
-  conditional updates instead (see DATABASE.md). Without Supabase keys: SQLite + local disk, single server process.
-- Running it needs the laptop server reachable on the LAN.
+- Accounts are created by script (`tools/seed_accounts.py`); there is no sign-up, invite or password-reset screen.
+  One employer and its employees per company; no finer permissions.
+- No rate limiting on AI calls; each photo costs one model call (~6–9 s), each question one embedding + one model call.
+- Photos must be JPEG/PNG/WebP. HEIC files are rejected (415).
+- Document search reads text PDFs and .txt files. Scanned PDFs (images of pages) are stored but not searchable.
+- Supabase is reached through its REST API, which has no multi-statement transactions (see DATABASE.md).
+- Signed file links expire after an hour; a page left open longer needs a reload to show photos and models again.
+- Updates from the other person's device appear by polling (6–8 s), not push. No offline mode.
 - AI cannot verify torque, tightness, dimensions, load capacity or internal condition, and is instructed not to claim so.
   AI output is advisory and is never a certification.
-- QR codes are not generated in-app yet (the passport URL `/p/<serial>` can be encoded with any QR tool). A QR code identifies a record; it does not prove the unit is present.
-- No product release step, PLM/ERP integration, analytics, AR or document Q&A.
 
 ## Multi-industry (electrical panel)
 - ICP-001 is a fictional, simplified representative panel. It is not a certified design, has no electrical simulation, and all ratings are demo values.

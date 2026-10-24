@@ -69,3 +69,11 @@
 - `db.py` is now a small query interface with a REST backend and a SQLite backend (tests, offline). Raw SQL joins
   were rewritten as Python joins; workflow transitions use conditional updates. Schema: `backend/supabase/schema.sql`.
 - See DATABASE.md. Authentication (Supabase Auth) is next.
+
+## 2026-10-24: jobs and tasks on Supabase (rebuild)
+- New data model (8 tables): companies, users, jobs, tasks, evidence, media, task_media, document_chunks. The
+  engineering-package catalog, inspections, findings, reviews and activity log were removed.
+- Supabase Auth login (backend verifies the token with the project's JWKS); company-scoped access in workflow.py.
+- Media library with 3D models (parts lists), documents and images; signed Storage URLs.
+- Document search: Voyage AI embeddings + pgvector function + Claude answers with citations.
+- New web client: login, jobs, job detail with tasks/evidence/3D, new job, media library, ask the documents.

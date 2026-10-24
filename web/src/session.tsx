@@ -1,66 +1,65 @@
-// Lightweight demo identity (no authentication in the MVP). Names are recorded on every action.
+// Login state: the Supabase session (in the browser) plus the user's profile from /api/me.
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { api, type Health } from "./api";
-
-export type Role = "inspector" | "supervisor";
+import { api, setUnauthorizedHandler, type Me } from "./api";
+import { supabase } from "./supabase";
 
 interface Session {
-  name: string;
-  role: Role;
-  setName: (n: string) => void;
-  setRole: (r: Role) => void;
-  health: Health | null;
-  label: string;
-  industry: string; // active scenario filter: "All" or an industry name (e.g. "Furniture", "Electrical")
-  setIndustry: (i: string) => void;
+  me: Me | null;
+  loading: boolean;
+  error: string | null;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const Ctx = createContext<Session | null>(null);
 
-function stored(key: string, fallback: string): string {
-  try {
-    return localStorage.getItem(key) ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function persist(key: string, value: string) {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    /* storage unavailable: keep in memory only */
-  }
-}
-
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [name, setNameState] = useState(() => stored("fep.name", "Inspector A"));
-  const [role, setRoleState] = useState<Role>(() => stored("fep.role", "inspector") as Role);
-  const [health, setHealth] = useState<Health | null>(null);
-  const [industry, setIndustryState] = useState(() => stored("fep.industry", "All"));
+  const [me, setMe] = useState<Me | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Retry until the server answers (it may still be starting, or a serverless instance may be cold).
+  const loadProfile = async () => {
+    try {
+      setMe(await api.me());
+      setError(null);
+    } catch (e) {
+      setMe(null);
+      setError((e as Error).message);
+    }
+  };
+
   useEffect(() => {
-    let stop = false;
-    let timer: ReturnType<typeof setTimeout>;
-    const load = () => api.health().then((h) => { if (!stop) setHealth(h); })
-      .catch(() => { if (!stop) timer = setTimeout(load, 5000); });
-    load();
-    return () => { stop = true; clearTimeout(timer); };
+    let unsubscribe = () => undefined as void;
+    supabase()
+      .then(async (sb) => {
+        const { data } = await sb.auth.getSession();
+        if (data.session) await loadProfile();
+        unsubscribe = sb.auth.onAuthStateChange((event) => {
+          if (event === "SIGNED_OUT") setMe(null);
+        }).data.subscription.unsubscribe;
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+    return () => unsubscribe();
   }, []);
 
-  const label = health?.app_label ?? "Field Assistant";
-  useEffect(() => {
-    document.title = label;
-  }, [label]);
-
-  const value: Session = {
-    name, role, health, label, industry,
-    setIndustry: (i) => { setIndustryState(i); persist("fep.industry", i); },
-    setName: (n) => { setNameState(n); persist("fep.name", n); },
-    setRole: (r) => { setRoleState(r); persist("fep.role", r); },
+  const signOut = async () => {
+    await (await supabase()).auth.signOut().catch(() => undefined);
+    setMe(null);
   };
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  setUnauthorizedHandler(() => void signOut());
+
+  const signIn = async (email: string, password: string) => {
+    const { error: err } = await (await supabase()).auth.signInWithPassword({ email: email.trim(), password });
+    if (err) throw new Error(err.message === "Invalid login credentials" ? "Wrong email or password." : err.message);
+    await loadProfile();
+  };
+
+  useEffect(() => {
+    document.title = me ? `${me.company.name} · Field Assistant` : "Field Assistant";
+  }, [me]);
+
+  return <Ctx.Provider value={{ me, loading, error, signIn, signOut }}>{children}</Ctx.Provider>;
 }
 
 export function useSession(): Session {

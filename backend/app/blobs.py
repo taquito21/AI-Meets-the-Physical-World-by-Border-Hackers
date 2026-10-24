@@ -1,7 +1,8 @@
-"""Evidence photo storage: a private Supabase Storage bucket, or local files in DATA_DIR/evidence.
+"""File storage: a private Supabase Storage bucket, or local files in DATA_DIR/files (tests).
 
-Paths are relative ("<inspection_id>/<evidence_id>.jpg"), so records do not depend on the backend.
-Photos are always served through the API (never a public bucket URL), behind the same access checks.
+Paths are relative ("<company_id>/evidence/<task_id>/<evidence_id>.jpg", "<company_id>/media/<media_id>.glb"),
+so records do not depend on the backend. Browsers never get a permanent link: the API hands out short-lived
+signed URLs, created only after it has checked that the user may see the file.
 """
 from __future__ import annotations
 
@@ -13,11 +14,14 @@ import httpx
 
 from .config import settings
 
+SIGNED_URL_SECONDS = 3600
+
 
 class BlobStore(Protocol):
     def put(self, path: str, data: bytes, content_type: str) -> None: ...
     def get(self, path: str) -> bytes | None: ...
     def delete(self, paths: list[str]) -> None: ...
+    def signed_urls(self, paths: list[str]) -> dict[str, str]: ...
 
 
 class LocalBlobs:
@@ -45,9 +49,13 @@ class LocalBlobs:
             if target:
                 target.unlink(missing_ok=True)
 
+    def signed_urls(self, paths):
+        return {p: f"/api/local-files/{quote(p)}" for p in paths}  # served by main.py in local mode only
+
 
 class SupabaseBlobs:
     def __init__(self, url: str, key: str, bucket: str):
+        self.url = url
         self.bucket = bucket
         self.client = httpx.Client(base_url=f"{url}/storage/v1", timeout=30,
                                    headers={"apikey": key, "Authorization": f"Bearer {key}"})
@@ -75,11 +83,21 @@ class SupabaseBlobs:
             if resp.status_code >= 400:
                 raise RuntimeError(f"Supabase Storage delete failed {resp.status_code}: {resp.text[:200]}")
 
+    def signed_urls(self, paths):
+        paths = sorted(set(paths))
+        if not paths:
+            return {}
+        resp = self.client.post(f"/object/sign/{self.bucket}",
+                                json={"expiresIn": SIGNED_URL_SECONDS, "paths": paths})
+        resp.raise_for_status()
+        return {r["path"]: f"{self.url}/storage/v1{r['signedURL']}" for r in resp.json()
+                if r.get("signedURL") and not r.get("error")}
+
 
 def _make() -> BlobStore:
     if settings.data_backend == "supabase":
         return SupabaseBlobs(settings.supabase_url, settings.supabase_secret_key, settings.storage_bucket)
-    return LocalBlobs(settings.evidence_dir)
+    return LocalBlobs(settings.files_dir)
 
 
 blobs: BlobStore = _make()

@@ -1,93 +1,54 @@
-import { useEffect, useRef, useState } from "react";
-import type { ComponentStatus, Issue, ItemStatus } from "../api";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import type { Counts, TaskStatus } from "../api";
 
-export const ITEM_LABEL: Record<ItemStatus, string> = {
-  pending: "Not inspected",
-  evidence_submitted: "Awaiting decision",
-  more_evidence_requested: "More evidence needed",
+export const TASK_LABEL: Record<TaskStatus, string> = {
+  pending: "Pending",
   passed: "Passed",
   failed: "Failed",
-  not_applicable: "Not applicable",
+  flagged: "Flagged",
 };
 
-export const ITEM_TONE: Record<ItemStatus, string> = {
+export const TASK_TONE: Record<TaskStatus, string> = {
   pending: "neutral",
-  evidence_submitted: "amber",
-  more_evidence_requested: "amber",
   passed: "green",
   failed: "red",
-  not_applicable: "neutral",
+  flagged: "purple",
 };
 
-// Component-level states shared by every industry. "Inspected" means all requirements were dispositioned by a
-// person (passed or N/A); attaching a photo alone never makes a component "Inspected".
-export const COMPONENT_LABEL: Record<ComponentStatus, string> = {
-  not_inspected: "Pending",
-  in_progress: "In progress",
-  pending: "Requires review",
-  accepted: "Inspected",
-  finding: "Finding reported",
-};
-
-export function ModeBadge({ mode }: { mode: string | undefined | null }) {
-  if (mode !== "demo") return <Chip tone="blue">Live inspection</Chip>;
-  return <span className="chip chip-demo" title="Uses prepared demonstration material">DEMO inspection</span>;
-}
-
-export function IndustryChip({ industry }: { industry: string | undefined | null }) {
-  const slug = (industry ?? "general").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  return <span className={`chip chip-industry chip-ind-${slug}`}>{industry ?? "General"}</span>;
-}
-
-export const COMPONENT_TONE: Record<ComponentStatus, string> = {
-  not_inspected: "neutral",
-  in_progress: "amber",
-  pending: "amber",
-  accepted: "green",
-  finding: "red",
-};
-
-export const INSPECTION_TONE: Record<string, string> = {
-  in_progress: "blue",
-  changes_requested: "amber",
-  submitted: "amber",
-  approved: "green",
-  rejected: "red",
-};
-
-export function Chip({ tone = "neutral", children }: { tone?: string; children: React.ReactNode }) {
+export function Chip({ tone = "neutral", children }: { tone?: string; children: ReactNode }) {
   return <span className={`chip chip-${tone}`}>{children}</span>;
 }
 
-export function Progress({ done, total }: { done: number; total: number }) {
-  const pct = total ? Math.round((done / total) * 100) : 0;
+export function StatusChip({ status }: { status: TaskStatus }) {
+  return <Chip tone={TASK_TONE[status]}>{TASK_LABEL[status]}</Chip>;
+}
+
+// Progress of a job: tasks with a decision (passed or failed) out of all tasks.
+export function Progress({ counts }: { counts: Counts }) {
+  const done = counts.passed + counts.failed;
+  const pct = counts.total ? Math.round((done / counts.total) * 100) : 0;
   return (
-    <div className="progress" aria-label={`${done} of ${total}`}>
+    <div className="progress" aria-label={`${done} of ${counts.total} tasks done`}>
       <div className="progress-bar" style={{ width: `${pct}%` }} />
-      <span>{done}/{total} required</span>
+      <span>{done}/{counts.total} done</span>
     </div>
   );
 }
 
-export function ErrorBox({ error, onSelect }: { error: { message: string; issues?: Issue[] } | null; onSelect?: (i: Issue) => void }) {
-  if (!error) return null;
+export function CountChips({ counts }: { counts: Counts }) {
   return (
-    <div className="error-box" role="alert">
-      <strong>{error.message}</strong>
-      {!!error.issues?.length && (
-        <ul>
-          {error.issues.map((i, n) => (
-            <li key={n}>
-              {onSelect && i.component_id ? (
-                <button className="link" onClick={() => onSelect(i)}>{i.title ?? i.component_id}</button>
-              ) : i.title ? <b>{i.title}</b> : null}
-              {i.title || i.component_id ? ": " : ""}{i.reason}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <span className="row-inline">
+      {counts.flagged > 0 && <Chip tone="purple">{counts.flagged} flagged</Chip>}
+      {counts.failed > 0 && <Chip tone="red">{counts.failed} failed</Chip>}
+      {counts.passed > 0 && <Chip tone="green">{counts.passed} passed</Chip>}
+      {counts.pending > 0 && <Chip>{counts.pending} pending</Chip>}
+    </span>
   );
+}
+
+export function ErrorBox({ error }: { error: string | null }) {
+  if (!error) return null;
+  return <div className="error-box" role="alert">{error}</div>;
 }
 
 export function usePolling(fn: () => void, ms: number, deps: unknown[] = []) {

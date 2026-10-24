@@ -1,51 +1,36 @@
-import { NavLink, Route, Routes } from "react-router-dom";
+import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { AskBox } from "./components/AskBox";
+import JobDetail from "./pages/JobDetail";
+import Jobs from "./pages/Jobs";
+import Login from "./pages/Login";
+import Media from "./pages/Media";
+import NewJob from "./pages/NewJob";
 import { useSession } from "./session";
-import Home from "./pages/Home";
-import Catalog from "./pages/Catalog";
-import ProductDetail from "./pages/ProductDetail";
-import Inspection from "./pages/Inspection";
-import Summary from "./pages/Summary";
-import Supervisor from "./pages/Supervisor";
-import Findings from "./pages/Findings";
-import ImportStudio from "./pages/ImportStudio";
-import Passport from "./pages/Passport";
-import Dashboard from "./pages/Dashboard";
-import Render from "./pages/Render";
 
 export default function App() {
-  const { label, name, role, health } = useSession();
-  if (window.location.pathname.startsWith("/render/")) {
-    return <Routes><Route path="/render/:revisionId" element={<Render />} /></Routes>;
-  }
+  const { me, loading, signOut } = useSession();
+  if (loading) return <div className="page muted">Loading…</div>;
+  if (!me) return <Login />;
+  const employer = me.user_class === "employer";
   return (
     <div className="app">
       <header className="topbar">
-        <NavLink to="/" className="brand">{label}</NavLink>
+        <NavLink to="/" className="brand">Field Assistant</NavLink>
         <nav>
-          <NavLink to="/catalog">Assets</NavLink>
-          <NavLink to="/dashboard">Dashboard</NavLink>
-          <NavLink to="/supervisor">Review</NavLink>
-          <NavLink to="/findings">Findings</NavLink>
-          <NavLink to="/import">Import</NavLink>
+          <NavLink to="/" end>Jobs</NavLink>
+          {employer && <NavLink to="/media">Media</NavLink>}
+          <NavLink to="/ask">Ask docs</NavLink>
         </nav>
-        <span className="who" title="Change on the home screen">{name} · {role}</span>
+        <span className="who">{me.username} · {me.user_class} · {me.company.name}</span>
+        <button className="link signout" onClick={signOut}>Sign out</button>
       </header>
-      {health?.storage === "ephemeral" && (
-        <div className="test-banner">Temporary test deployment: data is not permanent and may reset at any time.</div>
-      )}
       <main>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/catalog" element={<Catalog />} />
-          <Route path="/products/:revisionId" element={<ProductDetail />} />
-          <Route path="/inspections/:id" element={<Inspection />} />
-          <Route path="/inspections/:id/summary" element={<Summary />} />
-          <Route path="/supervisor" element={<Supervisor />} />
-          <Route path="/supervisor/:id" element={<Summary review />} />
-          <Route path="/findings" element={<Findings />} />
-          <Route path="/import" element={<ImportStudio />} />
-          <Route path="/p/:serial" element={<Passport />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/" element={<Jobs />} />
+          <Route path="/jobs/new" element={employer ? <NewJob /> : <Navigate to="/" />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
+          <Route path="/media" element={employer ? <Media /> : <Navigate to="/" />} />
+          <Route path="/ask" element={<div className="page"><AskBox /></div>} />
           <Route path="*" element={<div className="page"><h1>Not found</h1></div>} />
         </Routes>
       </main>

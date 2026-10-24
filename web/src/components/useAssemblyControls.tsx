@@ -1,9 +1,9 @@
 import { useState } from "react";
-import type { Component } from "../api";
+import type { Part } from "../api";
 import { ExplodeControl } from "./ExplodeControl";
 
 // Shared viewer state for every page that shows an assembly: explode, articulation (door) and framing.
-export function useAssemblyControls(components: Component[] | undefined, selectedId: string | null) {
+export function useAssemblyControls(components: Part[] | undefined, selectedId: string | null) {
   const [explode, setExplode] = useState(0);
   const [articulation, setArticulation] = useState(0);
   const [focus, setFocus] = useState<{ id: string | null; key: number }>({ id: null, key: 0 });

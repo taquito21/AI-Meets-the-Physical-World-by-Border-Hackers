@@ -47,13 +47,16 @@ class Settings:
     data_backend: str = _DATA_BACKEND
     supabase_url: str = _SUPABASE_URL
     supabase_secret_key: str = _SUPABASE_SECRET_KEY  # server side only; never sent to the web client
+    # Public (browser) key: the web client uses it only to log in through Supabase Auth.
+    supabase_publishable_key: str = os.environ.get("SUPABASE_PUBLISHABLE_KEY", "").strip()
+    # Public keys that sign login tokens; defaults to the project's standard JWKS endpoint.
+    supabase_jwks_url: str = os.environ.get("SUPABASE_JWKS_URL") or (
+        f"{_SUPABASE_URL}/auth/v1/.well-known/jwks.json" if _SUPABASE_URL else "")
     storage_bucket: str = os.environ.get("STORAGE_BUCKET", "files")
     # "persistent" for Supabase or a laptop/server disk, "ephemeral" for local storage on serverless hosts
     # (data may reset at any time).
     storage_mode: str = os.environ.get("STORAGE_MODE") or (
         "ephemeral" if os.environ.get("VERCEL") and _DATA_BACKEND == "local" else "persistent")
-    # When set, every request requires this shared password (HTTP Basic auth; any username).
-    access_password: str = os.environ.get("ACCESS_PASSWORD", "")
     packages_dir: Path = Path(os.environ.get("PACKAGES_DIR", ROOT_DIR / "engineering-packages"))
     web_dist_dir: Path = Path(os.environ.get("WEB_DIST_DIR", ROOT_DIR / "web" / "dist"))
     # AI provider: "anthropic" (needs ANTHROPIC_API_KEY or an `ant auth login` profile) or "none".
@@ -65,9 +68,10 @@ class Settings:
     ai_timeout_s: float = float(os.environ.get("AI_TIMEOUT_S") or ("40" if os.environ.get("VERCEL") else "60"))
     ai_max_retries: int = int(os.environ.get("AI_MAX_RETRIES") or ("0" if os.environ.get("VERCEL") else "1"))
     ai_fallbacks: bool = _bool("AI_FALLBACKS", True)
-    # Closure policy: may an inspection be submitted while critical findings are still open?
-    block_submit_on_open_critical: bool = _bool("BLOCK_SUBMIT_ON_OPEN_CRITICAL", False)
-    seed_instances: bool = _bool("SEED_INSTANCES", True)
+    # Document search (RAG): Voyage AI embeddings through the MongoDB Atlas API.
+    voyage_api_key: str = os.environ.get("VOYAGE_API_KEY", "").strip()
+    voyage_model: str = os.environ.get("VOYAGE_MODEL", "voyage-4")  # 1024-dim vectors, matching schema.sql
+    voyage_url: str = os.environ.get("VOYAGE_URL", "https://ai.mongodb.com/v1/embeddings")
     max_upload_mb: int = int(os.environ.get("MAX_UPLOAD_MB", "15"))
     cors_origins: list[str] = field(default_factory=lambda: os.environ.get("CORS_ORIGINS", "*").split(","))
 
@@ -76,8 +80,8 @@ class Settings:
         return self.data_dir / "field_platform.db"
 
     @property
-    def evidence_dir(self) -> Path:
-        return self.data_dir / "evidence"
+    def files_dir(self) -> Path:
+        return self.data_dir / "files"
 
 
 settings = Settings()

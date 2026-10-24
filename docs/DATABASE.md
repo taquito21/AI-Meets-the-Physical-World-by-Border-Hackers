@@ -1,52 +1,50 @@
-# Persistent storage (Supabase)
+# Data, storage and login (Supabase)
 
-Data lives in **Supabase Postgres**, and evidence photos live in a private **Supabase Storage** bucket. The backend
-reaches both over HTTPS through the Supabase REST API, using the server-side secret key. There is no direct Postgres
-connection, so it also works on networks that only allow port 443 (the venue Wi-Fi blocks 5432/6543).
-
-Without Supabase keys, the same code runs on **local SQLite + files** in `backend/data` (tests, offline work).
+Data lives in **Supabase Postgres**, files in a private **Supabase Storage** bucket (`files`), and logins in
+**Supabase Auth**. The backend reaches all of them over HTTPS (REST API + the server-side secret key). There is
+no direct Postgres connection, so it also works on networks that only allow port 443 (the venue Wi-Fi blocks
+5432/6543).
 
 | Setting (`backend/.env`, Vercel env) | Purpose |
 |---|---|
-| `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Turn on the Supabase backend. The secret key is server side only. |
-| `STORAGE_BUCKET` | Photo bucket (default `evidence`). |
-| `DATA_BACKEND=local` | Force local storage even when the keys are set. |
+| `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Data, storage, token verification. The secret key is server side only. |
+| `SUPABASE_PUBLISHABLE_KEY` | Public; handed to the browser (via `/api/config`) for login. |
+| `VOYAGE_API_KEY` | Document search embeddings (MongoDB Atlas → AI Model APIs). |
+| `ANTHROPIC_API_KEY` | Photo review and document answers. |
+| `STORAGE_BUCKET` | Default `files`. |
 
 ## First-time setup (once per Supabase project)
-1. Supabase dashboard → **SQL Editor** → New query → paste `backend/supabase/schema.sql` → **Run**. It is safe to re-run.
-   It creates the tables, indexes, the private `evidence` bucket, and enables row-level security with no policies,
-   so the publishable (browser) key cannot read or write any table.
-2. Start the server. It imports the engineering packages and seeds the demo units on first start.
+1. SQL Editor → paste `backend/supabase/schema.sql` → Run (safe to re-run). It creates the 8 tables, the
+   `match_document_chunks` search function, the private `files` bucket, and enables row-level security with no
+   policies (the publishable key can read or write nothing).
+2. Authentication → Sign In / Providers → Email: turn **Confirm email** off.
+3. `cp backend/seed.example.json backend/seed.json`, edit it (gitignored: it holds passwords), then
+   `backend/.venv/bin/python tools/seed_accounts.py` creates companies, logins and profiles together.
+4. `backend/.venv/bin/python tools/load_demo_media.py` uploads the demo 3D models to their companies.
+5. `backend/.venv/bin/python tools/smoke_test_supabase.py` checks everything end to end with a throwaway company
+   and cleans up after itself.
 
 ## How the code is organized
 - `backend/app/db.py`: the only data-access module. A small interface (`select`, `first`, `count`, `insert`,
-  `upsert`, `update`, `delete`) with two backends: `RestStore` (PostgREST over HTTPS) and `SqliteStore`.
-  Filters are equality, `None` (is null) and lists (IN). Joins happen in Python.
-- `backend/app/blobs.py`: photo storage (`put`, `get`, `delete`) on Supabase Storage or local disk. Photos are always
-  served through `/api/evidence/{id}/file`, never through a public bucket URL.
+  `upsert`, `update`, `delete`, `rpc`) with two backends: `RestStore` (PostgREST over HTTPS) and `SqliteStore`
+  (local, used by the tests). Filters are equality, `None` (is null) and lists (IN). Joins happen in Python.
+- `backend/app/blobs.py`: file storage (`put`, `get`, `delete`, `signed_urls`) on Supabase Storage or local disk.
 - `backend/supabase/schema.sql` (Postgres) and `SCHEMA` in `db.py` (SQLite) must be kept in sync.
 
 ## No multi-statement transactions
-Each REST call is its own transaction. The workflow stays safe this way:
-- Every state change is a **conditional update** on the status that was read (`where status = <what we read>`). If
-  someone changed the record in between, the request fails with 409 instead of overwriting their change.
-- A **partial unique index** allows only one open inspection per unit, so concurrent starts cannot create two.
-- Validation runs before the first write. Multi-row inserts (inspection items, components) are a single request.
-- Package import is idempotent and **self-repairing**: if an import was interrupted, the next start completes it.
-- Remaining gap: if a request fails between two writes (e.g. after the status change, before the activity event),
-  the state change is kept without its follow-up rows. It is rare, and acceptable for the MVP. Wrap a critical
-  sequence in a Postgres function (called through `/rpc`) if it ever needs to be atomic.
+Each REST call is its own transaction. The code validates before the first write, writes parents before children,
+and undoes a half-created job or upload if a later write fails. Deletes rely on `on delete cascade`.
 
-## Switching to a direct Postgres connection later
-Add a third store class in `db.py` (e.g. `psycopg`) that implements the same interface, and select it with
-`DATA_BACKEND`. Nothing outside `db.py` changes. A direct connection needs a network that allows port 5432/6543.
+## Adding people later
+Add them to `backend/seed.json` and re-run `tools/seed_accounts.py`; existing accounts are left untouched.
 
 ## Resetting data (development)
-Revisions are immutable once loaded. To reload an edited revision, wipe the data:
-`backend/.venv/bin/python tools/reset_demo_data.py --yes` (Supabase: deletes every row and photo, then restart the
-server; local: deletes `backend/data`, stop the server first).
+`backend/.venv/bin/python tools/reset_demo_data.py --yes` deletes all jobs, tasks, evidence and media (and their
+files); companies and logins are kept. Reload the demo models with `tools/load_demo_media.py`.
 
 ## Tests
-`pytest backend/tests` always runs on a temporary SQLite database. `TEST_DATA_BACKEND=supabase pytest backend/tests`
-runs the same suite against the Supabase project in `backend/.env` and **wipes all its data** before each module.
-Use it only with a development project.
+`backend/.venv/bin/python -m pytest -q backend/tests` runs on a temporary SQLite database with AI and embeddings
+stubbed; it never touches Supabase or paid APIs.
+
+## Switching to a direct Postgres connection later
+Add a third store class in `db.py` (e.g. `psycopg`) with the same interface and select it with `DATA_BACKEND`.

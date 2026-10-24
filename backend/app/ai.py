@@ -1,7 +1,7 @@
 """Evidence assessment: deterministic image checks + a pluggable multimodal AI provider.
 
-The AI supports the inspector; it does not decide. Its output is validated against a
-schema and stored as advisory data. Workflow consequences live in workflow.py.
+The AI supports the field worker; it does not decide. Its output is validated against a schema and stored as
+advisory data on the evidence row. Only a person sets a task's status.
 """
 from __future__ import annotations
 
@@ -96,8 +96,8 @@ ASSESSMENT_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
-SYSTEM_PROMPT = """You assist a human field inspector by reviewing one photograph submitted as evidence for one \
-manufacturer-defined inspection requirement on a physical product.
+SYSTEM_PROMPT = """You assist a human field worker by reviewing one photograph submitted as evidence for one \
+task on a job (usually an inspection of a physical asset).
 
 Your job is to judge the photograph as evidence, not to certify the product:
 - Decide whether the component and area named in the requirement are actually visible, and whether the image is \
@@ -105,7 +105,7 @@ clear enough for a person to judge the acceptance criteria.
 - Describe only conditions you can see. Never invent components, defects, measurements, materials or specifications.
 - Do not claim that torque, tightness, load capacity, dimensions, tolerances or internal condition are acceptable; \
 these cannot be established from a photograph. Say so in limitations when relevant.
-- Never state that the product is safe, compliant, approved or released. The inspector and supervisor decide.
+- Never state that the product is safe, compliant, approved or released. The worker and their employer decide.
 - For electrical equipment: never state that an installation is electrically safe, de-energized, correctly wired \
 or compliant with any standard, and never infer voltage, continuity, insulation resistance, terminal torque or \
 internal operation from a photograph. You may describe visible signs (discoloration, melting, missing labels, \
@@ -113,12 +113,12 @@ exposed conductors, loose-looking or disconnected wires, missing covers) as cond
 - Do not identify brands, part numbers or certifications that are not legible in the image.
 - For fire-safety or other safety equipment: never state that it is charged, correctly pressurized, ready, serviceable or compliant. Describe a gauge needle only relative to markings that are clearly legible in the photo, and never invent unreadable text, dates or values on labels or tags; ask for a better photo instead.
 - If the photo shows a different object, the wrong part, or is too dark, blurred, distant or obstructed to judge the \
-requirement, set evidence_sufficient to false, recommended_action to "retake_photo", and give specific retake_guidance.
+task, set evidence_sufficient to false, recommended_action to "retake_photo", and give specific retake_guidance.
 - If the required area is visible and something might be a defect (crack, deformation, missing part, damage, \
 corrosion), list it under conditions_for_human_review and use "flag_for_human_review".
-- Otherwise use "accept_for_human_review". This means "usable evidence", not "requirement passed".
+- Otherwise use "accept_for_human_review". This means "usable evidence", not "task passed".
 - The asset may be anything from furniture to an industrial control panel; assess what is in the photo against \
-the requirement text and asset context as written. Technical values marked as demonstration data are not verified.
+the task text and asset context as written. Technical values marked as demonstration data are not verified.
 Keep every string short and concrete. Write retake_guidance as an empty string when no retake is needed."""
 
 
@@ -140,51 +140,64 @@ class AssessmentProvider(Protocol):
     def assess(self, image_jpeg: bytes, context: dict[str, Any]) -> AssessmentOutcome: ...
 
 
-def build_context(*, manifest: dict[str, Any], procedure: dict[str, Any], component: dict[str, Any],
-                  requirement: dict[str, Any], serial_number: str, worker_note: str | None,
-                  image_checks: dict[str, Any] | None, inspection_id: str | None = None) -> dict[str, Any]:
-    """Asset-agnostic assessment context, built the same way for live calls and precomputed demo results."""
-    return {
-        "industry": manifest.get("industry") or "General",
-        "asset_category": manifest.get("asset_category") or "",
-        "product_id": manifest["product_id"], "product_name": manifest["product_name"],
-        "revision": manifest["engineering_revision"], "serial_number": serial_number,
-        "profile_guidance": procedure.get("ai_guidance") or "",
-        "component_id": component["component_id"], "component_name": component["name"],
-        "component_category": component.get("category") or "", "part_number": component["part_number"],
-        "quantity": component["quantity"], "component_description": component.get("description"),
-        "specs": component.get("specs", []),
-        "requirement": requirement, "worker_note": worker_note, "image_checks": image_checks or {},
-        "inspection_id": inspection_id,
-    }
+def build_context(*, company: str, job_title: str, task: str, parts: list[dict[str, Any]], media_titles: list[str],
+                  worker_note: str | None, image_checks: dict[str, Any] | None) -> dict[str, Any]:
+    """What the model knows about one photo: the job, the task and the parts of any linked 3D model."""
+    return {"company": company, "job_title": job_title, "task": task, "parts": parts,
+            "media_titles": media_titles, "worker_note": worker_note, "image_checks": image_checks or {}}
 
 
 def build_prompt(ctx: dict[str, Any]) -> str:
-    req = ctx["requirement"]
-    specs = "; ".join(f"{s['label']}: {s['value']}{' (demonstration value, unverified)' if s.get('demo_value') else ''}"
-                      for s in ctx.get("specs") or []) or "(none)"
+    def part_line(p: dict[str, Any]) -> str:
+        specs = "; ".join(f"{s['label']}: {s['value']}{' (demonstration value, unverified)' if s.get('demo_value') else ''}"
+                          for s in p.get("specs") or [])
+        return (f"- {p.get('name')} (part {p.get('part_number') or 'n/a'}): {p.get('description') or ''}"
+                + (f" Specs: {specs}" if specs else ""))
+
     lines = [
-        f"Industry: {ctx.get('industry')}. Asset category: {ctx.get('asset_category') or 'n/a'}",
-        f"Asset: {ctx['product_name']} ({ctx['product_id']}), engineering revision {ctx['revision']}",
-        f"Asset instance: {ctx['serial_number']}",
-        f"Inspection profile guidance: {ctx.get('profile_guidance') or '(none)'}",
-        f"Component: {ctx['component_name']} ({ctx['component_id']}), category {ctx.get('component_category') or 'n/a'}, "
-        f"part number {ctx['part_number']}, quantity {ctx['quantity']}",
-        f"Component description: {ctx.get('component_description') or 'n/a'}",
-        f"Technical sheet: {specs}",
-        f"Requirement {req['requirement_id']}: {req['title']}",
-        f"Instructions: {req['instructions']}",
-        "Inspection points: " + "; ".join(req.get("inspection_points") or ["(see acceptance criteria)"]),
-        "Acceptance criteria: " + "; ".join(req.get("acceptance_criteria") or ["(none listed)"]),
-        "Possible findings to look for: " + "; ".join(req.get("possible_findings") or ["(none listed)"]),
-        f"Required photo: {req.get('photo_guidance') or '(no specific guidance)'}",
-        "Known limits of visual inspection for this requirement: "
-        + "; ".join(req.get("visual_limitations") or ["(none listed)"]),
-        f"Inspector note: {ctx.get('worker_note') or '(none)'}",
+        f"Company: {ctx['company']}",
+        f"Job: {ctx['job_title']}",
+        f"Task: {ctx['task']}",
+        "Linked reference material: " + (", ".join(ctx["media_titles"]) or "(none)"),
+        "Parts this task is about:" if ctx["parts"] else "Parts this task is about: (not specified)",
+        *[part_line(p) for p in ctx["parts"]],
+        f"Worker note: {ctx.get('worker_note') or '(none)'}",
         f"Automated image checks (heuristic): {json.dumps(ctx.get('image_checks', {}))}",
-        "Assess the attached photograph as evidence for this requirement.",
+        "Assess the attached photograph as evidence for this task.",
     ]
     return "\n".join(lines)
+
+
+def claude_client():
+    """Shared Anthropic client (photo review and document answers)."""
+    global _client
+    import anthropic
+    if _client is None:
+        # Ignore ANTHROPIC_BASE_URL inherited from developer tooling; use AI_BASE_URL to override deliberately.
+        _client = anthropic.Anthropic(
+            base_url=os.environ.get("AI_BASE_URL", "https://api.anthropic.com"),
+            timeout=settings.ai_timeout_s, max_retries=settings.ai_max_retries)
+    return _client
+
+
+_client = None
+
+
+def request_options() -> dict[str, Any]:
+    """Server-side refusal fallback (on by default; AI_FALLBACKS=false turns it off)."""
+    if not settings.ai_fallbacks:
+        return {}
+    return {"extra_headers": {"anthropic-beta": "server-side-fallback-2026-07-01"},
+            "extra_body": {"fallbacks": "default"}}
+
+
+def claude_available() -> tuple[bool, str]:
+    if settings.ai_provider != "anthropic":
+        return False, "AI is disabled (AI_PROVIDER=none)."
+    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")
+            or os.environ.get("ANTHROPIC_PROFILE")):
+        return False, "No Anthropic credentials configured (set ANTHROPIC_API_KEY in backend/.env)."
+    return True, f"Claude ({settings.ai_model})"
 
 
 class NoProvider:
@@ -202,26 +215,9 @@ class AnthropicProvider:
 
     def __init__(self) -> None:
         self.model = settings.ai_model
-        self._client = None
 
     def available(self) -> tuple[bool, str]:
-        try:
-            import anthropic  # noqa: F401
-        except ImportError:
-            return False, "anthropic SDK not installed"
-        if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")
-                or os.environ.get("ANTHROPIC_PROFILE")):
-            return False, "No Anthropic credentials configured (set ANTHROPIC_API_KEY in backend/.env)."
-        return True, f"Claude ({self.model})"
-
-    def _get_client(self):
-        import anthropic
-        if self._client is None:
-            # Ignore ANTHROPIC_BASE_URL inherited from developer tooling; use AI_BASE_URL to override deliberately.
-            self._client = anthropic.Anthropic(
-                base_url=os.environ.get("AI_BASE_URL", "https://api.anthropic.com"),
-                timeout=settings.ai_timeout_s, max_retries=settings.ai_max_retries)
-        return self._client
+        return claude_available()
 
     def assess(self, image_jpeg: bytes, context: dict[str, Any]) -> AssessmentOutcome:
         import anthropic
@@ -234,12 +230,8 @@ class AnthropicProvider:
             return AssessmentOutcome(self.name, self.model, status, result, error,
                                      int((time.monotonic() - started) * 1000))
 
-        kwargs: dict[str, Any] = {}
-        if settings.ai_fallbacks:
-            kwargs = {"extra_headers": {"anthropic-beta": "server-side-fallback-2026-07-01"},
-                      "extra_body": {"fallbacks": "default"}}
         try:
-            response = self._get_client().messages.create(
+            response = claude_client().messages.create(
                 model=self.model,
                 max_tokens=4000,
                 system=SYSTEM_PROMPT,
@@ -250,7 +242,7 @@ class AnthropicProvider:
                                                  "data": base64.standard_b64encode(image_jpeg).decode()}},
                     {"type": "text", "text": build_prompt(context)},
                 ]}],
-                **kwargs,
+                **request_options(),
             )
         except anthropic.AuthenticationError:
             return done("failed", error="AI provider rejected the credentials.")
