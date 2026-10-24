@@ -63,3 +63,9 @@
 - Assets without a 3D model are supported (assembly_file optional).
 - Viewer: tapping empty space clears the selection; the selected part is strongly highlighted.
 - 36 tests passing; 10 real AI calls on synthetic test images (behaviour matched expectations); no real extinguisher photos yet.
+
+## 2026-10-24: Supabase storage
+- Data moved to Supabase Postgres + Storage through the REST API (HTTPS only: the venue network blocks Postgres ports).
+- `db.py` is now a small query interface with a REST backend and a SQLite backend (tests, offline). Raw SQL joins
+  were rewritten as Python joins; workflow transitions use conditional updates. Schema: `backend/supabase/schema.sql`.
+- See DATABASE.md. Authentication (Supabase Auth) is next.

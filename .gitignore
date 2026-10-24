@@ -12,3 +12,4 @@ backend/.env.*
 .vercel
 web/.env.local
 web/.env.*.local
+backend/seed.json

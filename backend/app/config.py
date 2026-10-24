@@ -32,14 +32,26 @@ def _bool(name: str, default: bool) -> bool:
     return os.environ.get(name, str(default)).strip().lower() in ("1", "true", "yes", "on")
 
 
+_SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
+_SUPABASE_SECRET_KEY = os.environ.get("SUPABASE_SECRET_KEY", "").strip()
+# "supabase" (Postgres + Storage over the Supabase REST API) or "local" (SQLite + files in DATA_DIR).
+_DATA_BACKEND = os.environ.get("DATA_BACKEND") or ("supabase" if _SUPABASE_URL and _SUPABASE_SECRET_KEY else "local")
+
+
 @dataclass(frozen=True)
 class Settings:
     app_label: str = os.environ.get("APP_LABEL", "Field Assistant")
     # On Vercel the deployment is read-only; only /tmp is writable, and it is per-instance and temporary.
     data_dir: Path = Path(os.environ.get("DATA_DIR") or ("/tmp/field-platform" if os.environ.get("VERCEL")
                                                           else BACKEND_DIR / "data"))
-    # "persistent" for a laptop/server disk, "ephemeral" on serverless hosts where data may reset at any time.
-    storage_mode: str = os.environ.get("STORAGE_MODE") or ("ephemeral" if os.environ.get("VERCEL") else "persistent")
+    data_backend: str = _DATA_BACKEND
+    supabase_url: str = _SUPABASE_URL
+    supabase_secret_key: str = _SUPABASE_SECRET_KEY  # server side only; never sent to the web client
+    storage_bucket: str = os.environ.get("STORAGE_BUCKET", "files")
+    # "persistent" for Supabase or a laptop/server disk, "ephemeral" for local storage on serverless hosts
+    # (data may reset at any time).
+    storage_mode: str = os.environ.get("STORAGE_MODE") or (
+        "ephemeral" if os.environ.get("VERCEL") and _DATA_BACKEND == "local" else "persistent")
     # When set, every request requires this shared password (HTTP Basic auth; any username).
     access_password: str = os.environ.get("ACCESS_PASSWORD", "")
     packages_dir: Path = Path(os.environ.get("PACKAGES_DIR", ROOT_DIR / "engineering-packages"))

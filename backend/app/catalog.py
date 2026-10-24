@@ -35,76 +35,108 @@ def find_package_dir(package_dir_name: str) -> Path:
     raise FileNotFoundError(package_dir_name)
 
 
-def load_package(package_dir: Path, actor: str = "system") -> dict[str, Any]:
+def _catalog_rows(report: PackageReport, rev_id: str) -> tuple[list[dict], list[dict]]:
+    comps = [{
+        "product_revision_id": rev_id, "id": c["component_id"], "parent_component_id": c.get("parent_component_id"),
+        "part_number": c["part_number"], "name": c["name"], "quantity": c["quantity"], "category": c.get("category"),
+        "material": c.get("material"), "description": c.get("description"),
+        "model_node_ids": c.get("model_node_ids") or [],
+        "explosion": c.get("explosion") or {"direction": [0, 1, 0], "distance": 0},
+        "documents": c.get("documents", []), "sort": i, "definition": c}
+        for i, c in enumerate(report.components)]
+    reqs = [{
+        "product_revision_id": rev_id, "id": r["requirement_id"], "component_id": r["component_id"],
+        "title": r["title"], "instructions": r["instructions"], "evidence_type": r["evidence_type"],
+        "required": bool(r["required"]), "definition": r, "sort": i}
+        for i, r in enumerate(report.procedure.get("requirements", []))]
+    return comps, reqs
+
+
+def load_package(package_dir: Path, actor: str = "system", loaded: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Import a validated package. `loaded` (from bootstrap) avoids re-querying what is already in the catalog.
+
+    The REST API has no multi-statement transaction, so every insert is idempotent (ignore duplicates) and a
+    revision whose components or requirements are incomplete (an import interrupted mid-way) is completed."""
     report = validate_package(package_dir)
     if not report.ok:
         raise PackageInvalid(report)
     m = report.manifest
     rev_id = revision_id(m["product_id"], m["engineering_revision"])
     pkg_id = m.get("package_id") or f"PKG-{m['product_id']}-{m['engineering_revision']}"
-    with db.tx() as conn:
-        existing = conn.execute(
-            "SELECT p.content_hash, p.id FROM product_revisions r JOIN engineering_packages p "
-            "ON p.id = r.engineering_package_id WHERE r.id = ?", (rev_id,)).fetchone()
-        if existing:
-            if existing["content_hash"] == report.content_hash:
-                return {"status": "unchanged", "revision_id": rev_id, "report": report.summary()}
-            raise PackageConflict(
-                f"Revision {m['engineering_revision']} of {m['product_id']} is already loaded with different content. "
-                "Released revisions are immutable: publish a new engineering_revision, or reset demo data during development.")
-        ts = db.now()
-        conn.execute("INSERT OR IGNORE INTO manufacturers VALUES (?,?)",
-                     (m.get("manufacturer_id") or m["manufacturer"], m["manufacturer"]))
-        conn.execute(
-            "INSERT INTO product_models VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, "
-            "description=excluded.description",
-            (m["product_id"], m.get("manufacturer_id") or m["manufacturer"], m["product_name"], m.get("product_description")))
-        conn.execute("INSERT INTO engineering_packages VALUES (?,?,?,?,?,?,?,?,?,?)",
-                     (pkg_id, m["product_id"], m["engineering_revision"], m["package_version"], package_dir.name,
-                      db.dumps(m), report.content_hash, "loaded", db.dumps(report.summary()), ts))
-        proc = {k: v for k, v in report.procedure.items() if k != "requirements"}
-        conn.execute("INSERT INTO product_revisions VALUES (?,?,?,?,?,?)",
-                     (rev_id, m["product_id"], m["engineering_revision"], pkg_id, db.dumps(proc), ts))
-        for i, c in enumerate(report.components):
-            conn.execute(
-                "INSERT INTO components (product_revision_id, id, parent_component_id, part_number, name, quantity, "
-                "category, material, description, model_node_ids, explosion, documents, sort, definition) "
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (rev_id, c["component_id"], c.get("parent_component_id"), c["part_number"], c["name"],
-                 c["quantity"], c.get("category"), c.get("material"), c.get("description"),
-                 db.dumps(c.get("model_node_ids") or []),
-                 db.dumps(c.get("explosion") or {"direction": [0, 1, 0], "distance": 0}),
-                 db.dumps(c.get("documents", [])), i,
-                 db.dumps(c)))
-        for i, r in enumerate(report.procedure.get("requirements", [])):
-            conn.execute("INSERT INTO inspection_requirements VALUES (?,?,?,?,?,?,?,?,?)",
-                         (rev_id, r["requirement_id"], r["component_id"], r["title"], r["instructions"],
-                          r["evidence_type"], int(r["required"]), db.dumps(r), i))
-        db.log_event(conn, "product_revision", rev_id, "package_loaded", actor,
-                     {"package_id": pkg_id, "content_hash": report.content_hash, "warnings": report.warnings})
+    comps, reqs = _catalog_rows(report, rev_id)
+    if loaded is None:
+        loaded = _loaded_state([rev_id])
+    existing_hash = loaded["hashes"].get(rev_id)
+    if existing_hash and existing_hash != report.content_hash:
+        raise PackageConflict(
+            f"Revision {m['engineering_revision']} of {m['product_id']} is already loaded with different content. "
+            "Released revisions are immutable: publish a new engineering_revision, or reset demo data during development.")
+    complete = (existing_hash and loaded["components"].get(rev_id, 0) == len(comps)
+                and loaded["requirements"].get(rev_id, 0) == len(reqs))
+    if complete:
+        return {"status": "unchanged", "revision_id": rev_id, "report": report.summary()}
+
+    ts = db.now()
+    mfr_id = m.get("manufacturer_id") or m["manufacturer"]
+    db.insert("manufacturers", {"id": mfr_id, "name": m["manufacturer"]}, ignore_duplicates_on="id")
+    db.upsert("product_models", {"id": m["product_id"], "manufacturer_id": mfr_id, "name": m["product_name"],
+                                 "description": m.get("product_description")}, on_conflict="id")
+    db.insert("engineering_packages", {
+        "id": pkg_id, "product_model_id": m["product_id"], "revision": m["engineering_revision"],
+        "package_version": m["package_version"], "source_dir": package_dir.name, "manifest": m,
+        "content_hash": report.content_hash, "status": "loaded", "validation": report.summary(), "created_at": ts},
+        ignore_duplicates_on="id")
+    proc = {k: v for k, v in report.procedure.items() if k != "requirements"}
+    db.insert("product_revisions", {"id": rev_id, "product_model_id": m["product_id"],
+                                    "revision": m["engineering_revision"], "engineering_package_id": pkg_id,
+                                    "procedure": proc, "created_at": ts}, ignore_duplicates_on="id")
+    db.insert("components", comps, ignore_duplicates_on="product_revision_id,id")
+    db.insert("inspection_requirements", reqs, ignore_duplicates_on="product_revision_id,id")
+    if existing_hash:
+        db.log_event("product_revision", rev_id, "package_import_completed", actor, {"package_id": pkg_id})
+        return {"status": "repaired", "revision_id": rev_id, "report": report.summary()}
+    db.log_event("product_revision", rev_id, "package_loaded", actor,
+                 {"package_id": pkg_id, "content_hash": report.content_hash, "warnings": report.warnings})
     return {"status": "loaded", "revision_id": rev_id, "report": report.summary()}
+
+
+def _loaded_state(rev_ids: list[str] | None = None) -> dict[str, Any]:
+    """Content hash per loaded revision and how many components/requirements it has (3 queries in total)."""
+    where = {"id": rev_ids} if rev_ids is not None else None
+    revs = db.select("product_revisions", where, columns="id,engineering_package_id")
+    pkgs = {p["id"]: p["content_hash"] for p in db.select(
+        "engineering_packages", {"id": [r["engineering_package_id"] for r in revs]}, columns="id,content_hash")}
+    by_rev = {"product_revision_id": [r["id"] for r in revs]}
+
+    def per_rev(table: str) -> dict[str, int]:
+        out: dict[str, int] = {}
+        for row in db.select(table, by_rev, columns="product_revision_id"):
+            out[row["product_revision_id"]] = out.get(row["product_revision_id"], 0) + 1
+        return out
+
+    return {"hashes": {r["id"]: pkgs.get(r["engineering_package_id"]) for r in revs},
+            "components": per_rev("components"), "requirements": per_rev("inspection_requirements")}
 
 
 def seed_instances() -> None:
     seed_file = Path(__file__).with_name("seed_instances.json")
     instances = json.loads(seed_file.read_text(encoding="utf-8"))
-    with db.tx() as conn:
-        for inst in instances:
-            rev = conn.execute("SELECT id FROM product_revisions WHERE id = ?", (inst["product_revision_id"],)).fetchone()
-            if not rev:
-                continue
-            conn.execute(
-                "INSERT OR IGNORE INTO product_instances VALUES (?,?,?,?,?,?)",
-                (inst["serial_number"], inst["product_model_id"], inst["product_revision_id"], inst["serial_number"],
-                 db.dumps(inst.get("metadata", {})), db.now()))
+    known = {r["id"] for r in db.select("product_revisions", {"id": [i["product_revision_id"] for i in instances]},
+                                        columns="id")}
+    db.insert("product_instances", [{
+        "id": inst["serial_number"], "product_model_id": inst["product_model_id"],
+        "product_revision_id": inst["product_revision_id"], "serial_number": inst["serial_number"],
+        "metadata": inst.get("metadata", {}), "created_at": db.now()}
+        for inst in instances if inst["product_revision_id"] in known], ignore_duplicates_on="id")
 
 
 def bootstrap() -> list[dict[str, Any]]:
     """Load every valid package found on disk (idempotent) and seed demo product instances."""
     results = []
+    loaded = _loaded_state()
     for pkg in discover_packages(settings.packages_dir):
         try:
-            results.append(load_package(pkg))
+            results.append(load_package(pkg, loaded=loaded))
         except (PackageInvalid, PackageConflict) as exc:
             results.append({"status": "error", "package_dir": pkg.name, "error": str(exc)})
     if settings.seed_instances:
@@ -112,24 +144,23 @@ def bootstrap() -> list[dict[str, Any]]:
     return results
 
 
-def get_revision(conn, rev_id: str) -> dict[str, Any] | None:
-    rev = db.row(conn.execute(
-        "SELECT r.*, m.name AS product_name, m.description AS product_description, mf.name AS manufacturer, "
-        "p.manifest, p.source_dir, p.content_hash, p.package_version FROM product_revisions r "
-        "JOIN product_models m ON m.id = r.product_model_id JOIN manufacturers mf ON mf.id = m.manufacturer_id "
-        "JOIN engineering_packages p ON p.id = r.engineering_package_id WHERE r.id = ?", (rev_id,)).fetchone())
+def get_revision(rev_id: str) -> dict[str, Any] | None:
+    rev = db.first("product_revisions", {"id": rev_id})
     if not rev:
         return None
-    comps = db.rows(conn.execute(
-        "SELECT * FROM components WHERE product_revision_id = ? ORDER BY sort", (rev_id,)).fetchall())
+    model = db.first("product_models", {"id": rev["product_model_id"]})
+    mfr = db.first("manufacturers", {"id": model["manufacturer_id"]})
+    pkg = db.first("engineering_packages", {"id": rev["engineering_package_id"]},
+                   columns="manifest,source_dir,content_hash,package_version")
+    rev.update(product_name=model["name"], product_description=model["description"], manufacturer=mfr["name"], **pkg)
+    comps = db.select("components", {"product_revision_id": rev_id}, order="sort")
     for c in comps:
         d = c.pop("definition", None) or {}
         c["specs"] = d.get("specs", [])                    # technical sheet entries
         c["inspection_type"] = d.get("inspection_type")
         c["articulation"] = d.get("articulation")          # e.g. a hinged door
     rev["components"] = comps
-    reqs = db.rows(conn.execute(
-        "SELECT * FROM inspection_requirements WHERE product_revision_id = ? ORDER BY sort", (rev_id,)).fetchall())
+    reqs = db.select("inspection_requirements", {"product_revision_id": rev_id}, order="sort")
     rev["requirements"] = [_public_requirement(r) for r in reqs]
     base = f"/package-files/{rev['source_dir']}"
     manifest = rev["manifest"]
@@ -141,6 +172,24 @@ def get_revision(conn, rev_id: str) -> dict[str, Any] | None:
     rev["asset_category"] = manifest.get("asset_category")
     rev["demo_evidence"] = demo_evidence(rev["source_dir"])
     return rev
+
+
+def revision_index() -> dict[str, dict[str, Any]]:
+    """Display fields for every revision (product, manufacturer, industry), joined in Python: 4 queries."""
+    models = {m["id"]: m for m in db.select("product_models")}
+    mfrs = {m["id"]: m["name"] for m in db.select("manufacturers")}
+    pkgs = {p["id"]: p for p in db.select("engineering_packages", columns="id,source_dir,manifest")}
+    out = {}
+    for r in db.select("product_revisions", columns="id,revision,product_model_id,engineering_package_id"):
+        model, pkg = models.get(r["product_model_id"], {}), pkgs.get(r["engineering_package_id"], {})
+        manifest = pkg.get("manifest") or {}
+        out[r["id"]] = {
+            "id": r["id"], "revision": r["revision"], "product_id": r["product_model_id"],
+            "product_name": model.get("name"), "description": model.get("description"),
+            "manufacturer": mfrs.get(model.get("manufacturer_id")), "package_id": r["engineering_package_id"],
+            "source_dir": pkg.get("source_dir"), "manifest": manifest,
+            "industry": manifest.get("industry") or "General", "asset_category": manifest.get("asset_category")}
+    return out
 
 
 def demo_evidence(source_dir: str) -> list[dict[str, Any]]:

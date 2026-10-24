@@ -176,9 +176,9 @@ def test_asset_without_3d_model_is_fully_inspectable(client, tmp_path):
     report = validate_package(pkg)
     assert report.ok, report.errors
     assert catalog.load_package(pkg)["status"] == "loaded"
-    with db.tx() as conn:
-        conn.execute("INSERT INTO product_instances VALUES (?,?,?,?,?,?)",
-                     ("NO3D-SN-1", "NO3D-001", "NO3D-001@A", "NO3D-SN-1", "{}", db.now()))
+    db.insert("product_instances", {"id": "NO3D-SN-1", "product_model_id": "NO3D-001",
+                                    "product_revision_id": "NO3D-001@A", "serial_number": "NO3D-SN-1",
+                                    "metadata": {}, "created_at": db.now()})
     rev = client.get("/api/revisions/NO3D-001@A").json()
     assert rev["assembly_url"] is None and len(rev["components"]) == 12
     s = client.post("/api/inspections", json={"serial_number": "NO3D-SN-1", "inspector": INSPECTOR}).json()

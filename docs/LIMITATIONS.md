@@ -22,7 +22,8 @@
 - No rate limiting on AI calls; each photo costs one model call (~6–9 s).
 - Photos must be JPEG/PNG/WebP. iOS normally converts camera captures to JPEG for web uploads; HEIC files from other sources are rejected (415).
 - Not the Expo/React Native app: the MVP is a mobile web app (see ARCHITECTURE.md). No offline mode.
-- SQLite + local disk instead of Supabase; a single server process.
+- Supabase is reached through its REST API, which has no multi-statement transactions; the workflow uses
+  conditional updates instead (see DATABASE.md). Without Supabase keys: SQLite + local disk, single server process.
 - Running it needs the laptop server reachable on the LAN.
 - AI cannot verify torque, tightness, dimensions, load capacity or internal condition, and is instructed not to claim so.
   AI output is advisory and is never a certification.

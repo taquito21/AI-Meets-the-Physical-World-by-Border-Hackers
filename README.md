@@ -33,6 +33,12 @@ Without an API key, everything works except AI assessment, which honestly report
 
 Development with hot reload: run the backend as above, then `cd web && npm run dev` and open port 5173 (it proxies `/api` to the backend).
 
+On macOS/Linux, use `python3.12 -m venv backend/.venv` and `backend/.venv/bin/python` instead of `backend/.venv/Scripts/python`.
+
+**Storage.** With `SUPABASE_URL` and `SUPABASE_SECRET_KEY` in `backend/.env`, data is stored in Supabase (Postgres + a
+private photo bucket, over HTTPS). Run `backend/supabase/schema.sql` once in the Supabase SQL Editor first. Without
+those keys, the app uses local SQLite + files in `backend/data`. See [docs/DATABASE.md](docs/DATABASE.md).
+
 ## Useful commands
 
 ```bash

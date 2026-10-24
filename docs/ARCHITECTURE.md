@@ -1,8 +1,8 @@
 # Architecture
 
 ```
- Phone / laptop browser  ──HTTP/JSON──►  FastAPI (single process, port 8000)  ──►  SQLite (backend/data)
- React + R3F web client                  ├─ packages.py  validate engineering package       evidence/*.jpg
+ Phone / laptop browser  ──HTTP/JSON──►  FastAPI (single process, port 8000)  ──HTTPS──►  Supabase Postgres + Storage
+ React + R3F web client                  ├─ packages.py  validate engineering package           (or local SQLite + files)
    AssemblyViewer (GLB, explode)         ├─ catalog.py   import → immutable revision
    Inspection / Review / Findings        ├─ workflow.py  ALL state transitions + rules
                                          ├─ ai.py        image checks + AI provider ──► Claude (vision, structured JSON)
@@ -14,7 +14,7 @@
 | Decision | Rationale |
 |---|---|
 | **Mobile-first web app instead of Expo for the hackathon** | The master prompt allows a standalone mobile web viewer if WebView adds complexity. One codebase gives the phone, laptop and supervisor screens. The camera works through `<input capture>` over plain HTTP on the LAN, and nothing needs installing on the presentation phones. An Expo shell can wrap this later (WebView), and all business logic is already server-side and REST-based, so a future Flutter client consumes the same API. |
-| **SQLite + local files instead of Supabase** | No Supabase credentials were available, and the venue Wi-Fi is a risk. The schema mirrors the target PostgreSQL model (TEXT JSON → `jsonb`), and storage paths are relative, so the migration is mechanical. |
+| **Supabase through its REST API, SQLite as the local fallback** | The venue Wi-Fi only allows HTTPS, so the backend reaches Postgres and Storage through the Supabase REST API instead of a direct connection. All data access goes through `db.py` (one interface, two backends), so tests and offline work use SQLite and a direct Postgres driver can be added later. See [DATABASE.md](DATABASE.md). |
 | **Workflow rules only in `workflow.py`** | The client renders state. Colors in the 3D view come from `component_status`, which the server derives from persisted items and findings. |
 | **AI is advisory and bounded** | AI can move an item to `more_evidence_requested`, but it can never pass one. Passing needs an inspector disposition. Overriding an AI retake recommendation needs a written justification, which is shown to the supervisor. Supervisor-requested evidence cannot be overridden. |
 | **Requirement snapshot per inspection** | `inspection_items.requirement_snapshot` freezes the requirement text, so later revisions never rewrite history. |
