@@ -1,0 +1,45 @@
+/* Face camera (FaceCamera.tsx): mirrored preview with an oval guide, progress dots and a short hint. */
+.face-cam { display: grid; gap: .7rem; width: 100%; max-width: 420px; margin: .5rem auto 0; }
+
+.face-cam-stage { position: relative; width: 100%; aspect-ratio: 3 / 4; max-height: 62vh; border-radius: var(--radius, 10px);
+  overflow: hidden; background: #0f172a; }
+.face-cam-stage[hidden] { display: none; }
+.face-cam-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+
+/* Oval guide: the huge shadow darkens everything outside it (clipped by the stage). */
+.face-cam-oval { position: absolute; left: 50%; top: 46%; height: 70%; aspect-ratio: 3 / 4; transform: translate(-50%, -50%);
+  border-radius: 50%; border: 3px solid rgba(255, 255, 255, .9); box-shadow: 0 0 0 200vmax rgba(15, 23, 42, .45);
+  pointer-events: none; transition: border-color .2s; }
+.face-cam-oval.ok { border-color: #22c55e; }
+.face-cam-oval.warn { border-color: #fbbf24; }
+
+.face-cam-status { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .45rem; padding: 1.2rem; text-align: center; color: #fff; background: rgba(15, 23, 42, .6); }
+.face-cam-status svg.lucide { width: 2.4rem; height: 2.4rem; }
+.face-cam-small { font-size: .85rem; opacity: .9; max-width: 30ch; }
+.face-cam-bar { width: min(220px, 80%); height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .25); overflow: hidden; }
+.face-cam-bar > span { display: block; height: 100%; background: #60a5fa; transition: width .2s; }
+
+.face-cam-dots { display: flex; justify-content: center; gap: .55rem; }
+.face-cam-dots span { width: 14px; height: 14px; border-radius: 50%; background: var(--line, #dbe2ea); transition: background .2s; }
+.face-cam-dots span.on { background: var(--green, #15803d); }
+.face-cam-hint { margin: 0; min-height: 1.5em; text-align: center; font-size: 1.1rem; font-weight: 700; }
+.face-cam-privacy { margin: 0; display: flex; gap: .4rem; align-items: flex-start; justify-content: center; text-align: left;
+  font-size: .82rem; color: var(--muted, #526071); }
+.face-cam-privacy svg.lucide { color: var(--green, #15803d); margin-top: .05em; }
+
+.face-cam-problem { display: grid; justify-items: center; gap: .35rem; padding: 1rem; text-align: center;
+  border: 1px solid #fde68a; border-radius: var(--radius, 10px); background: #fffbeb; }
+.face-cam-problem svg.lucide { width: 2.2rem; height: 2.2rem; color: var(--amber, #d97706); }
+.face-cam-problem h3 { margin: 0; font-size: 1.05rem; }
+.face-cam-problem p { margin: 0; color: var(--muted, #526071); }
+
+.face-cam-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.face-cam-actions .btn { flex: 1 1 200px; }
+
+.face-spin { animation: face-spin 1s linear infinite; }
+@keyframes face-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .face-spin { animation: none; }
+  .face-cam-oval, .face-cam-dots span, .face-cam-bar > span { transition: none; }
+}

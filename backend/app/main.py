@@ -17,7 +17,7 @@ from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, Field, StringConstraints
 from starlette.concurrency import run_in_threadpool
 
-from . import ai, db, i18n, media, rag, workflow
+from . import ai, db, face, i18n, media, rag, workflow
 from .auth import current_user, employer
 from .blobs import blobs
 from .config import settings
@@ -137,7 +137,35 @@ def client_config() -> dict[str, Any]:
 @app.get("/api/me")
 def me(user: User) -> dict[str, Any]:
     company = db.first("companies", {"id": user["company_id"]})
-    return {**user, "company": company}
+    return {**user, "company": company, "has_face": face.has_face(user["id"])}
+
+
+class FaceIn(BaseModel):
+    embeddings: list[list[float]] = Field(max_length=10)
+    consent: bool = False
+
+
+def _client(request: Request) -> str:
+    return request.headers.get("x-forwarded-for", "").split(",")[0].strip() or \
+        (request.client.host if request.client else "unknown")
+
+
+@app.post("/api/auth/face-login")
+def face_login(body: FaceIn, request: Request) -> dict[str, Any]:
+    """No login needed: the face is the login. Returns a Supabase session for the browser to adopt."""
+    return face.supabase_session(face.identify(body.embeddings, _client(request)))
+
+
+@app.post("/api/me/face")
+def register_face(body: FaceIn, user: User) -> dict[str, Any]:
+    face.register(user, body.embeddings, body.consent)
+    return {"has_face": True}
+
+
+@app.delete("/api/me/face")
+def delete_face(user: User) -> dict[str, Any]:
+    face.remove(user)
+    return {"has_face": False}
 
 
 @app.get("/api/users")

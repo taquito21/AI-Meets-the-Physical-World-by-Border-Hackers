@@ -1,12 +1,16 @@
-import { useState } from "react";
-import { LogIn } from "lucide-react";
+import { Suspense, lazy, useState } from "react";
+import { LogIn, ScanFace } from "lucide-react";
 import { LanguageSwitch } from "../components/LanguageSwitch";
 import { ErrorBox } from "../components/ui";
 import { t } from "../i18n";
 import { useSession } from "../session";
 
+// Loaded only when someone chooses face login (the face models are large).
+const FaceCamera = lazy(() => import("../face/FaceCamera"));
+
 export default function Login() {
-  const { signIn, error: sessionError } = useSession();
+  const { signIn, signInWithFace, error: sessionError } = useSession();
+  const [usingFace, setUsingFace] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -24,6 +28,18 @@ export default function Login() {
       setBusy(false);
     }
   };
+  const faceSignIn = async (embeddings: number[][]) => {
+    setUsingFace(false);
+    setBusy(true);
+    setError(null);
+    try {
+      await signInWithFace(embeddings);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <div className="page login">
       <div className="card-head">
@@ -33,6 +49,21 @@ export default function Login() {
         <LanguageSwitch />
       </div>
       <p className="muted">{t("Your jobs, step by step: take photos, write notes, and mark each task done.")}</p>
+      {usingFace ? (
+        <section className="card">
+          <Suspense fallback={<p className="muted">{t("Preparing the camera…")}</p>}>
+            <FaceCamera purpose="login" onDone={faceSignIn} onCancel={() => setUsingFace(false)} />
+          </Suspense>
+        </section>
+      ) : (
+        <>
+          <button type="button" className="btn btn-big login-face" disabled={busy} onClick={() => { setError(null); setUsingFace(true); }}>
+            <ScanFace aria-hidden />{t("Sign in with my face")}
+          </button>
+          <p className="tiny muted">{t("To use your face, first sign in with your password and register it in “My face”.")}</p>
+          <div className="login-or"><span>{t("or")}</span></div>
+        </>
+      )}
       <form className="card" onSubmit={submit}>
         <label>{t("Email")}<input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
         <label>{t("Password")}<input type="password" autoComplete="current-password" value={password}

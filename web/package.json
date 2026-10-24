@@ -6,13 +6,16 @@
   "scripts": {
     "dev": "vite --host",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host"
+    "preview": "vite preview --host",
+    "prebuild": "node scripts/split-face-assets.mjs",
+    "postbuild": "node scripts/drop-unused-wasm.mjs"
   },
   "dependencies": {
     "@react-three/drei": "9.122.0",
     "@react-three/fiber": "8.17.10",
     "@supabase/supabase-js": "2.45.4",
     "lucide-react": "1.52.0",
+    "onnxruntime-web": "1.30.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router-dom": "6.30.6",
