@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1270 455" font-family="monospace">
+<rect width="1270" height="455" fill="#fff"/>
+<rect x="4" y="4" width="1262" height="447" fill="none" stroke="#000" stroke-width="2"/>
+<text x="40" y="28" font-size="13" font-weight="bold">FRONT VIEW (looking -Z)</text>
+<rect x="40.0" y="40.0" width="360.0" height="9.0" fill="#e8e8e8" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>tabletop</title></rect>
+<rect x="377.5" y="52.0" width="15.0" height="210.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_front_left</title></rect>
+<rect x="47.5" y="52.0" width="15.0" height="210.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_front_right</title></rect>
+<rect x="377.5" y="52.0" width="15.0" height="210.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_rear_left</title></rect>
+<rect x="47.5" y="52.0" width="15.0" height="210.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_rear_right</title></rect>
+<rect x="62.5" y="49.0" width="315.0" height="24.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>apron_front</title></rect>
+<rect x="62.5" y="49.0" width="315.0" height="24.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>apron_rear</title></rect>
+<rect x="382.0" y="49.0" width="6.0" height="24.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>apron_left</title></rect>
+<rect x="52.0" y="49.0" width="6.0" height="24.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>apron_right</title></rect>
+<rect x="356.5" y="52.0" width="21.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>corner_bracket_fl</title></rect>
+<rect x="62.5" y="52.0" width="21.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>corner_bracket_fr</title></rect>
+<rect x="356.5" y="52.0" width="21.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>corner_bracket_rl</title></rect>
+<rect x="62.5" y="52.0" width="21.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>corner_bracket_rr</title></rect>
+<rect x="364.0" y="59.2" width="21.0" height="3.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hanger_bolt_fl</title></rect>
+<rect x="55.0" y="59.2" width="21.0" height="3.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hanger_bolt_fr</title></rect>
+<rect x="364.0" y="59.2" width="21.0" height="3.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hanger_bolt_rl</title></rect>
+<rect x="55.0" y="59.2" width="21.0" height="3.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hanger_bolt_rr</title></rect>
+<rect x="378.4" y="262.0" width="13.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_fl</title></rect>
+<rect x="48.4" y="262.0" width="13.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_fr</title></rect>
+<rect x="378.4" y="262.0" width="13.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_rl</title></rect>
+<rect x="48.4" y="262.0" width="13.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_rr</title></rect>
+<text x="40" y="287.0" font-size="11">overall 1200 x 750 mm (nominal)</text>
+<text x="460.0" y="28" font-size="13" font-weight="bold">SIDE VIEW (looking -X)</text>
+<rect x="460.0" y="40.0" width="210.0" height="9.0" fill="#e8e8e8" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>tabletop</title></rect>
+<rect x="467.5" y="52.0" width="15.0" height="210.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_front_left</title></rect>
+<rect x="467.5" y="52.0" width="15.0" height="210.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_front_right</title></rect>
+<rect x="647.5" y="52.0" width="15.0" height="210.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_rear_left</title></rect>
+<rect x="647.5" y="52.0" width="15.0" height="210.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_rear_right</title></rect>
+<rect x="472.0" y="49.0" width="6.0" height="24.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>apron_front</title></rect>
+<rect x="652.0" y="49.0" width="6.0" height="24.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>apron_rear</title></rect>
+<rect x="482.5" y="49.0" width="165.0" height="24.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>apron_left</title></rect>
+<rect x="482.5" y="49.0" width="165.0" height="24.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>apron_right</title></rect>
+<rect x="482.5" y="52.0" width="21.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>corner_bracket_fl</title></rect>
+<rect x="482.5" y="52.0" width="21.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>corner_bracket_fr</title></rect>
+<rect x="626.5" y="52.0" width="21.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>corner_bracket_rl</title></rect>
+<rect x="626.5" y="52.0" width="21.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>corner_bracket_rr</title></rect>
+<rect x="483.7" y="59.2" width="3.6" height="3.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hanger_bolt_fl</title></rect>
+<rect x="483.7" y="59.2" width="3.6" height="3.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hanger_bolt_fr</title></rect>
+<rect x="642.7" y="59.2" width="3.6" height="3.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hanger_bolt_rl</title></rect>
+<rect x="642.7" y="59.2" width="3.6" height="3.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hanger_bolt_rr</title></rect>
+<rect x="468.4" y="262.0" width="13.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_fl</title></rect>
+<rect x="468.4" y="262.0" width="13.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_fr</title></rect>
+<rect x="648.4" y="262.0" width="13.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_rl</title></rect>
+<rect x="648.4" y="262.0" width="13.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_rr</title></rect>
+<text x="460.0" y="287.0" font-size="11">overall 700 x 750 mm (nominal)</text>
+<text x="730.0" y="28" font-size="13" font-weight="bold">TOP VIEW</text>
+<rect x="730.0" y="40.0" width="360.0" height="210.0" fill="#e8e8e8" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>tabletop</title></rect>
+<rect x="1067.5" y="227.5" width="15.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_front_left</title></rect>
+<rect x="737.5" y="227.5" width="15.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_front_right</title></rect>
+<rect x="1067.5" y="47.5" width="15.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_rear_left</title></rect>
+<rect x="737.5" y="47.5" width="15.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_rear_right</title></rect>
+<rect x="752.5" y="232.0" width="315.0" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>apron_front</title></rect>
+<rect x="752.5" y="52.0" width="315.0" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>apron_rear</title></rect>
+<rect x="1072.0" y="62.5" width="6.0" height="165.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>apron_left</title></rect>
+<rect x="742.0" y="62.5" width="6.0" height="165.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>apron_right</title></rect>
+<rect x="1046.5" y="206.5" width="21.0" height="21.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>corner_bracket_fl</title></rect>
+<rect x="752.5" y="206.5" width="21.0" height="21.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>corner_bracket_fr</title></rect>
+<rect x="1046.5" y="62.5" width="21.0" height="21.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>corner_bracket_rl</title></rect>
+<rect x="752.5" y="62.5" width="21.0" height="21.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>corner_bracket_rr</title></rect>
+<rect x="1054.0" y="222.7" width="21.0" height="3.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hanger_bolt_fl</title></rect>
+<rect x="745.0" y="222.7" width="21.0" height="3.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hanger_bolt_fr</title></rect>
+<rect x="1054.0" y="63.7" width="21.0" height="3.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hanger_bolt_rl</title></rect>
+<rect x="745.0" y="63.7" width="21.0" height="3.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hanger_bolt_rr</title></rect>
+<rect x="1068.4" y="228.4" width="13.2" height="13.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_fl</title></rect>
+<rect x="738.4" y="228.4" width="13.2" height="13.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_fr</title></rect>
+<rect x="1068.4" y="48.4" width="13.2" height="13.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_rl</title></rect>
+<rect x="738.4" y="48.4" width="13.2" height="13.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_rr</title></rect>
+<text x="730.0" y="287.0" font-size="11">overall 1200 x 700 mm (nominal)</text>
+<line x1="4" y1="375" x2="1266" y2="375" stroke="#000"/>
+<text x="16" y="397" font-size="12">Demo Manufacturing Company - Standard Table (TABLE-001)</text>
+<text x="16" y="415" font-size="12">Engineering revision A - General arrangement - generated from source/geometry.json</text>
+<text x="16" y="433" font-size="12">DEMONSTRATION DRAWING - simplified projection, nominal dimensions, not for manufacture.</text>
+</svg>

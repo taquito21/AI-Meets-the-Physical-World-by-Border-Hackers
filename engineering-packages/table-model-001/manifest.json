@@ -1,0 +1,28 @@
+{
+  "package_version": "1.0",
+  "package_id": "PKG-TABLE-001-A",
+  "manufacturer": "Demo Manufacturing Company",
+  "manufacturer_id": "MFR-DEMO",
+  "product_id": "TABLE-001",
+  "product_name": "Standard Table",
+  "product_description": "Four-leg rectangular table with laminate top, wooden apron frame and steel corner brackets. Provisional development fixture pending venue photographs.",
+  "industry": "Furniture",
+  "asset_category": "Manufactured product",
+  "engineering_revision": "A",
+  "released_at": "2026-10-23",
+  "units": "m",
+  "assembly_file": "assembly.glb",
+  "components_file": "components.json",
+  "bom_file": "bom.csv",
+  "inspection_procedure_file": "inspection-procedure.json",
+  "documents": [
+    {
+      "id": "DWG-TB-GA",
+      "title": "General arrangement drawing",
+      "type": "drawing",
+      "path": "drawings/general-arrangement.svg"
+    }
+  ],
+  "demonstration_package": true,
+  "provenance": "Prepared by the hackathon team to simulate a manufacturer engineering handoff. Not supplied by a real manufacturer."
+}

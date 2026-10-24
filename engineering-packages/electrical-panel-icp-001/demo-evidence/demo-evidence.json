@@ -1,0 +1,349 @@
+{
+  "description": "Prepared demonstration images for demo-mode inspections of ICP-001. These are 3D renders of the demonstration model, not photographs of a real panel. Replace them with real photographs (see docs/MULTI_INDUSTRY.md) and re-run tools/precompute_demo_assessments.py.",
+  "items": [
+    {
+      "id": "DEMO-ENCLOSURE",
+      "requirement_id": "ENCLOSURE-EXTERIOR",
+      "file": "render-enclosure.jpg",
+      "caption": "Enclosure exterior, door closed (3D render)",
+      "source": "Rendered from the ICP-001 demonstration model, 2026-10-24. Not a photograph.",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 7625,
+        "captured_at": "2026-10-24T06:45:30+00:00",
+        "result": {
+          "summary": "Image is a 3D render of a closed grey wall enclosure, seen from the front with the right side visible. The front, right side and top edge are shown. The bottom face and cable entries are not visible. No dents, corrosion or ingress traces are visible on the rendered surfaces.",
+          "correct_area_visible": "uncertain",
+          "image_quality": "acceptable",
+          "evidence_sufficient": false,
+          "observations": [
+            "Enclosure with door closed, shown in a front three-quarter view.",
+            "Yellow rectangular label on the upper door; no text is legible.",
+            "Dark handle or latch on the right side of the door.",
+            "No visible dents, deformation or corrosion on the front or right side.",
+            "Bottom face and cable entries are not visible.",
+            "Image is a synthetic 3D render, not a field photograph."
+          ],
+          "conditions_for_human_review": [
+            "Photo is a render (demo), not a real photo of asset ICP-001-DEMO."
+          ],
+          "missing_information": [
+            "Bottom cable entries and glands",
+            "Left side, top and bottom surfaces",
+            "Mounting fixings",
+            "Close detail of the door seal area"
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Take a real photo of the whole enclosure from the front with the door closed. Add a low-angle shot showing the bottom cable entries and glands, and a shot of the mounting fixings. Use even lighting.",
+          "uncertainty": "medium",
+          "limitations": [
+            "IP54 rating cannot be verified from a photo.",
+            "Dimensions cannot be verified from a photo.",
+            "Internal condition and ingress inside the enclosure are not visible.",
+            "No conclusion on electrical safety or compliance can be drawn from a photo."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-DOOR-LABEL",
+      "requirement_id": "DOOR-LABEL-LATCH",
+      "file": "render-door-label.jpg",
+      "caption": "Door with warning label (3D render)",
+      "source": "Rendered from the ICP-001 demonstration model, 2026-10-24. Not a photograph.",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6108,
+        "captured_at": "2026-10-24T06:45:36+00:00",
+        "result": {
+          "summary": "Front of enclosure door visible with a yellow rectangular label and a handle, but no symbol or text is readable on the label. Required photo (label readable) not met.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": false,
+          "observations": [
+            "Grey enclosure door shown head-on, appears closed.",
+            "Plain yellow rectangle near top centre; no hazard symbol or text visible.",
+            "Dark vertical handle/latch on right side.",
+            "Image is a 3D render (per inspector note), not a field photo.",
+            "Gasket and door edges not visible."
+          ],
+          "conditions_for_human_review": [
+            "Label shows no visible symbol or text; may be blank, illegible or not the required warning label."
+          ],
+          "missing_information": [
+            "Legible close-up of warning label symbol and text.",
+            "View of gasket condition.",
+            "Evidence door is latched (e.g. latch engaged, edge gap)."
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Take a close-up of the warning label, filling most of the frame, square-on with even lighting so the symbol and text are readable. Optionally add a photo of the door edge/latch closed and a view of the gasket with door open.",
+          "uncertainty": "medium",
+          "limitations": [
+            "Photo cannot confirm door latches securely or closes fully.",
+            "Gasket compression cannot be verified from a photograph.",
+            "No conclusion on electrical safety, wiring or compliance.",
+            "Image appears to be a render, not the actual asset."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-MCB",
+      "requirement_id": "MCB-CIRCUIT-ID",
+      "file": "render-mcb.jpg",
+      "caption": "Main switch and circuit breakers (3D render)",
+      "source": "Rendered from the ICP-001 demonstration model, 2026-10-24. Not a photograph.",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 5969,
+        "captured_at": "2026-10-24T06:45:42+00:00",
+        "result": {
+          "summary": "Render shows a main switch and a row of four light-grey modules with blue conductors below, plausibly the four breakers. No circuit labels are visible on any module, so the labelling criterion (4 of 4) cannot be met as shown. Housings show no visible cracks or discoloration.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": true,
+          "observations": [
+            "Four adjacent grey modules visible straight on, right of the red/yellow main switch.",
+            "One blue conductor exits the bottom of each module.",
+            "No circuit labels, legends or markings visible on or near the four modules.",
+            "No visible cracks, deformation or discoloration on module housings.",
+            "Image is a 3D render (demo), not a real panel photo."
+          ],
+          "conditions_for_human_review": [
+            "No circuit labels visible on any of the 4 breakers (0 of 4 apparent).",
+            "Confirm whether labels exist elsewhere (e.g., on panel door or label strip out of frame)."
+          ],
+          "missing_information": [
+            "Circuit label text for each breaker.",
+            "Breaker ratings/markings (not legible or not present)."
+          ],
+          "recommended_action": "flag_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "medium",
+          "limitations": [
+            "Trip characteristics, ratings (C10) and pole count cannot be verified from a photo.",
+            "Cannot assess wiring correctness, terminal torque, de-energization or electrical safety.",
+            "Render lacks real surface detail; subtle damage or discoloration would not appear."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-PSU",
+      "requirement_id": "PSU-VISUAL",
+      "file": "render-psu.jpg",
+      "caption": "24 VDC power supply (3D render)",
+      "source": "Rendered from the ICP-001 demonstration model, 2026-10-24. Not a photograph.",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6750,
+        "captured_at": "2026-10-24T06:45:49+00:00",
+        "result": {
+          "summary": "3D render of a control panel interior. A grey rectangular module with a blank label strip and two blue wires is centered, plausibly the PSU, but no legible tag or identification confirms it is ICP-001-PSU-01. Terminal area is not clearly shown.",
+          "correct_area_visible": "uncertain",
+          "image_quality": "acceptable",
+          "evidence_sufficient": false,
+          "observations": [
+            "Image is a synthetic 3D render, not a real photograph.",
+            "Centered grey module with a light label strip; no legible text on it.",
+            "Two blue conductors exit the bottom of the centered module toward a duct.",
+            "Adjacent white four-pole modular device with four blue conductors at left.",
+            "No visible discoloration, melting or physical damage on the rendered surfaces.",
+            "No component tag (e.g., PSU-01) legible anywhere in frame."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Legible component tag or identification for ICP-001-PSU-01",
+            "Clear view of terminal area and connections",
+            "Legible rating/manufacturer label on the power supply"
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Photograph the power supply straight-on and closer so it fills most of the frame, with its tag/label legible and the terminal block and wire entries clearly visible. Use even lighting and avoid glare.",
+          "uncertainty": "high",
+          "limitations": [
+            "Render, not real-world evidence of product condition.",
+            "Output voltage, terminal tightness, wiring correctness and electrical safety cannot be verified from a photograph.",
+            "Identity of the centered module as the PSU is assumed, not confirmed."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-PLC",
+      "requirement_id": "PLC-VISUAL",
+      "file": "render-plc.jpg",
+      "caption": "PLC CPU and I/O module (3D render)",
+      "source": "Rendered from the ICP-001 demonstration model, 2026-10-24. Not a photograph.",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6702,
+        "captured_at": "2026-10-24T06:45:56+00:00",
+        "result": {
+          "summary": "3D render of a control panel interior. A blue modular device (four segments) and dark grey units are visible mid-panel, but which item is the PLC CPU and I/O module is not certain, no legible A1 tag is visible, and no status indicators are discernible.",
+          "correct_area_visible": "uncertain",
+          "image_quality": "acceptable",
+          "evidence_sufficient": false,
+          "observations": [
+            "Image is a 3D render, not a real photograph.",
+            "Middle rail holds a large dark grey unit with a blank light label strip, a narrower dark grey unit, and a blue four-segment modular device.",
+            "Label strip on the dark grey unit shows no legible text.",
+            "No A1 identification tag is legible on any device.",
+            "No status indicator LEDs are visible on any device.",
+            "Blue wires run to the devices; no visible damage, discoloration or exposed conductors seen.",
+            "Photo is taken at an angle with the panel edge occupying the left third."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Legible A1 identification tag",
+            "Visible PLC CPU and I/O status indicators",
+            "Confirmation of which device is the PLC CPU and which is the I/O module"
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Take a straight-on front photo, close up, of the PLC CPU and its I/O module only. Fill the frame with both modules. Make sure the A1 tag and the status LEDs are legible and in focus. Avoid glare.",
+          "uncertainty": "high",
+          "limitations": [
+            "Indicator lights do not prove correct program or I/O function.",
+            "Wiring correctness, voltage, terminal torque and internal condition cannot be judged from a photo.",
+            "Render may not reflect real device condition."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-TERMINALS",
+      "requirement_id": "TERMINAL-MARKING",
+      "file": "render-terminals.jpg",
+      "caption": "Terminal strip X1 (3D render)",
+      "source": "Rendered from the ICP-001 demonstration model, 2026-10-24. Not a photograph.",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 5936,
+        "captured_at": "2026-10-24T06:46:02+00:00",
+        "result": {
+          "summary": "3D render shows a terminal strip with 14 grey and 2 green terminals plus a blank marker strip. No legible X1 label or terminal numbers; markers not readable.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": false,
+          "observations": [
+            "Terminal strip on DIN rail with 16 terminal segments visible.",
+            "14 grey terminals and 2 green terminals at right end.",
+            "A light marker strip spans the terminals but shows no legible text.",
+            "No X1 strip label visible.",
+            "PE terminals appear plain green; yellow striping not discernible.",
+            "Blue wires enter bottom of two terminals; image is a 3D render."
+          ],
+          "conditions_for_human_review": [
+            "Marker strip appears blank; terminal markers may be missing.",
+            "PE terminal colour appears green only; green-yellow identification unclear."
+          ],
+          "missing_information": [
+            "Readable X1 strip label",
+            "Readable individual terminal markers",
+            "Clear view of PE terminal colour/symbol"
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Take a closer, straight-on photo of strip X1 filling the frame, with the X1 label, each terminal marker and the PE terminals' colour and earth symbol readable.",
+          "uncertainty": "medium",
+          "limitations": [
+            "Photo is a 3D render, not a real panel.",
+            "Terminal torque and conductor insertion depth cannot be verified from a photo.",
+            "No conclusion on wiring correctness, electrical safety or compliance."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-INTERIOR",
+      "requirement_id": "WIRING-VISUAL",
+      "file": "render-interior.jpg",
+      "caption": "Open panel interior (3D render)",
+      "source": "Rendered from the ICP-001 demonstration model, 2026-10-24. Not a photograph.",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 6063,
+        "captured_at": "2026-10-24T06:46:09+00:00",
+        "result": {
+          "summary": "Open panel interior is fully visible in even light (3D render). Blue wire runs between devices and ducts and a green conductor to a brown bar are visible. No exposed conductors, damaged insulation or disconnected ends are apparent at this resolution.",
+          "correct_area_visible": "yes",
+          "image_quality": "good",
+          "evidence_sufficient": true,
+          "observations": [
+            "Overall view of open panel with three device rows and horizontal ducts.",
+            "Short blue wire segments run from device bottoms/tops into ducts.",
+            "Single green conductor runs to a brown bar at the bottom of the panel.",
+            "No visible exposed copper, melted or discolored insulation, or loose wire ends.",
+            "Image is a 3D render, not a real photograph."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Close-up views of terminations and wire entry points.",
+            "Inside of ducts is not visible (covers fitted)."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "medium",
+          "limitations": [
+            "Demo render; not evidence of a real installation.",
+            "Continuity, insulation resistance, terminal torque and correct wiring cannot be verified from a photo.",
+            "Green-yellow PE striping cannot be confirmed; conductor appears plain green at this scale.",
+            "Small insulation damage may not be visible at overall-view resolution.",
+            "No conclusion on electrical safety or compliance."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-PE-BAR",
+      "requirement_id": "PE-BAR-VISUAL",
+      "file": "render-pe-bar.jpg",
+      "caption": "Protective earth bar (3D render)",
+      "source": "Rendered from the ICP-001 demonstration model, 2026-10-24. Not a photograph.",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 5938,
+        "captured_at": "2026-10-24T06:46:15+00:00",
+        "result": {
+          "summary": "3D render of panel interior shows a brown/copper-colored bar with one green conductor attached, likely the PE bar. Image is clear but distant; only one conductor visible versus 8 stated points, and no identification marking visible.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": true,
+          "observations": [
+            "Brown/copper-colored bar mounted on back plate below a cable duct.",
+            "One green conductor runs from duct down to the bar.",
+            "No other conductors visibly connected to the bar.",
+            "No PE identification label or symbol visible on or near the bar.",
+            "No visible corrosion or discoloration on the bar surface.",
+            "Green conductor also visible at terminal block above duct."
+          ],
+          "conditions_for_human_review": [
+            "Only one PE conductor visible; confirm whether other PE connections are expected.",
+            "No visible PE identification marking on the bar.",
+            "Connection point of green conductor to bar not clearly detailed (no visible terminal/screw)."
+          ],
+          "missing_information": [
+            "Close-up of bar terminals and fixings.",
+            "View of PE identification label/symbol.",
+            "Visible bonding to enclosure."
+          ],
+          "recommended_action": "flag_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "medium",
+          "limitations": [
+            "Image is a 3D render, not a real photo.",
+            "Earth continuity and bonding cannot be verified from a photo.",
+            "Terminal tightness/torque cannot be assessed.",
+            "Photo taken from a distance; terminal details not resolvable."
+          ]
+        }
+      }
+    }
+  ]
+}

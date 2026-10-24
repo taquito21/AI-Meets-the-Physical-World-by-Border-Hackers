@@ -1,0 +1,12 @@
+item,part_number,description,quantity,unit
+1,CH-100,Seat panel,1,ea
+2,CH-110,Backrest panel,1,ea
+3,CH-200,Front leg,2,ea
+4,CH-210,Rear leg / upright,2,ea
+5,CH-220,Side stretcher,2,ea
+6,CH-230,Front seat rail,1,ea
+7,CH-231,Rear seat rail,1,ea
+8,CH-300,Seat mounting bracket,4,ea
+9,CH-310,Seat screw M5x30,4,ea
+10,CH-320,Backrest bolt M6x50,4,ea
+11,CH-400,Floor glide,4,ea

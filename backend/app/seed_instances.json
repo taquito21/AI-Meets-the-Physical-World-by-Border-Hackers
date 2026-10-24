@@ -1,0 +1,62 @@
+[
+  {
+    "serial_number": "CHAIR-001-SN-0025",
+    "product_model_id": "CHAIR-001",
+    "product_revision_id": "CHAIR-001@A",
+    "metadata": {
+      "location": "Pitch room, row 1",
+      "manufactured": "2026-09 (sample data)",
+      "note": "Demonstration product instance"
+    }
+  },
+  {
+    "serial_number": "CHAIR-001-SN-0026",
+    "product_model_id": "CHAIR-001",
+    "product_revision_id": "CHAIR-001@A",
+    "metadata": {
+      "location": "Pitch room, row 1",
+      "manufactured": "2026-09 (sample data)",
+      "note": "Demonstration product instance"
+    }
+  },
+  {
+    "serial_number": "TABLE-001-SN-0107",
+    "product_model_id": "TABLE-001",
+    "product_revision_id": "TABLE-001@A",
+    "metadata": {
+      "location": "Pitch room, front",
+      "manufactured": "2026-08 (sample data)",
+      "note": "Demonstration product instance"
+    }
+  },
+  {
+    "serial_number": "TABLE-001-SN-0108",
+    "product_model_id": "TABLE-001",
+    "product_revision_id": "TABLE-001@A",
+    "metadata": {
+      "location": "Pitch room, side",
+      "manufactured": "2026-08 (sample data)",
+      "note": "Demonstration product instance"
+    }
+  },
+  {
+    "serial_number": "ICP-001-SN-0001",
+    "product_model_id": "ICP-001",
+    "product_revision_id": "ICP-001@A",
+    "metadata": {
+      "location": "Packaging line 1, cell 3 (sample data)",
+      "commissioned": "2025-11 (sample data)",
+      "note": "Demonstration asset instance"
+    }
+  },
+  {
+    "serial_number": "ICP-001-SN-0002",
+    "product_model_id": "ICP-001",
+    "product_revision_id": "ICP-001@A",
+    "metadata": {
+      "location": "Packaging line 2, cell 1 (sample data)",
+      "commissioned": "2026-02 (sample data)",
+      "note": "Demonstration asset instance"
+    }
+  }
+]

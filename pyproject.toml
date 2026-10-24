@@ -1,0 +1,20 @@
+[project]
+name = "field-execution-platform"
+version = "0.1.0"
+description = "AI-assisted, engineering-driven field inspection platform (hackathon MVP)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi==0.115.0",
+    "python-multipart==0.0.12",
+    "pydantic==2.14.1",
+    "pillow==10.4.0",
+    "anthropic==2.3.0",
+]
+
+# Vercel: the FastAPI app lives in backend/app/main.py (local dev runs it with uvicorn --app-dir backend).
+[tool.vercel]
+entrypoint = "backend.app.main:app"
+
+# Keep every file behind the app (and its shared-password gate) instead of promoting static files to the CDN.
+[tool.vercel.fastapi.static]
+cdn = false

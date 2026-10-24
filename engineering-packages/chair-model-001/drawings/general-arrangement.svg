@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 488" font-family="monospace">
+<rect width="780" height="488" fill="#fff"/>
+<rect x="4" y="4" width="772" height="480" fill="none" stroke="#000" stroke-width="2"/>
+<text x="40" y="28" font-size="13" font-weight="bold">FRONT VIEW (looking -Z)</text>
+<rect x="40.0" y="161.5" width="132.0" height="7.5" fill="#e8e8e8" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_panel</title></rect>
+<rect x="43.0" y="49.0" width="126.0" height="60.0" fill="#e8e8e8" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_panel</title></rect>
+<rect x="158.5" y="169.0" width="9.0" height="126.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_front_left</title></rect>
+<rect x="44.5" y="169.0" width="9.0" height="126.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_front_right</title></rect>
+<rect x="158.5" y="40.0" width="9.0" height="255.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>upright_rear_left</title></rect>
+<rect x="44.5" y="40.0" width="9.0" height="255.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>upright_rear_right</title></rect>
+<rect x="160.0" y="247.0" width="6.0" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>stretcher_left</title></rect>
+<rect x="46.0" y="247.0" width="6.0" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>stretcher_right</title></rect>
+<rect x="53.5" y="169.0" width="105.0" height="12.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>rail_front</title></rect>
+<rect x="53.5" y="169.0" width="105.0" height="12.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>rail_rear</title></rect>
+<rect x="144.2" y="169.0" width="13.5" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_bracket_fl</title></rect>
+<rect x="54.2" y="169.0" width="13.5" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_bracket_fr</title></rect>
+<rect x="144.2" y="169.0" width="13.5" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_bracket_rl</title></rect>
+<rect x="54.2" y="169.0" width="13.5" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_bracket_rr</title></rect>
+<rect x="149.5" y="166.0" width="3.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_screw_fl</title></rect>
+<rect x="59.5" y="166.0" width="3.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_screw_fr</title></rect>
+<rect x="149.5" y="166.0" width="3.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_screw_rl</title></rect>
+<rect x="59.5" y="166.0" width="3.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_screw_rr</title></rect>
+<rect x="160.9" y="61.9" width="4.2" height="4.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_bolt_ul</title></rect>
+<rect x="160.9" y="91.9" width="4.2" height="4.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_bolt_ll</title></rect>
+<rect x="46.9" y="61.9" width="4.2" height="4.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_bolt_ur</title></rect>
+<rect x="46.9" y="91.9" width="4.2" height="4.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_bolt_lr</title></rect>
+<rect x="157.9" y="295.0" width="10.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_fl</title></rect>
+<rect x="43.9" y="295.0" width="10.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_fr</title></rect>
+<rect x="157.9" y="295.0" width="10.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_rl</title></rect>
+<rect x="43.9" y="295.0" width="10.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_rr</title></rect>
+<text x="40" y="320.0" font-size="11">overall 440 x 860 mm (nominal)</text>
+<text x="232.0" y="28" font-size="13" font-weight="bold">SIDE VIEW (looking -X)</text>
+<rect x="232.0" y="161.5" width="129.0" height="7.5" fill="#e8e8e8" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_panel</title></rect>
+<rect x="358.0" y="49.0" width="6.0" height="60.0" fill="#e8e8e8" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_panel</title></rect>
+<rect x="238.0" y="169.0" width="9.0" height="126.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_front_left</title></rect>
+<rect x="238.0" y="169.0" width="9.0" height="126.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_front_right</title></rect>
+<rect x="349.0" y="40.0" width="9.0" height="255.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>upright_rear_left</title></rect>
+<rect x="349.0" y="40.0" width="9.0" height="255.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>upright_rear_right</title></rect>
+<rect x="247.0" y="247.0" width="102.0" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>stretcher_left</title></rect>
+<rect x="247.0" y="247.0" width="102.0" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>stretcher_right</title></rect>
+<rect x="239.5" y="169.0" width="6.0" height="12.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>rail_front</title></rect>
+<rect x="350.5" y="169.0" width="6.0" height="12.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>rail_rear</title></rect>
+<rect x="247.8" y="169.0" width="13.5" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_bracket_fl</title></rect>
+<rect x="247.8" y="169.0" width="13.5" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_bracket_fr</title></rect>
+<rect x="334.8" y="169.0" width="13.5" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_bracket_rl</title></rect>
+<rect x="334.8" y="169.0" width="13.5" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_bracket_rr</title></rect>
+<rect x="253.0" y="166.0" width="3.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_screw_fl</title></rect>
+<rect x="253.0" y="166.0" width="3.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_screw_fr</title></rect>
+<rect x="340.0" y="166.0" width="3.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_screw_rl</title></rect>
+<rect x="340.0" y="166.0" width="3.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_screw_rr</title></rect>
+<rect x="346.0" y="61.9" width="15.0" height="4.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_bolt_ul</title></rect>
+<rect x="346.0" y="91.9" width="15.0" height="4.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_bolt_ll</title></rect>
+<rect x="346.0" y="61.9" width="15.0" height="4.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_bolt_ur</title></rect>
+<rect x="346.0" y="91.9" width="15.0" height="4.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_bolt_lr</title></rect>
+<rect x="237.4" y="295.0" width="10.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_fl</title></rect>
+<rect x="237.4" y="295.0" width="10.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_fr</title></rect>
+<rect x="348.4" y="295.0" width="10.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_rl</title></rect>
+<rect x="348.4" y="295.0" width="10.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_rr</title></rect>
+<text x="232.0" y="320.0" font-size="11">overall 440 x 860 mm (nominal)</text>
+<text x="424.0" y="28" font-size="13" font-weight="bold">TOP VIEW</text>
+<rect x="424.0" y="43.0" width="132.0" height="129.0" fill="#e8e8e8" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_panel</title></rect>
+<rect x="427.0" y="40.0" width="126.0" height="6.0" fill="#e8e8e8" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_panel</title></rect>
+<rect x="542.5" y="157.0" width="9.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_front_left</title></rect>
+<rect x="428.5" y="157.0" width="9.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>leg_front_right</title></rect>
+<rect x="542.5" y="46.0" width="9.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>upright_rear_left</title></rect>
+<rect x="428.5" y="46.0" width="9.0" height="9.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>upright_rear_right</title></rect>
+<rect x="544.0" y="55.0" width="6.0" height="102.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>stretcher_left</title></rect>
+<rect x="430.0" y="55.0" width="6.0" height="102.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>stretcher_right</title></rect>
+<rect x="437.5" y="158.5" width="105.0" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>rail_front</title></rect>
+<rect x="437.5" y="47.5" width="105.0" height="6.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>rail_rear</title></rect>
+<rect x="528.2" y="142.8" width="13.5" height="13.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_bracket_fl</title></rect>
+<rect x="438.2" y="142.8" width="13.5" height="13.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_bracket_fr</title></rect>
+<rect x="528.2" y="55.8" width="13.5" height="13.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_bracket_rl</title></rect>
+<rect x="438.2" y="55.8" width="13.5" height="13.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_bracket_rr</title></rect>
+<rect x="533.5" y="148.0" width="3.0" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_screw_fl</title></rect>
+<rect x="443.5" y="148.0" width="3.0" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_screw_fr</title></rect>
+<rect x="533.5" y="61.0" width="3.0" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_screw_rl</title></rect>
+<rect x="443.5" y="61.0" width="3.0" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>seat_screw_rr</title></rect>
+<rect x="544.9" y="43.0" width="4.2" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_bolt_ul</title></rect>
+<rect x="544.9" y="43.0" width="4.2" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_bolt_ll</title></rect>
+<rect x="430.9" y="43.0" width="4.2" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_bolt_ur</title></rect>
+<rect x="430.9" y="43.0" width="4.2" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>backrest_bolt_lr</title></rect>
+<rect x="541.9" y="156.4" width="10.2" height="10.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_fl</title></rect>
+<rect x="427.9" y="156.4" width="10.2" height="10.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_fr</title></rect>
+<rect x="541.9" y="45.4" width="10.2" height="10.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_rl</title></rect>
+<rect x="427.9" y="45.4" width="10.2" height="10.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>glide_rr</title></rect>
+<text x="424.0" y="320.0" font-size="11">overall 440 x 440 mm (nominal)</text>
+<line x1="4" y1="408" x2="776" y2="408" stroke="#000"/>
+<text x="16" y="430" font-size="12">Demo Manufacturing Company - Standard Chair (CHAIR-001)</text>
+<text x="16" y="448" font-size="12">Engineering revision A - General arrangement - generated from source/geometry.json</text>
+<text x="16" y="466" font-size="12">DEMONSTRATION DRAWING - simplified projection, nominal dimensions, not for manufacture.</text>
+</svg>

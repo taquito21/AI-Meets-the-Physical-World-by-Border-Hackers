@@ -1,0 +1,17 @@
+# Secrets and local state: never upload
+**/.env
+**/.env.*
+backend/data
+.vercel
+.claude
+
+# Local tooling and development-only files
+backend/.venv
+backend/tests
+**/__pycache__
+.pytest_cache
+web/node_modules
+web/src
+docs
+tools
+engineering-packages/*/source

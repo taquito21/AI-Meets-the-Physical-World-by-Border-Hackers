@@ -1,0 +1,23 @@
+{
+  "package_version": "1.0",
+  "package_id": "PKG-ICP-001-A",
+  "manufacturer": "Demo Panel Builders (fictional)",
+  "manufacturer_id": "MFR-DEMO-PANELS",
+  "product_id": "ICP-001",
+  "product_name": "Industrial Control Panel",
+  "product_description": "Low-voltage industrial control panel: wall-mounted enclosure with main isolator, miniature circuit breakers, 24 VDC power supply, PLC, contactors, relays and terminal blocks. Simplified representative model for a visual and documentation inspection demo. It is not a certified electrical design and does not claim conformity with any standard.",
+  "industry": "Electrical",
+  "asset_category": "Industrial control panel",
+  "engineering_revision": "A",
+  "released_at": "2026-10-24",
+  "units": "m",
+  "assembly_file": "assembly.glb",
+  "components_file": "components.json",
+  "bom_file": "bom.csv",
+  "inspection_procedure_file": "inspection-procedure.json",
+  "documents": [
+    {"id": "DWG-ICP-GA", "title": "General arrangement drawing", "type": "drawing", "path": "drawings/general-arrangement.svg"}
+  ],
+  "demonstration_package": true,
+  "provenance": "Prepared by the hackathon team to demonstrate a second industry. Fictional panel builder; all ratings are demonstration values, not taken from real datasheets."
+}

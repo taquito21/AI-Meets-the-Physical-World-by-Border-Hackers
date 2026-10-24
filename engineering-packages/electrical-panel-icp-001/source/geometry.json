@@ -1,0 +1,109 @@
+{
+  "name": "ICP-001 rev A",
+  "units": "m",
+  "axes": "Y up, +Z = front (door side), +X = right when facing the panel",
+  "materials": {
+    "enclosure": {"color": [0.80, 0.81, 0.79], "metallic": 0.2, "roughness": 0.55},
+    "plate":     {"color": [0.72, 0.75, 0.76], "metallic": 0.25, "roughness": 0.45},
+    "din":       {"color": [0.80, 0.82, 0.84], "metallic": 0.3, "roughness": 0.35},
+    "device":    {"color": [0.90, 0.90, 0.88], "metallic": 0.0, "roughness": 0.6},
+    "dark":      {"color": [0.20, 0.22, 0.25], "metallic": 0.1, "roughness": 0.5},
+    "psu":       {"color": [0.68, 0.71, 0.74], "metallic": 0.25, "roughness": 0.4},
+    "relay":     {"color": [0.18, 0.33, 0.60], "metallic": 0.0, "roughness": 0.5},
+    "terminal":  {"color": [0.62, 0.64, 0.67], "metallic": 0.0, "roughness": 0.6},
+    "duct":      {"color": [0.52, 0.54, 0.56], "metallic": 0.0, "roughness": 0.7},
+    "wire":      {"color": [0.10, 0.24, 0.70], "metallic": 0.0, "roughness": 0.5},
+    "pe_wire":   {"color": [0.45, 0.68, 0.12], "metallic": 0.0, "roughness": 0.5},
+    "label":     {"color": [0.97, 0.97, 0.97], "metallic": 0.0, "roughness": 0.8},
+    "warning":   {"color": [0.97, 0.80, 0.08], "metallic": 0.0, "roughness": 0.7},
+    "handle":    {"color": [0.80, 0.10, 0.08], "metallic": 0.0, "roughness": 0.5},
+    "copper":    {"color": [0.80, 0.50, 0.25], "metallic": 0.35, "roughness": 0.35}
+  },
+  "nodes": [
+    {"id": "cab_back",   "shape": "box", "size": [0.60, 0.80, 0.015], "position": [0, 0.40, -0.1175], "material": "enclosure"},
+    {"id": "cab_left",   "shape": "box", "size": [0.015, 0.80, 0.235], "position": [-0.2925, 0.40, 0.0075], "material": "enclosure"},
+    {"id": "cab_right",  "shape": "box", "size": [0.015, 0.80, 0.235], "position": [0.2925, 0.40, 0.0075], "material": "enclosure"},
+    {"id": "cab_top",    "shape": "box", "size": [0.57, 0.015, 0.235], "position": [0, 0.7925, 0.0075], "material": "enclosure"},
+    {"id": "cab_bottom", "shape": "box", "size": [0.57, 0.015, 0.235], "position": [0, 0.0075, 0.0075], "material": "enclosure"},
+
+    {"id": "door_panel",         "shape": "box", "size": [0.60, 0.80, 0.018], "position": [0, 0.40, 0.134], "material": "enclosure"},
+    {"id": "door_handle",        "shape": "box", "size": [0.02, 0.08, 0.025], "position": [0.25, 0.40, 0.1555], "material": "dark"},
+    {"id": "door_warning_label", "shape": "box", "size": [0.08, 0.07, 0.002], "position": [0, 0.62, 0.144], "material": "warning"},
+
+    {"id": "mounting_plate", "shape": "box", "size": [0.54, 0.74, 0.004], "position": [0, 0.40, -0.108], "material": "plate"},
+
+    {"id": "din_rail_1", "shape": "box", "size": [0.42, 0.035, 0.0075], "position": [0, 0.63, -0.10225], "material": "din"},
+    {"id": "din_rail_2", "shape": "box", "size": [0.42, 0.035, 0.0075], "position": [0, 0.44, -0.10225], "material": "din"},
+    {"id": "din_rail_3", "shape": "box", "size": [0.42, 0.035, 0.0075], "position": [0, 0.25, -0.10225], "material": "din"},
+
+    {"id": "main_switch_body",   "shape": "box", "size": [0.08, 0.10, 0.07], "position": [-0.17, 0.63, -0.0635], "material": "dark"},
+    {"id": "main_switch_plate",  "shape": "box", "size": [0.06, 0.06, 0.003], "position": [-0.17, 0.625, -0.027], "material": "warning"},
+    {"id": "main_switch_handle", "shape": "box", "size": [0.016, 0.07, 0.022], "position": [-0.17, 0.625, -0.0145], "material": "handle"},
+
+    {"id": "mcb_1", "shape": "box", "size": [0.018, 0.09, 0.07], "position": [-0.115, 0.63, -0.0635], "material": "device"},
+    {"id": "mcb_2", "shape": "box", "size": [0.018, 0.09, 0.07], "position": [-0.096, 0.63, -0.0635], "material": "device"},
+    {"id": "mcb_3", "shape": "box", "size": [0.018, 0.09, 0.07], "position": [-0.077, 0.63, -0.0635], "material": "device"},
+    {"id": "mcb_4", "shape": "box", "size": [0.018, 0.09, 0.07], "position": [-0.058, 0.63, -0.0635], "material": "device"},
+
+    {"id": "psu", "shape": "box", "size": [0.07, 0.11, 0.08], "position": [0.04, 0.63, -0.0585], "material": "psu"},
+
+    {"id": "plc_cpu", "shape": "box", "size": [0.12, 0.10, 0.075], "position": [-0.13, 0.44, -0.061], "material": "dark"},
+    {"id": "plc_io",  "shape": "box", "size": [0.05, 0.10, 0.075], "position": [-0.04, 0.44, -0.061], "material": "dark"},
+
+    {"id": "relay_1", "shape": "box", "size": [0.016, 0.08, 0.06], "position": [0.040, 0.44, -0.0685], "material": "relay"},
+    {"id": "relay_2", "shape": "box", "size": [0.016, 0.08, 0.06], "position": [0.058, 0.44, -0.0685], "material": "relay"},
+    {"id": "relay_3", "shape": "box", "size": [0.016, 0.08, 0.06], "position": [0.076, 0.44, -0.0685], "material": "relay"},
+    {"id": "relay_4", "shape": "box", "size": [0.016, 0.08, 0.06], "position": [0.094, 0.44, -0.0685], "material": "relay"},
+
+    {"id": "contactor_k1", "shape": "box", "size": [0.045, 0.08, 0.085], "position": [-0.17, 0.25, -0.056], "material": "device"},
+    {"id": "contactor_k2", "shape": "box", "size": [0.045, 0.08, 0.085], "position": [-0.115, 0.25, -0.056], "material": "device"},
+
+    {"id": "terminal_01", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [-0.0300, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_02", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [-0.0215, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_03", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [-0.0130, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_04", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [-0.0045, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_05", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [0.0040, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_06", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [0.0125, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_07", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [0.0210, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_08", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [0.0295, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_09", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [0.0380, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_10", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [0.0465, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_11", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [0.0550, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_12", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [0.0635, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_13", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [0.0720, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_14", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [0.0805, 0.25, -0.0735], "material": "terminal"},
+    {"id": "terminal_15", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [0.0890, 0.25, -0.0735], "material": "pe_wire"},
+    {"id": "terminal_16", "shape": "box", "size": [0.008, 0.06, 0.05], "position": [0.0975, 0.25, -0.0735], "material": "pe_wire"},
+
+    {"id": "duct_h1",     "shape": "box", "size": [0.44, 0.04, 0.06], "position": [0, 0.535, -0.076], "material": "duct"},
+    {"id": "duct_h2",     "shape": "box", "size": [0.44, 0.04, 0.06], "position": [0, 0.345, -0.076], "material": "duct"},
+    {"id": "duct_h3",     "shape": "box", "size": [0.44, 0.04, 0.06], "position": [0, 0.155, -0.076], "material": "duct"},
+    {"id": "duct_v_left", "shape": "box", "size": [0.04, 0.62, 0.06], "position": [-0.24, 0.40, -0.076], "material": "duct"},
+    {"id": "duct_v_right","shape": "box", "size": [0.04, 0.62, 0.06], "position": [0.24, 0.40, -0.076], "material": "duct"},
+
+    {"id": "wire_mcb_1",  "shape": "cylinder", "radius": 0.0022, "height": 0.030, "position": [-0.115, 0.570, -0.06], "material": "wire"},
+    {"id": "wire_mcb_2",  "shape": "cylinder", "radius": 0.0022, "height": 0.030, "position": [-0.096, 0.570, -0.06], "material": "wire"},
+    {"id": "wire_mcb_3",  "shape": "cylinder", "radius": 0.0022, "height": 0.030, "position": [-0.077, 0.570, -0.06], "material": "wire"},
+    {"id": "wire_mcb_4",  "shape": "cylinder", "radius": 0.0022, "height": 0.030, "position": [-0.058, 0.570, -0.06], "material": "wire"},
+    {"id": "wire_psu_1",  "shape": "cylinder", "radius": 0.0022, "height": 0.020, "position": [0.030, 0.565, -0.06], "material": "wire"},
+    {"id": "wire_psu_2",  "shape": "cylinder", "radius": 0.0022, "height": 0.020, "position": [0.050, 0.565, -0.06], "material": "wire"},
+    {"id": "wire_plc_1",  "shape": "cylinder", "radius": 0.0022, "height": 0.025, "position": [-0.050, 0.5025, -0.06], "material": "wire"},
+    {"id": "wire_plc_2",  "shape": "cylinder", "radius": 0.0022, "height": 0.025, "position": [-0.030, 0.5025, -0.06], "material": "wire"},
+    {"id": "wire_rel_1",  "shape": "cylinder", "radius": 0.0022, "height": 0.035, "position": [0.040, 0.3825, -0.06], "material": "wire"},
+    {"id": "wire_rel_2",  "shape": "cylinder", "radius": 0.0022, "height": 0.035, "position": [0.076, 0.3825, -0.06], "material": "wire"},
+    {"id": "wire_k1",     "shape": "cylinder", "radius": 0.0022, "height": 0.035, "position": [-0.170, 0.3075, -0.06], "material": "wire"},
+    {"id": "wire_k2",     "shape": "cylinder", "radius": 0.0022, "height": 0.035, "position": [-0.115, 0.3075, -0.06], "material": "wire"},
+    {"id": "wire_term_1", "shape": "cylinder", "radius": 0.0022, "height": 0.045, "position": [0.000, 0.1975, -0.06], "material": "wire"},
+    {"id": "wire_term_2", "shape": "cylinder", "radius": 0.0022, "height": 0.045, "position": [0.030, 0.1975, -0.06], "material": "wire"},
+    {"id": "wire_pe",     "shape": "cylinder", "radius": 0.0026, "height": 0.046, "position": [0.120, 0.112, -0.07], "material": "pe_wire"},
+
+    {"id": "label_main_switch", "shape": "box", "size": [0.05, 0.012, 0.002], "position": [-0.17, 0.668, -0.0275], "material": "label"},
+    {"id": "label_psu",         "shape": "box", "size": [0.05, 0.012, 0.002], "position": [0.04, 0.672, -0.0175], "material": "label"},
+    {"id": "label_plc",         "shape": "box", "size": [0.08, 0.012, 0.002], "position": [-0.13, 0.478, -0.0225], "material": "label"},
+    {"id": "label_k1",          "shape": "box", "size": [0.03, 0.010, 0.002], "position": [-0.17, 0.278, -0.0125], "material": "label"},
+    {"id": "label_k2",          "shape": "box", "size": [0.03, 0.010, 0.002], "position": [-0.115, 0.278, -0.0125], "material": "label"},
+    {"id": "label_terminals",   "shape": "box", "size": [0.12, 0.010, 0.002], "position": [0.034, 0.262, -0.0475], "material": "label"},
+
+    {"id": "pe_bar", "shape": "box", "size": [0.16, 0.018, 0.012], "position": [0.08, 0.08, -0.10], "material": "copper"}
+  ]
+}

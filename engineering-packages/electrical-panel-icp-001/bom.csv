@@ -1,0 +1,16 @@
+item,part_number,description,quantity,unit
+1,ICP-P100,Enclosure body,1,ea
+2,ICP-P110,Enclosure door with handle and warning label,1,ea
+3,ICP-P120,Mounting plate,1,ea
+4,ICP-P200,Main switch (isolator),1,ea
+5,ICP-P210,Miniature circuit breaker,4,ea
+6,ICP-P220,24 VDC power supply,1,ea
+7,ICP-P230,PLC CPU with I/O module,1,ea
+8,ICP-P240,Contactor,2,ea
+9,ICP-P250,Auxiliary relay,4,ea
+10,ICP-P260,Terminal block,16,ea
+11,ICP-P270,Cable duct,5,ea
+12,ICP-P280,DIN rail,3,ea
+13,ICP-P290,Internal wiring (representative),1,lot
+14,ICP-P300,Device identification label,6,ea
+15,ICP-P310,Protective earth bar,1,ea
