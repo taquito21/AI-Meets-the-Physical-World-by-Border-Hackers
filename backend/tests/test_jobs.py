@@ -79,6 +79,8 @@ def test_evidence_status_and_flag_escalation(world):
 
     boss = world.login("acme-employer")
     assert [j["counts"]["flagged"] for j in boss.get("/api/jobs").json()] == [1]
+    r = boss.post(f"/api/tasks/{task}/evidence", data={"text": "my photo"}, files={"file": ("p.jpg", photo(), "image/jpeg")})
+    assert r.status_code == 403  # the employer replies with notes; photos come from the field
     boss.post(f"/api/tasks/{task}/evidence", data={"text": "Fine, pass it."})
     r = boss.post(f"/api/tasks/{task}/status", json={"status": "passed"})
     t = r.json()["tasks"][0]

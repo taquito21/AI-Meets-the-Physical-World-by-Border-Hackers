@@ -18,6 +18,7 @@ function nowLine(task: Task, role: UserClass): string {
     return role === "employer" ? "Your employee asked for your input. Write a reply below, then choose Passed or Failed."
       : "Waiting for your employer's reply.";
   }
+  if (role === "employer") return task.status === "pending" ? "Waiting for your employee." : "You can add a note or change the result.";
   if (task.status !== "pending") return "Done. You can still add a photo or change the result.";
   return task.evidence.length ? "Now choose a result." : "Take a photo or write a note, then choose a result.";
 }
@@ -87,11 +88,13 @@ export function TaskCard({ task, role, onJob, onOpenImage }:
         <textarea rows={2} value={text} onChange={(e) => setText(e.target.value)}
           placeholder={t(role === "employer" ? "Write a reply or a note…" : "Write a note: what you saw, what you did…")} />
         <div className="capture">
-          <label className="btn btn-big">
-            <Camera aria-hidden />{file ? t("Photo ready: {name}", { name: file.name }) : t("Take photo")}
-            <input ref={fileInput} type="file" accept="image/*" capture="environment" hidden
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-          </label>
+          {role === "employee" && (  // photos come from the field; the employer replies with notes
+            <label className="btn btn-big">
+              <Camera aria-hidden />{file ? t("Photo ready: {name}", { name: file.name }) : t("Take photo")}
+              <input ref={fileInput} type="file" accept="image/*" capture="environment" hidden
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            </label>
+          )}
           <button className="btn btn-big btn-primary" disabled={!!busy || (!text.trim() && !file)} onClick={addEvidence}>
             <Send aria-hidden />{t(file ? "Save photo" : "Save note")}
           </button>

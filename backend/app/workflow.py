@@ -3,6 +3,8 @@
 Who sees what: an employer sees every job of their company; an employee sees only the jobs assigned to them.
 Anything outside that answers 404, so ids from another company reveal nothing.
 
+Evidence: the employee adds photos and notes; the employer adds notes only (e.g. a reply to a flagged task).
+
 Task status (pending | passed | failed | flagged) is always set by a person. "Flagged" escalates the task to the
 employer, who answers with a text evidence entry and then sets passed or failed. The AI photo review is advisory:
 it is stored on the evidence row and never changes a status.
@@ -204,8 +206,11 @@ def set_status(user: dict[str, Any], task_id: str, status: str) -> dict[str, Any
 
 
 def add_evidence(user: dict[str, Any], task_id: str, *, text: str | None, photo: bytes | None) -> dict[str, Any]:
-    """Store a photo and/or text on a task. Returns the evidence row (the AI review runs separately)."""
+    """Store a photo and/or text on a task. Returns the evidence row (the AI review runs separately).
+    Photos come from the employee in the field; the employer answers with notes only."""
     text = (text or "").strip()[:MAX_TEXT] or None
+    if photo and user["user_class"] != "employee":
+        raise WorkflowError("Only the employee doing the job can add photos. Write a note instead.", 403)
     if not text and not photo:
         raise WorkflowError("Add a photo, a note, or both", 422)
     _, job = task_for(user, task_id)
