@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, Search } from "lucide-react";
+import { BookOpen, ExternalLink, Search } from "lucide-react";
 import { api, type AskResult } from "../api";
 import { t } from "../i18n";
 import { ErrorBox } from "./ui";
@@ -33,12 +33,15 @@ export function AskBox() {
       <ErrorBox error={error} />
       {result && (
         <div className="answer">
-          <p>{result.answer}</p>
+          <p className="answer-text">{result.answer}</p>
           {result.sources.length > 0 && (
             <ol className="sources small">
               {result.sources.map((s) => (
                 <li key={s.n} value={s.n}>
-                  <b>{s.title}</b>{s.page ? `, ${t("page {n}", { n: s.page })}` : ""}{s.cited_text && <span className="muted">: “{s.cited_text.trim()}”</span>}
+                  {s.url
+                    ? <a href={s.url} target="_blank" rel="noreferrer" className="with-icon"><b>{s.title}</b>{s.page ? `, ${t("page {n}", { n: s.page })}` : ""}<ExternalLink aria-hidden /></a>
+                    : <><b>{s.title}</b>{s.page ? `, ${t("page {n}", { n: s.page })}` : ""}</>}
+                  {s.cited_text && <span className="muted">: “{s.cited_text.trim()}”</span>}
                 </li>
               ))}
             </ol>

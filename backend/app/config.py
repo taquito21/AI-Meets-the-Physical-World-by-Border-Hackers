@@ -69,9 +69,13 @@ class Settings:
     ai_max_retries: int = int(os.environ.get("AI_MAX_RETRIES") or ("0" if os.environ.get("VERCEL") else "1"))
     ai_fallbacks: bool = _bool("AI_FALLBACKS", True)
     # Document search (RAG): Voyage AI embeddings through the MongoDB Atlas API.
+    anthropic_ok: bool = bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
     voyage_api_key: str = os.environ.get("VOYAGE_API_KEY", "").strip()
     voyage_model: str = os.environ.get("VOYAGE_MODEL", "voyage-4")  # 1024-dim vectors, matching schema.sql
-    voyage_url: str = os.environ.get("VOYAGE_URL", "https://ai.mongodb.com/v1/embeddings")
+    # Keys from the Voyage AI platform ("pa-...") use Voyage's endpoint; MongoDB Atlas model keys use Atlas's.
+    voyage_url: str = os.environ.get("VOYAGE_URL") or (
+        "https://api.voyageai.com/v1/embeddings" if os.environ.get("VOYAGE_API_KEY", "").strip().startswith("pa-")
+        else "https://ai.mongodb.com/v1/embeddings")
     max_upload_mb: int = int(os.environ.get("MAX_UPLOAD_MB", "15"))
     cors_origins: list[str] = field(default_factory=lambda: os.environ.get("CORS_ORIGINS", "*").split(","))
 

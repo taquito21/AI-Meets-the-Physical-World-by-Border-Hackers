@@ -168,6 +168,8 @@ const app: Record<string, string> = {
   "\"{title}\" was saved but cannot be searched: {reason}": "“{title}” se guardó, pero no se puede consultar: {reason}",
   "Delete \"{title}\"? Tasks that link to it lose the link.": "¿Borrar “{title}”? Las tareas que lo usan perderán el enlace.",
   "Nothing uploaded yet.": "Todavía no se ha subido nada.",
+  "Make searchable": "Hacer consultable",
+  "Indexing…": "Preparando…",
   "searchable": "se puede consultar",
   "not searchable": "no se puede consultar",
   "{n} parts": "{n} piezas",

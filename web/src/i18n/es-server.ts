@@ -30,7 +30,10 @@ const server: Record<string, string> = {
   "This record already exists or was just changed. Reload and try again.": "Esto ya existe o alguien lo acaba de cambiar. Recarga e inténtalo de nuevo.",
   // Media and document search (backend/app/media.py, rag.py)
   "This is not a valid .glb (binary glTF 2.0) file": "Este no es un archivo .glb válido",
+  "Only documents (.pdf, .txt) can be made searchable": "Solo los documentos (.pdf, .txt) se pueden hacer consultables",
+  "The document file is missing from storage": "Falta el archivo del documento",
   "Document search is not configured (set VOYAGE_API_KEY in backend/.env).": "La búsqueda en documentos no está configurada.",
+  "Document search is busy right now. Try again in a minute.": "La búsqueda en documentos está ocupada. Inténtalo de nuevo en un minuto.",
   "Could not reach the embedding service (network).": "No se pudo conectar con el servicio de búsqueda (red).",
   "No text found in this file. Scanned PDFs (images of pages) cannot be searched yet.":
     "No se encontró texto en este archivo. Los PDF escaneados (fotos de páginas) todavía no se pueden consultar.",

@@ -64,6 +64,23 @@ def create_media(company_id: str, filename: str, data: bytes, title: str | None 
     return {**row, "indexing": indexing}
 
 
+def reindex(media: dict[str, Any]) -> dict[str, Any]:
+    """Index a stored document again (e.g. it was uploaded while search was not configured or rate limited).
+    The old chunks are replaced only once the new ones are ready, so a failure leaves the document as it was."""
+    if media["kind"] != "document":
+        raise WorkflowError("Only documents (.pdf, .txt) can be made searchable", 422)
+    data = blobs.get(media["storage_path"])
+    if data is None:
+        raise WorkflowError("The document file is missing from storage", 404)
+    old = [c["id"] for c in db.select("document_chunks", {"media_id": media["id"]}, columns="id")]
+    try:
+        chunks = rag.ingest(media, data, media["storage_path"], start_index=len(old))
+    except rag.RagError as exc:
+        return {"indexed": False, "error": exc.message}
+    db.delete("document_chunks", {"id": old})
+    return {"indexed": True, "chunks": chunks}
+
+
 def delete_media(media: dict[str, Any]) -> None:
     db.delete("media", {"id": media["id"]})  # chunks and task links cascade
     blobs.delete([media["storage_path"]])

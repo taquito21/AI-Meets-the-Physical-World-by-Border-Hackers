@@ -174,6 +174,7 @@ def test_document_search_is_company_scoped_and_cited(world, monkeypatch):
     body = r.json()
     assert body["answer"] == "Pull the pin first.[1] Then squeeze."
     assert [s["title"] for s in body["sources"]] == ["manual"]
+    assert body["sources"][0]["url"] and "#page=" not in body["sources"][0]["url"]  # text files have no pages
     sent = [b["source"]["data"] for b in claude.last["messages"][0]["content"] if b["type"] == "document"]
     assert sent and all("secret" not in d for d in sent)  # the other company's document never reaches Claude
 
@@ -273,3 +274,69 @@ def test_dashboard_lists_what_needs_the_employer_and_team_workload(world):
     assert emp.get("/api/dashboard").status_code == 403
     other = world.login("other-employer").get("/api/dashboard").json()
     assert other["jobs"] == [] and other["attention"] == []
+
+
+def test_embedding_rate_limit_is_retried_then_reported(monkeypatch):
+    import httpx
+    from app import rag
+    calls, sleeps = [], []
+    responses = [httpx.Response(429, headers={"retry-after": "1"}, json={"detail": "slow down"}),
+                 httpx.Response(200, json={"data": [{"index": 0, "embedding": [0.1, 0.2]}]})]
+    monkeypatch.setattr(rag.httpx, "post", lambda *a, **kw: calls.append(1) or responses[len(calls) - 1])
+    monkeypatch.setattr(rag.time, "sleep", sleeps.append)
+    assert rag.embed(["x"], "query") == [[0.1, 0.2]] and sleeps == [1.0]
+
+    monkeypatch.setattr(rag.httpx, "post", lambda *a, **kw: httpx.Response(429, json={"detail": "slow down"}))
+    with pytest.raises(rag.RagError) as exc:
+        rag.embed(["x"], "query")
+    assert exc.value.status_code == 429 and "busy" in exc.value.message
+
+
+def test_reindex_makes_a_saved_document_searchable(world, monkeypatch):
+    from app import ai, rag
+
+    def down(texts, input_type):
+        raise rag.RagError("Document search is busy right now. Try again in a minute.", 429)
+
+    monkeypatch.setattr(rag, "embed", down)
+    boss = world.login("acme-employer")
+    doc = boss.post("/api/media", files={"file": ("manual.txt", b"Pull the pin, aim, squeeze.", "text/plain")}).json()
+    assert doc["indexing"]["indexed"] is False
+    assert boss.get("/api/media").json()[0]["chunks"] == 0  # saved, shown as not searchable
+
+    monkeypatch.setattr(rag, "embed", down)
+    r = boss.post(f"/api/media/{doc['id']}/reindex").json()
+    assert r["indexing"]["indexed"] is False and r["chunks"] == 0  # still down: nothing changes
+
+    monkeypatch.setattr(rag, "embed", fake_embed)
+    r = boss.post(f"/api/media/{doc['id']}/reindex").json()
+    assert r["indexing"] == {"indexed": True, "chunks": 1} and r["chunks"] == 1
+    r = boss.post(f"/api/media/{doc['id']}/reindex").json()
+    assert r["chunks"] == 1  # re-indexing again replaces the chunks instead of adding more
+
+    monkeypatch.setattr(ai, "claude_available", lambda: (True, ""))
+    monkeypatch.setattr(ai, "claude_client", lambda: FakeClaude())
+    sources = world.login("acme-employee").post("/api/ask", json={"question": "pull the pin?"}).json()["sources"]
+    assert sources and sources[0]["media_id"] == doc["id"]
+
+    model = boss.post("/api/media", files={"file": ("fe.glb", GLB.read_bytes(), "x")}).json()
+    assert boss.post(f"/api/media/{model['id']}/reindex").status_code == 422  # only documents
+    assert world.login("acme-employee").post(f"/api/media/{doc['id']}/reindex").status_code == 403
+    assert world.login("other-employer").post(f"/api/media/{doc['id']}/reindex").status_code == 404
+
+
+def test_pdf_sources_link_to_the_cited_page(world, monkeypatch):
+    import sys
+    sys.path.insert(0, str(ROOT / "tools"))
+    from smoke_test_supabase import MANUAL_PAGES, sample_pdf
+    from app import ai, rag
+    monkeypatch.setattr(rag, "embed", fake_embed)
+    monkeypatch.setattr(ai, "claude_available", lambda: (True, ""))
+    monkeypatch.setattr(ai, "claude_client", lambda: FakeClaude())  # cites the top-ranked chunk
+    boss = world.login("acme-employer")
+    r = boss.post("/api/media", files={"file": ("manual.pdf", sample_pdf(MANUAL_PAGES), "application/pdf")}).json()
+    assert r["indexing"] == {"indexed": True, "chunks": 3}
+    src = world.login("acme-employee").post("/api/ask", json={
+        "question": "after use recharge the extinguisher immediately"}).json()["sources"][0]
+    assert src["page"] == 3 and src["url"].endswith("#page=3")
+    assert world.login("acme-employee").get(src["url"].split("#")[0]).headers["content-type"] == "application/pdf"

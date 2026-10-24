@@ -27,6 +27,40 @@ from app.main import app  # noqa: E402
 
 GLB = ROOT / "engineering-packages" / "fire-extinguisher-fe-001" / "assembly.glb"
 
+MANUAL_PAGES = [
+    ["Portable fire extinguisher - inspection manual (smoke test sample)", "",
+     "Monthly visual inspection:", "1. The pressure gauge needle must be in the green zone.",
+     "2. The safety pin and tamper seal must be in place and unbroken.", "3. The extinguisher must be on its hanger."],
+    ["Hose and nozzle", "Check the hose for cracks, cuts or blockage, and the nozzle for dirt or nests.", "",
+     "Professional maintenance:", "A certified technician must service the extinguisher every 12 months.",
+     "A hydrostatic test of the cylinder is required every 5 years."],
+    ["After use", "Recharge the extinguisher immediately after any use, even if it was only partly discharged.",
+     "Never return a used extinguisher to its hanger without recharging it."],
+]
+
+
+def sample_pdf(pages: list[list[str]]) -> bytes:
+    """A small text PDF (one Helvetica text block per page), so search is tested on a real PDF file."""
+    objs = ["<< /Type /Catalog /Pages 2 0 R >>", None, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"]
+    kids = []
+    for lines in pages:
+        esc = [l.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)") for l in lines]
+        stream = "BT /F1 11 Tf 50 760 Td 16 TL " + " ".join(f"({l}) '" for l in esc) + " ET"
+        objs.append(f"<< /Length {len(stream)} >>\nstream\n{stream}\nendstream")
+        objs.append(f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents {len(objs)} 0 R "
+                    "/Resources << /Font << /F1 3 0 R >> >> >>")
+        kids.append(f"{len(objs)} 0 R")
+    objs[1] = f"<< /Type /Pages /Kids [{' '.join(kids)}] /Count {len(kids)} >>"
+    out, offsets = b"%PDF-1.4\n", []
+    for i, body in enumerate(objs, 1):
+        offsets.append(len(out))
+        out += f"{i} 0 obj\n{body}\nendobj\n".encode("latin-1")
+    xref = len(out)
+    out += f"xref\n0 {len(objs) + 1}\n0000000000 65535 f \n".encode()
+    out += "".join(f"{o:010d} 00000 n \n" for o in offsets).encode()
+    out += f"trailer\n<< /Size {len(objs) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+    return out
+
 
 def check(cond, what):
     print(("ok   " if cond else "FAIL ") + what)
@@ -104,8 +138,38 @@ def main() -> int:
         r = c.post(f"/api/tasks/{task}/status", headers=tokens["employer"], json={"status": "passed"})
         check(r.json()["tasks"][0]["status"] == "passed", "employer resolves it")
 
-        r = c.post("/api/ask", headers=tokens["employee"], json={"question": "How do I check the gauge?"})
-        print(f"     document search: HTTP {r.status_code} {str(r.json())[:120]}")
+        if not settings.voyage_api_key:
+            print("     document search: skipped (no VOYAGE_API_KEY)")
+            return 0
+        r = c.post("/api/media", headers=tokens["employer"], data={"title": "Extinguisher manual"},
+                   files={"file": ("manual.pdf", sample_pdf(MANUAL_PAGES), "application/pdf")})
+        idx = r.json().get("indexing") or {}
+        check(r.status_code == 200 and idx.get("indexed"), f"PDF uploaded and indexed ({idx})")
+        stored = db.select("document_chunks", {"company_id": company_id}, columns="chunk_index,content")
+        check(len(stored) == idx["chunks"] and all(ch["content"].startswith("(page ") for ch in stored),
+              f"{len(stored)} chunks with page numbers stored in Supabase (pgvector)")
+        hits = __import__("app.rag", fromlist=["rag"]).search(company_id, "How often does a technician service it?")
+        check(hits and hits[0]["page"] == 2, f"vector search ranks page 2 first (pages: {[h['page'] for h in hits]})")
+        if not settings.anthropic_ok:
+            print("     document answers: skipped (no ANTHROPIC_API_KEY)")
+            return 0
+        r = c.post("/api/ask", headers=tokens["employee"],
+                   json={"question": "How often does the extinguisher need professional maintenance?"})
+        body = r.json()
+        print(f"     answer: {str(body.get('answer', body))[:160]}")
+        check(r.status_code == 200 and "12" in body["answer"], "answer from the manual mentions 12 months")
+        check(any(src["page"] == 2 and src["title"] == "Extinguisher manual" for src in body["sources"]),
+              f"answer cites the manual, page 2 ({[(src['title'], src['page']) for src in body['sources']]})")
+        r = c.post("/api/ask", headers={**tokens["employee"], "X-Lang": "es"},
+                   json={"question": "¿Qué hago después de usar el extintor?"})
+        body = r.json()
+        if r.status_code == 429:  # Voyage without a payment method allows 3 requests per minute
+            print("     Spanish question: skipped, Voyage rate limit (add a payment method in Voyage to lift it)")
+            return 0
+        print(f"     respuesta: {str(body.get('answer', body))[:160]}")
+        check(r.status_code == 200 and any(w in body["answer"].lower() for w in (" el ", " la ", "recarg")),
+              "Spanish question gets a Spanish answer")
+        check(any(src["page"] == 3 for src in body["sources"]), "Spanish answer cites page 3 (after use)")
         return 0
     finally:
         try:
