@@ -337,6 +337,13 @@ label input, label select, label textarea { color: var(--ink); }
 .answer { border-top: 1px dashed var(--line); margin-top: .6rem; padding-top: .4rem; }
 .topbar .lang-switch + .signout { margin-left: .6rem; }
 .btn svg.lucide { width: 1.15em; height: 1.15em; }
+
+/* FieldSight brand */
+.topbar .brand { display: inline-flex; align-items: center; gap: .45rem; text-decoration: none; }
+.topbar .brand img { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; }
+.topbar .brand .brand-sight { color: #5ec4c0; }
+.login-logo { margin: 0; flex: 1; }
+.login-logo img { display: block; width: min(280px, 70vw); height: auto; border-radius: 16px; box-shadow: 0 1px 3px rgba(15, 23, 42, .08); }
 /* Employer overview */
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .6rem; margin: .4rem 0 .8rem; }
 .stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: .7rem .8rem;

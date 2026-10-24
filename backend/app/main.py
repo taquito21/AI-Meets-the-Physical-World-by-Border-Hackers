@@ -57,7 +57,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="Field Assistant API", version=API_VERSION, lifespan=lifespan,
+app = FastAPI(title="FieldSight API", version=API_VERSION, lifespan=lifespan,
               description="Jobs, tasks and evidence for field work (hackathon MVP).")
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["*"], allow_headers=["*"])
 

@@ -18,7 +18,10 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <NavLink to="/" className="brand">{t("Field Assistant")}</NavLink>
+        <NavLink to="/" className="brand" aria-label="FieldSight">
+          <img src="/brand/fieldsight-mark.png" alt="" width={30} height={30} />
+          <span>Field<span className="brand-sight">Sight</span></span>
+        </NavLink>
         <nav>
           <NavLink to="/" end><ClipboardList aria-hidden /><span>{t(employer ? "Overview" : "My jobs")}</span></NavLink>
           {employer && <NavLink to="/media"><FolderOpen aria-hidden /><span>{t("Media")}</span></NavLink>}

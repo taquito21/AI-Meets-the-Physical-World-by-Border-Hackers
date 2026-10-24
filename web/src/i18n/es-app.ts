@@ -2,7 +2,6 @@
 // Spanish, informal "tú", plain words: the people using the app are not necessarily technical).
 const app: Record<string, string> = {
   // App shell and login
-  "Field Assistant": "Asistente de Campo",
   "Language": "Idioma",
   "Loading…": "Cargando…",
   "Page not found": "Página no encontrada",
