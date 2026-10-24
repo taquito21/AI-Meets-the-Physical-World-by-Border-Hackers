@@ -5,7 +5,10 @@ workflow.py; this module only translates HTTP to those calls.
 """
 from __future__ import annotations
 
+import functools
+import hashlib
 import threading
+from pathlib import Path
 from contextlib import asynccontextmanager
 from datetime import date
 from typing import Annotated, Any
@@ -321,12 +324,33 @@ if settings.data_backend == "local":
         return Response(data, media_type=media.KINDS.get("." + path.rsplit(".", 1)[-1].lower(),
                                                          ("", "application/octet-stream"))[1])
 
+@functools.lru_cache(maxsize=512)
+def _content_etag(path: str, size: int, mtime: float) -> str:
+    # Vercel gives every deployed file the same old timestamp, so the default size+mtime ETag stayed identical across
+    # deploys: browsers revalidated index.html, got 304 and kept running the previous app. Hash the content instead.
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return f'"{h.hexdigest()[:32]}"'
+
+
+def _static_file(path: Path) -> FileResponse:
+    st = path.stat()
+    headers = {"ETag": _content_etag(str(path), st.st_size, st.st_mtime)}
+    if path.name == "index.html":
+        headers["Cache-Control"] = "no-cache"  # always revalidate the page; it names the current scripts
+    elif path.parent.name == "assets":
+        headers["Cache-Control"] = "public, max-age=31536000, immutable"  # Vite hashes these names
+    return FileResponse(path, headers=headers)
+
+
 if settings.web_dist_dir.exists():
     @app.get("/{full_path:path}", include_in_schema=False)
     def spa(full_path: str):
         candidate = (settings.web_dist_dir / full_path).resolve()
         if full_path and candidate.is_file() and settings.web_dist_dir.resolve() in candidate.parents:
-            return FileResponse(candidate)
-        if full_path.startswith("api/"):
-            raise HTTPException(404, "Not found")
-        return FileResponse(settings.web_dist_dir / "index.html")
+            return _static_file(candidate)
+        if full_path.startswith(("api/", "assets/")):
+            raise HTTPException(404, "Not found")  # a missing script must fail, not come back as the HTML page
+        return _static_file(settings.web_dist_dir / "index.html")
