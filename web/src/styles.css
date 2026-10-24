@@ -362,3 +362,51 @@ label input, label select, label textarea { color: var(--ink); }
 .login-or { display: flex; align-items: center; gap: .6rem; color: var(--muted); font-size: .85rem; margin: .6rem 0; }
 .login-or::before, .login-or::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
 .face-facts { padding-left: 1.1rem; margin: .3rem 0 .6rem; color: var(--muted); }
+
+/* ---- Brand background and light header (FieldSight colours: navy #0e212e, teal #399496, light teal #71c9c4) ---- */
+body { background: #eef4f6; }
+.tech-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(1100px 620px at 8% -12%, rgba(113, 201, 196, .30), transparent 62%),
+    radial-gradient(900px 560px at 108% 112%, rgba(14, 33, 46, .10), transparent 60%),
+    linear-gradient(180deg, #f6fafb 0%, #edf3f5 100%); }
+.tech-bg-app { background:
+    radial-gradient(900px 520px at 0% 0%, rgba(113, 201, 196, .18), transparent 60%),
+    radial-gradient(800px 520px at 100% 100%, rgba(14, 33, 46, .06), transparent 60%),
+    linear-gradient(180deg, #f6fafb 0%, #eef4f6 100%); }
+.tech-bg canvas { display: block; width: 100%; height: 100%; }
+.app, .login-shell { position: relative; z-index: 1; }
+.app > main, .app > header { position: relative; z-index: 1; }
+
+/* Login: logo centred and blended into the background, frosted cards over the animation */
+.login-shell { min-height: 100vh; min-height: 100dvh; }
+.login-shell .login { position: relative; z-index: 1; padding-top: max(9vh, 3.5rem); }
+.login-lang { position: absolute; top: max(.8rem, env(safe-area-inset-top)); right: 1rem; z-index: 2; }
+.login-lang .lang-switch button { color: #33424f; border-color: rgba(14, 33, 46, .18); background: rgba(255, 255, 255, .7); }
+.login-lang .lang-switch button.on { background: #0e212e; color: #fff; border-color: #0e212e; }
+.login-lang .lang-switch svg.lucide { color: #5b6b78; }
+.login-logo { display: flex; justify-content: center; margin: 0 0 .2rem; }
+.login-logo img { display: block; width: min(300px, 76vw); height: auto; border-radius: 0; box-shadow: none;
+  filter: drop-shadow(0 8px 24px rgba(57, 148, 150, .18)); }
+.login-intro { text-align: center; margin-top: .2rem; }
+.login .card, .login .login-face { background: rgba(255, 255, 255, .84); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(14, 33, 46, .10); box-shadow: 0 6px 24px rgba(14, 33, 46, .06); }
+.login .tiny.muted { text-align: center; }
+
+/* Header: light frosted bar so the logo blends in; slightly larger mark */
+.topbar { background: rgba(255, 255, 255, .80); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  color: #0e212e; border-bottom: 1px solid rgba(14, 33, 46, .08); box-shadow: 0 4px 20px rgba(14, 33, 46, .05); }
+.topbar a { color: #3e5160; }
+.topbar a.active { color: #0e212e; }
+.topbar nav a.active { box-shadow: inset 0 -2px 0 #399496; }
+.topbar .brand { color: #0e212e; font-size: 1.12rem; gap: .5rem; }
+.topbar .brand img { width: 40px; height: 35px; border-radius: 0; object-fit: contain; }
+.topbar .brand .brand-sight { color: #399496; }
+.topbar .who { color: #5b6b78; }
+.topbar .lang-switch { color: #5b6b78; }
+.topbar .lang-switch button { color: #33424f; border-color: rgba(14, 33, 46, .18); }
+.topbar .lang-switch button.on { background: #0e212e; color: #fff; border-color: #0e212e; }
+.topbar .signout { color: #3e5160; }
+
+/* iPhone Safari zooms into any field whose text is under 16 px and keeps the zoom after login: never go below it */
+input, textarea, select { font-size: max(16px, 1em); }
