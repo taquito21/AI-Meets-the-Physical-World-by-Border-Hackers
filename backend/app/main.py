@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import base64
 import hmac
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated, Any, Literal
@@ -24,6 +25,7 @@ API_VERSION = "0.1.0"
 
 
 _ready = False
+_ready_lock = threading.Lock()
 
 
 def ensure_ready() -> None:
@@ -31,12 +33,15 @@ def ensure_ready() -> None:
     global _ready
     if _ready and settings.db_path.exists():
         return
-    db.init_db()
-    settings.evidence_dir.mkdir(parents=True, exist_ok=True)
-    for result in catalog.bootstrap():
-        print(f"[packages] {result.get('status')}: {result.get('revision_id') or result.get('package_dir')} "
-              f"{result.get('error', '')}")
-    _ready = True
+    with _ready_lock:  # concurrent first requests on a cold instance initialize once
+        if _ready and settings.db_path.exists():
+            return
+        db.init_db()
+        settings.evidence_dir.mkdir(parents=True, exist_ok=True)
+        for result in catalog.bootstrap():
+            print(f"[packages] {result.get('status')}: {result.get('revision_id') or result.get('package_dir')} "
+                  f"{result.get('error', '')}")
+        _ready = True
 
 
 @asynccontextmanager
@@ -186,7 +191,8 @@ def product_passport(serial_number: str) -> dict[str, Any]:
         inspections = db.rows(conn.execute(
             "SELECT * FROM inspections WHERE product_instance_id = ? ORDER BY started_at DESC", (inst["id"],)).fetchall())
         findings = db.rows(conn.execute(
-            "SELECT * FROM findings WHERE product_instance_id = ? ORDER BY created_at DESC", (inst["id"],)).fetchall())
+            "SELECT f.*, s.mode FROM findings f JOIN inspections s ON s.id = f.inspection_id "
+            "WHERE f.product_instance_id = ? ORDER BY f.created_at DESC", (inst["id"],)).fetchall())
         ids = [inst["id"]] + [i["id"] for i in inspections] + [f["id"] for f in findings]
         marks = ",".join("?" * len(ids))
         activity = db.rows(conn.execute(
@@ -331,8 +337,12 @@ def dashboard(industry: str | None = None) -> dict[str, Any]:
             f"SELECT f.*, s.mode FROM findings f JOIN inspections s ON s.id = f.inspection_id "
             f"WHERE f.inspection_id IN ({marks})", ids).fetchall())
     count = lambda rows, key: {k: sum(1 for r in rows if r[key] == k) for k in sorted({r[key] for r in rows})}
-    comp_done = {(i["inspection_id"], i["component_id"]) for i in items if i["status"] in workflow.FINAL_ITEM}
-    comp_all = {(i["inspection_id"], i["component_id"]) for i in items}
+    # A component counts as inspected only when every one of its requirements has a final disposition.
+    per_comp: dict[tuple[str, str], list[str]] = {}
+    for i in items:
+        per_comp.setdefault((i["inspection_id"], i["component_id"]), []).append(i["status"])
+    comp_done = {k for k, sts in per_comp.items() if all(st in workflow.FINAL_ITEM for st in sts)}
+    comp_all = set(per_comp)
     return {
         "industries": industries,
         "filter": industry or "All",
@@ -585,7 +595,7 @@ def evidence_file(evidence_id: str):
 
 @app.get("/api/findings")
 def list_findings(status: str | None = None) -> list[dict[str, Any]]:
-    sql = ("SELECT f.*, c.name AS component_name, c.part_number, s.product_revision_id FROM findings f "
+    sql = ("SELECT f.*, c.name AS component_name, c.part_number, s.product_revision_id, s.mode FROM findings f "
            "JOIN inspections s ON s.id = f.inspection_id "
            "LEFT JOIN components c ON c.id = f.component_id AND c.product_revision_id = s.product_revision_id")
     args: tuple = ()

@@ -50,7 +50,7 @@ inserts with `storage_path`. Simple options:
 - Add `psycopg[binary]` to `pyproject.toml` (Vercel) and `backend/requirements.txt` (local).
 
 ## How to know it works
-- `backend/.venv/Scripts/python -m pytest -q backend/tests` must pass (25 tests). The tests create a clean database per module.
+- `backend/.venv/Scripts/python -m pytest -q backend/tests` must pass (all tests; 31 at the time of writing). The tests create a clean database per module.
   Using a Postgres test database or SQLite locally both work, as long as `db.py` supports both.
 - In production: start an inspection on the phone, open it from another device or browser, and redeploy. It should still be there.
 

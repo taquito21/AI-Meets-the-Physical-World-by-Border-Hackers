@@ -31,3 +31,7 @@ Update `backend/.env.vercel` too, so the local copy stays in sync.
 - Temporary data that is not shared between instances (fixed once the database from DATABASE_HANDOFF.md is done).
 - No user accounts: one shared password. The name typed on the home screen is recorded on every action.
 - The local laptop server (`uvicorn`) is still the most reliable option for the live pitch on the venue network.
+
+## AI time budget
+On Vercel the AI timeout is 40 s with no automatic retry, so that a call never outlives the function's 60 s `maxDuration`.
+Override with `AI_TIMEOUT_S` / `AI_MAX_RETRIES` if `maxDuration` changes.

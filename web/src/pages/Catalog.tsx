@@ -78,7 +78,7 @@ export default function Catalog() {
                       </button>
                       {p.demo_evidence_count > 0 && (
                         <button className="btn btn-demo" disabled={!!busy} onClick={() => start(i.serial_number, "demo")}
-                          title="Uses prepared, clearly labelled demonstration photos">
+                          aria-describedby="demo-hint">
                           {busy === `${i.serial_number}:demo` ? "Opening…" : "Demo inspection"}
                         </button>
                       )}
@@ -91,6 +91,7 @@ export default function Catalog() {
         </section>
       ))}
       {data && assets.length === 0 && <p className="muted">No assets in this industry.</p>}
+      <p id="demo-hint" className="tiny muted">Demo inspections use prepared, clearly labelled demonstration photos and never mix with live inspection records.</p>
     </div>
   );
 }

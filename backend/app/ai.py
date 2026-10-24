@@ -219,7 +219,7 @@ class AnthropicProvider:
             # Ignore ANTHROPIC_BASE_URL inherited from developer tooling; use AI_BASE_URL to override deliberately.
             self._client = anthropic.Anthropic(
                 base_url=os.environ.get("AI_BASE_URL", "https://api.anthropic.com"),
-                timeout=settings.ai_timeout_s, max_retries=1)
+                timeout=settings.ai_timeout_s, max_retries=settings.ai_max_retries)
         return self._client
 
     def assess(self, image_jpeg: bytes, context: dict[str, Any]) -> AssessmentOutcome:

@@ -33,3 +33,4 @@
 - ICP-001 is a fictional, simplified representative panel. It is not a certified design, has no electrical simulation, and all ratings are demo values.
 - Demo-mode images are 3D renders, not photographs, and are labelled as such. Precomputed AI results are real earlier calls, replayed and labelled.
 - The AI never establishes electrical safety, de-energization, wiring correctness, conformity, voltage, continuity, insulation or torque.
+- Dependencies: 2 moderate advisories remain in react-router v6 (fixed only in v7); not applicable to this app (see AUDIT.md, audit 2).

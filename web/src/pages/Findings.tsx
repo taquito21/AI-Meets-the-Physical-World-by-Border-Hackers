@@ -51,7 +51,7 @@ function FindingCard({ f, onChange, onOpen }: { f: Finding; onChange: () => void
           <h2>{f.component_name ?? f.component_id}</h2>
           <div className="muted small">{f.part_number} · {f.product_instance_id} · <Link to={`/inspections/${f.inspection_id}/summary`}>inspection</Link> · {when(f.created_at)} by {f.created_by}</div>
         </div>
-        <div><Chip tone={tone}>{f.status.replace(/_/g, " ")}</Chip> <Chip tone="red">{f.severity}</Chip></div>
+        <div>{f.mode === "demo" && <span className="chip chip-demo" title="From a demo inspection">DEMO</span>} <Chip tone={tone}>{f.status.replace(/_/g, " ")}</Chip> <Chip tone="red">{f.severity}</Chip></div>
       </div>
       <p>{f.description}</p>
       {f.corrective_action && (

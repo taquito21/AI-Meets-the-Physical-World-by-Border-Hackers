@@ -48,7 +48,10 @@ class Settings:
     ai_provider: str = os.environ.get("AI_PROVIDER", "anthropic")
     ai_model: str = os.environ.get("AI_MODEL", "claude-opus-5-5")
     ai_effort: str = os.environ.get("AI_EFFORT", "low")
-    ai_timeout_s: float = float(os.environ.get("AI_TIMEOUT_S", "60"))
+    # Hosted functions are killed at maxDuration (60 s in vercel.json), so there the worst case
+    # (timeout x attempts) must fit inside it; locally there is no such limit.
+    ai_timeout_s: float = float(os.environ.get("AI_TIMEOUT_S") or ("40" if os.environ.get("VERCEL") else "60"))
+    ai_max_retries: int = int(os.environ.get("AI_MAX_RETRIES") or ("0" if os.environ.get("VERCEL") else "1"))
     ai_fallbacks: bool = _bool("AI_FALLBACKS", True)
     # Closure policy: may an inspection be submitted while critical findings are still open?
     block_submit_on_open_critical: bool = _bool("BLOCK_SUBMIT_ON_OPEN_CRITICAL", False)

@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, ApiError } from "../api";
-import { Chip, ErrorBox, INSPECTION_TONE, useAsync, when } from "../components/ui";
+import { Chip, ErrorBox, INSPECTION_TONE, ModeBadge, useAsync, when } from "../components/ui";
 import { useSession } from "../session";
 
 export default function Passport() {
@@ -39,7 +39,7 @@ export default function Passport() {
         <ul className="list">
           {data.inspections.map((i: any) => (
             <li key={i.id}>
-              <Link to={`/inspections/${i.id}/summary`}>{when(i.started_at)}, {i.inspector}</Link> <Chip tone={INSPECTION_TONE[i.status]}>{i.status.replace("_", " ")}</Chip>
+              <Link to={`/inspections/${i.id}/summary`}>{when(i.started_at)}, {i.inspector}</Link> <ModeBadge mode={i.mode} /> <Chip tone={INSPECTION_TONE[i.status]}>{i.status.replace("_", " ")}</Chip>
             </li>
           ))}
         </ul>
@@ -47,7 +47,7 @@ export default function Passport() {
       <section className="card">
         <h2>Findings</h2>
         {data.findings.length === 0 && <p className="muted small">No findings.</p>}
-        {data.findings.map((f: any) => <div key={f.id} className="small">{when(f.created_at)}: <b>{f.component_id}</b> {f.description} <Chip>{f.status.replace(/_/g, " ")}</Chip></div>)}
+        {data.findings.map((f: any) => <div key={f.id} className="small">{when(f.created_at)}: {f.mode === "demo" && <span className="chip chip-demo">DEMO</span>} <b>{f.component_id}</b> {f.description} <Chip>{f.status.replace(/_/g, " ")}</Chip></div>)}
       </section>
       <section className="card">
         <h2>Timeline</h2>

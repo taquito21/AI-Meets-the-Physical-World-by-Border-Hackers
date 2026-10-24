@@ -159,6 +159,7 @@ export interface Finding {
   updated_at: string;
   component_name?: string;
   part_number?: string;
+  mode?: "live" | "demo";
   corrective_action: CorrectiveAction | null;
   evidence: Evidence[];
 }
@@ -226,6 +227,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(0, "Cannot reach the server. Check the network connection.");
   }
   const body = await res.json().catch(() => null);
+  if (res.status === 413 && !body) {
+    throw new ApiError(413, "The photo is too large to upload. Try again, or use a lower camera resolution.");
+  }
   if (!res.ok) {
     const detail = body?.detail;
     const message = typeof detail === "string" ? detail : detail?.message ?? `Request failed (${res.status})`;
@@ -237,20 +241,42 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 // Phone photos are often 3-12 MB; hosted functions cap request bodies (4.5 MB on Vercel). Downscale on the
 // device to what the server keeps anyway (1568 px JPEG). Falls back to the original file if decoding fails.
+async function decodeImage(file: File): Promise<{ source: CanvasImageSource; width: number; height: number; close?: () => void }> {
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+    return { source: bmp, width: bmp.width, height: bmp.height, close: () => bmp.close() };
+  } catch {
+    // Older Safari rejects the options bag; an <img> applies EXIF orientation in current browsers.
+    const url = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      img.src = url;
+      await img.decode();
+      return { source: img, width: img.naturalWidth, height: img.naturalHeight };
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+}
+
 async function prepareImage(file: File): Promise<Blob> {
   const MAX = 1568;
   try {
-    const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
-    const scale = Math.min(1, MAX / Math.max(bmp.width, bmp.height));
-    if (scale === 1 && file.size < 2_000_000 && file.type === "image/jpeg") return file;
+    const { source, width, height, close } = await decodeImage(file);
+    const scale = Math.min(1, MAX / Math.max(width, height));
+    if (scale === 1 && file.size < 2_000_000 && file.type === "image/jpeg") {
+      close?.();
+      return file;
+    }
     const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bmp.width * scale);
-    canvas.height = Math.round(bmp.height * scale);
-    canvas.getContext("2d")!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    canvas.getContext("2d")!.drawImage(source, 0, 0, canvas.width, canvas.height);
+    close?.();
     const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.88));
     return blob ?? file;
   } catch {
-    return file;
+    return file; // the server still validates and reports unsupported or oversized files
   }
 }
 

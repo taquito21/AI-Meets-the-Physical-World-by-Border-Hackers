@@ -46,3 +46,7 @@
 - Verified in production: password gate (401 without it), health, 3 assets, GLB, demo images, real upload + live AI (6.7 s), demo + live AI (6.6 s).
 - 52 files uploaded (no `.env`). Client-side photo compression for the 4.5 MB limit. 25 tests passing.
 - Persistence is delegated to Xavier: DATABASE_HANDOFF.md.
+
+## 2026-10-24: audit 2
+- 9 findings (1 high: vulnerable dependencies), all fixed or documented. See AUDIT.md "Audit 2". 31 tests passing.
+- Not redeployed and not pushed yet (pending approval).

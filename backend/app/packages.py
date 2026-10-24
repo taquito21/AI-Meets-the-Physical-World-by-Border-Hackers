@@ -263,6 +263,15 @@ def validate_package(package_dir: Path) -> PackageReport:
             report.errors.append(f"demo evidence {entry.get('id')}: unknown requirement {entry.get('requirement_id')}")
         if not (pkg / "demo-evidence" / str(entry.get("file", ""))).is_file():
             report.errors.append(f"demo evidence {entry.get('id')}: file not found ({entry.get('file')})")
+        pre = entry.get("precomputed_assessment")
+        if pre is not None:
+            from .ai import AssessmentResult  # local import: keeps package validation light for tools
+            try:
+                AssessmentResult.model_validate(pre.get("result"))
+                if not pre.get("model") or not pre.get("captured_at"):
+                    raise ValueError("model and captured_at are required")
+            except Exception as exc:  # noqa: BLE001 - report any schema problem as a validation error
+                report.errors.append(f"demo evidence {entry.get('id')}: invalid precomputed assessment ({str(exc)[:120]})")
 
     report.content_hash = _hash_dir(pkg)
     return report

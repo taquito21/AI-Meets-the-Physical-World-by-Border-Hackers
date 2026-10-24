@@ -39,8 +39,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [health, setHealth] = useState<Health | null>(null);
   const [industry, setIndustryState] = useState(() => stored("fep.industry", "All"));
 
+  // Retry until the server answers (it may still be starting, or a serverless instance may be cold).
   useEffect(() => {
-    api.health().then(setHealth).catch(() => setHealth(null));
+    let stop = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const load = () => api.health().then((h) => { if (!stop) setHealth(h); })
+      .catch(() => { if (!stop) timer = setTimeout(load, 5000); });
+    load();
+    return () => { stop = true; clearTimeout(timer); };
   }, []);
 
   const label = health?.app_label ?? "Field Assistant";
