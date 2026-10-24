@@ -28,7 +28,9 @@ export function TaskCard({ task, role, onJob, onOpenImage }:
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showModel, setShowModel] = useState<string | null>(null);
+  // The first 3D model is shown by default; the button hides it.
+  const [showModel, setShowModel] = useState<string | null>(
+    () => task.media.find((m) => m.kind === "model_3d")?.id ?? null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const run = async (label: string, fn: () => Promise<Job>) => {
