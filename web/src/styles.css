@@ -356,3 +356,9 @@ label input, label select, label textarea { color: var(--ink); }
 .stat-red { border-color: #fecaca; } .stat-red svg.lucide, .stat-red b { color: var(--red); }
 .stat-purple { border-color: #c4b5fd; } .stat-purple svg.lucide, .stat-purple b { color: var(--purple); }
 .team-row { gap: .9rem; }
+
+/* Face login */
+.login-face { width: 100%; margin-top: .6rem; }
+.login-or { display: flex; align-items: center; gap: .6rem; color: var(--muted); font-size: .85rem; margin: .6rem 0; }
+.login-or::before, .login-or::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+.face-facts { padding-left: 1.1rem; margin: .3rem 0 .6rem; color: var(--muted); }

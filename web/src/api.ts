@@ -6,7 +6,7 @@ export type TaskStatus = "pending" | "passed" | "failed" | "flagged";
 export type UserClass = "employer" | "employee";
 
 export interface Person { id: string; username: string; user_class: UserClass }
-export interface Me extends Person { company_id: string; company: { id: string; name: string } }
+export interface Me extends Person { company_id: string; company: { id: string; name: string }; has_face?: boolean }
 export type Counts = Record<TaskStatus | "total", number>;
 
 // One selectable part of a 3D model (from the model's parts list).
@@ -178,8 +178,16 @@ const json = (method: string, data: unknown): RequestInit => ({
   body: JSON.stringify(data),
 });
 
+const postJson = (body: unknown): RequestInit =>
+  ({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+
 export const api = {
   me: () => request<Me>("/api/me"),
+  // Face login: the server matches the vectors and returns a Supabase session for the browser to adopt.
+  faceLogin: (embeddings: number[][]) =>
+    request<{ access_token: string; refresh_token: string }>("/api/auth/face-login", postJson({ embeddings })),
+  registerFace: (embeddings: number[][]) => request<{ has_face: boolean }>("/api/me/face", postJson({ embeddings, consent: true })),
+  deleteFace: () => request<{ has_face: boolean }>("/api/me/face", { method: "DELETE" }),
   users: () => request<(Person & { company_id: string })[]>("/api/users"),
   jobs: () => request<JobSummary[]>("/api/jobs"),
   dashboard: () => request<Dashboard>("/api/dashboard"),

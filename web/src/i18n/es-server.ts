@@ -42,6 +42,7 @@ const server: Record<string, string> = {
 };
 
 export const SERVER_PATTERNS: [RegExp, (...m: string[]) => string][] = [
+  [/^Too many attempts\. Try again in (\d+) seconds\.$/, (_, n) => `Demasiados intentos. Inténtalo de nuevo en ${n} segundos.`],
   [/^(Image|File) larger than (\d+) MB$/, (_, k, n) => `${k === "Image" ? "La imagen" : "El archivo"} pesa más de ${n} MB`],
   [/^Unsupported file type '(.*)'\..*$/, (_, x) => `Tipo de archivo no compatible (${x}). Usa .glb, .pdf, .txt, .jpg, .png o .webp`],
   [/^Could not read the PDF: (.*)$/s, () => "No se pudo leer el PDF"],

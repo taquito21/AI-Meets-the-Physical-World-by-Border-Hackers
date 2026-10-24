@@ -1,5 +1,5 @@
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
-import { BookOpen, ClipboardList, FolderOpen, LogOut } from "lucide-react";
+import { BookOpen, ClipboardList, FolderOpen, LogOut, ScanFace } from "lucide-react";
 import { AskBox } from "./components/AskBox";
 import { LanguageSwitch } from "./components/LanguageSwitch";
 import { t } from "./i18n";
@@ -7,6 +7,7 @@ import JobDetail from "./pages/JobDetail";
 import Jobs from "./pages/Jobs";
 import Login from "./pages/Login";
 import Media from "./pages/Media";
+import MyFace from "./pages/MyFace";
 import NewJob from "./pages/NewJob";
 import { useSession } from "./session";
 
@@ -26,6 +27,7 @@ export default function App() {
           <NavLink to="/" end><ClipboardList aria-hidden /><span>{t(employer ? "Overview" : "My jobs")}</span></NavLink>
           {employer && <NavLink to="/media"><FolderOpen aria-hidden /><span>{t("Media")}</span></NavLink>}
           <NavLink to="/ask"><BookOpen aria-hidden /><span>{t("Ask docs")}</span></NavLink>
+          <NavLink to="/face"><ScanFace aria-hidden /><span>{t("My face")}</span></NavLink>
         </nav>
         <span className="who">{me.username} · {t(me.user_class)} · {me.company.name}</span>
         <LanguageSwitch />
@@ -38,6 +40,7 @@ export default function App() {
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/media" element={employer ? <Media /> : <Navigate to="/" />} />
           <Route path="/ask" element={<div className="page"><AskBox /></div>} />
+          <Route path="/face" element={<MyFace />} />
           <Route path="*" element={<div className="page"><h1>{t("Page not found")}</h1></div>} />
         </Routes>
       </main>
