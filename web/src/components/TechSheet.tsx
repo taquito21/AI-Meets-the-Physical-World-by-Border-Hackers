@@ -1,17 +1,16 @@
-import type { Component } from "../api";
+import type { Part } from "../api";
 import { t } from "../i18n";
 
-// Structured technical sheet for any component. Demonstration values are always marked as such.
-export function TechSheet({ comp }: { comp: Component }) {
+// Structured technical sheet for one part of a 3D model. Demonstration values are always marked as such.
+export function TechSheet({ comp }: { comp: Part }) {
   const hasDemo = comp.specs?.some((s) => s.demo_value);
   return (
     <div className="techsheet">
       <dl className="kv">
-        <dt>{t("Component")}</dt><dd>{comp.name}</dd>
-        <dt>{t("Component ID")}</dt><dd><code>{comp.id}</code></dd>
+        <dt>{t("Part")}</dt><dd>{comp.name}</dd>
         {comp.category && <><dt>{t("Category")}</dt><dd>{comp.category}</dd></>}
-        <dt>{t("Part number")}</dt><dd>{comp.part_number}</dd>
-        <dt>{t("Quantity")}</dt><dd>{comp.quantity}</dd>
+        {comp.part_number && <><dt>{t("Part number")}</dt><dd>{comp.part_number}</dd></>}
+        {comp.quantity && <><dt>{t("Quantity")}</dt><dd>{comp.quantity}</dd></>}
         {comp.material && <><dt>{t("Material")}</dt><dd>{comp.material}</dd></>}
         {comp.inspection_type && <><dt>{t("Inspection type")}</dt><dd>{comp.inspection_type}</dd></>}
         {comp.specs?.map((s) => (

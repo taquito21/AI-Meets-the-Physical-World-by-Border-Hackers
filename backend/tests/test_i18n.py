@@ -1,83 +1,85 @@
-"""Display language: content overlays per request (X-Lang), AI reply language, and immutable package revisions."""
+"""Display language (X-Lang): media text overlays, AI reply language, and the package translation files."""
 from __future__ import annotations
 
 import json
+import sys
+from pathlib import Path
+from types import SimpleNamespace
 
-import pytest
-from fastapi.testclient import TestClient
-
-from app import ai
-from app.config import settings
-from app.main import app
-from app.packages import validate_package
-
-INSPECTOR = "Inspectora Ana"
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools"))
 
 
-@pytest.fixture(scope="module")
-def client():
-    with TestClient(app) as c:
-        yield c
-
-
-def test_products_and_revision_follow_the_requested_language(client):
-    en = {p["id"]: p for p in client.get("/api/products").json()}
-    es = {p["id"]: p for p in client.get("/api/products", headers={"X-Lang": "es"}).json()}
-    assert en["FE-001@A"]["product_name"] == "Portable Fire Extinguisher"
-    assert es["FE-001@A"]["product_name"] == "Extintor portátil"
-    assert es["FE-001@A"]["id"] == en["FE-001@A"]["id"]  # identifiers never change
-    assert "(datos" in es["FE-001@A"]["instances"][0]["metadata"]["location"]
-
-    rev = client.get("/api/revisions/FE-001@A", headers={"X-Lang": "es"}).json()
-    rev_en = client.get("/api/revisions/FE-001@A").json()
-    assert [c["name"] for c in rev["components"]] != [c["name"] for c in rev_en["components"]]
-    for key in ("id", "part_number", "quantity", "model_node_ids"):  # engineering data is never translated
-        assert [c[key] for c in rev["components"]] == [c[key] for c in rev_en["components"]]
-    assert rev["procedure"]["safety_notes"] and "pasador" in " ".join(rev["procedure"]["safety_notes"]).lower()
-
-
-def test_inspection_snapshot_is_translated_for_display_only(client):
-    r = client.post("/api/inspections", json={"serial_number": "FE-001-SN-0001", "inspector": INSPECTOR})
-    iid = r.json()["inspection_id"]
-    en_item = r.json()["state"]["items"][0]
-    es_state = client.get(f"/api/inspections/{iid}", headers={"X-Lang": "es"}).json()
-    es_item = next(i for i in es_state["items"] if i["id"] == en_item["id"])
-    assert es_item["requirement_snapshot"]["title"] != en_item["requirement_snapshot"]["title"]
-    # Readiness entries use the translated titles; reasons stay as codes-in-English for the client to translate.
-    blocking = es_state["readiness"]["blocking"]
-    assert any(b.get("title") == es_item["requirement_snapshot"]["title"] for b in blocking)
-    # The stored snapshot itself is untouched.
-    again = client.get(f"/api/inspections/{iid}").json()
-    assert next(i for i in again["items"] if i["id"] == en_item["id"])["requirement_snapshot"] == en_item["requirement_snapshot"]
-
-
-def test_translation_files_do_not_change_the_package_revision():
-    for pkg in sorted(settings.packages_dir.iterdir()):
-        if (pkg / "translations").is_dir():
-            report = validate_package(pkg)
-            assert report.ok, report.errors
-            assert not [w for w in report.warnings if w.startswith("translations/")], report.warnings
-            # Hash with and without the translations folder must match (it is excluded).
-            assert report.content_hash == validate_package(pkg).content_hash
-
-
-def test_ai_prompt_asks_for_spanish_replies_and_keeps_enum_codes():
+def load_extinguisher(company_id: str) -> dict:
+    """The demo loader's path: package parts list + translations stored with the media row."""
+    import load_demo_media as loader
+    from app import db, media
+    from app.config import settings
+    from app.packages import validate_package
     pkg = settings.packages_dir / "fire-extinguisher-fe-001"
     report = validate_package(pkg)
-    req = report.procedure["requirements"][0]
-    comp = next(c for c in report.components if c["component_id"] == req["component_id"])
-    ctx = ai.build_context(manifest=report.manifest, procedure=report.procedure, component=comp, requirement=req,
-                           serial_number="FE-TEST", worker_note=None, image_checks={}, language="es")
-    prompt = ai.build_prompt(ctx)
-    assert "Spanish" in prompt and "enum" in prompt
-    assert "Spanish" not in ai.build_prompt({**ctx, "language": "en"})
-    assert "seguro, conforme" in ai.SYSTEM_PROMPT  # the no-certification rule also covers Spanish wording
+    row = media.create_media(company_id, "assembly.glb", (pkg / "assembly.glb").read_bytes(),
+                             report.manifest["product_name"], loader.parts_of(report))
+    db.update("media", {"metadata": {**row["metadata"], "translations": loader.translations_of(pkg)}}, {"id": row["id"]})
+    return row
 
 
-def test_saved_spanish_practice_results_are_valid_and_labelled():
-    for name in ("fire-extinguisher-fe-001", "electrical-panel-icp-001", "utep-conference-chair-rw"):
-        doc = json.loads((settings.packages_dir / name / "demo-evidence" / "demo-evidence.json").read_text(encoding="utf-8"))
-        for entry in doc["items"]:
-            pre = entry.get("precomputed_assessment_es")
-            assert pre and pre["model"] and pre["captured_at"], entry["id"]
-            ai.AssessmentResult.model_validate(pre["result"])
+def test_media_follows_the_requested_language(world):
+    boss = world.users["acme-employer"]
+    row = load_extinguisher(boss["company_id"])
+    c = world.login("acme-employer")
+    en = c.get("/api/media").json()[0]
+    es = c.get("/api/media", headers={"X-Lang": "es"}).json()[0]
+    assert en["title"] == "Portable Fire Extinguisher" and es["title"] == "Extintor portátil"
+    en_parts = {p["id"]: p for p in en["metadata"]["parts"]}
+    es_parts = {p["id"]: p for p in es["metadata"]["parts"]}
+    assert en_parts.keys() == es_parts.keys()  # identifiers never change
+    assert en_parts["FE-001-CYL"]["name"] == "Pressure cylinder" and es_parts["FE-001-CYL"]["name"] == "Cilindro a presión"
+    assert es_parts["FE-001-CYL"]["part_number"] == en_parts["FE-001-CYL"]["part_number"]
+    assert "translations" not in es["metadata"]  # the reader gets one language
+    assert c.get("/api/media", headers={"X-Lang": "fr"}).json()[0]["title"] == "Portable Fire Extinguisher"
+
+    job = c.post("/api/jobs", headers={"X-Lang": "es"}, json={
+        "title": "Revisión", "assigned_to": world.users["acme-employee"]["id"],
+        "tasks": [{"description": "Revisa el cilindro", "media": [{"media_id": row["id"], "node_ids": ["FE-001-CYL"]}]}]})
+    assert job.json()["tasks"][0]["media"][0]["title"] == "Extintor portátil"
+
+
+def test_ai_prompts_ask_for_the_readers_language(world, monkeypatch):
+    from app import ai, rag
+    ctx = ai.build_context(company="Acme", job_title="J", task="T", parts=[], media_titles=[], worker_note=None,
+                           image_checks=None, language="es")
+    assert "Latin-American Spanish" in ai.build_prompt(ctx)
+    assert "Latin-American Spanish" not in ai.build_prompt({**ctx, "language": "en"})
+    assert "seguro, conforme" in ai.SYSTEM_PROMPT  # safety wording rules hold in Spanish too
+
+    sent = {}
+
+    class Claude:
+        messages = SimpleNamespace(create=lambda **kw: sent.update(kw) or SimpleNamespace(
+            stop_reason="end_turn", content=[SimpleNamespace(type="text", text="Respuesta.", citations=None)]))
+
+    monkeypatch.setattr(ai, "claude_available", lambda: (True, ""))
+    monkeypatch.setattr(ai, "claude_client", lambda: Claude())
+    hits = [{"media_id": "m", "title": "Manual", "page": 1, "content": "(page 1) text"}]
+    from app import i18n
+    token = i18n.current_lang.set("es")
+    try:
+        assert rag.answer("¿Cómo?", hits)["answer"] == "Respuesta."
+        assert "Spanish" in sent["system"]
+    finally:
+        i18n.current_lang.reset(token)
+    rag.answer("How?", hits)
+    assert "Spanish" not in sent["system"]
+
+
+def test_package_translation_files_line_up_with_their_packages():
+    from app.config import settings
+    from app.packages import validate_package
+    for pkg in sorted(settings.packages_dir.iterdir()):
+        for f in (pkg / "translations").glob("*.json"):
+            doc = json.loads(f.read_text(encoding="utf-8"))
+            report = validate_package(pkg)
+            assert report.ok, report.errors
+            ids = {c["component_id"] for c in report.components}
+            assert set(doc.get("components", {})) <= ids, f"{pkg.name}/{f.name}: unknown component ids"

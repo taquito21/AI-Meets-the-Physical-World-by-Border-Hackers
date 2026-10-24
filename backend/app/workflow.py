@@ -1,423 +1,222 @@
-"""Deterministic inspection workflow rules. All state transitions happen here, server side.
+"""Jobs, tasks and evidence: every access rule and state change happens here, server side.
 
-AI output is advisory: it can move an item to "more evidence requested" but never to
-"passed". Only an inspector disposition passes or fails a requirement, and only a
-supervisor (different person from the inspector) approves an inspection.
+Who sees what: an employer sees every job of their company; an employee sees only the jobs assigned to them.
+Anything outside that answers 404, so ids from another company reveal nothing.
+
+Task status (pending | passed | failed | flagged) is always set by a person. "Flagged" escalates the task to the
+employer, who answers with a text evidence entry and then sets passed or failed. The AI photo review is advisory:
+it is stored on the evidence row and never changes a status.
 """
 from __future__ import annotations
 
-import sqlite3
 from typing import Any
 
-from . import db
-from .config import settings
+from . import ai, db, i18n
+from .blobs import blobs
 
-EDITABLE = {"in_progress", "changes_requested"}
-FINAL_ITEM = {"passed", "failed", "not_applicable"}
-AWAITING_ITEM = {"evidence_submitted", "more_evidence_requested"}
-SEVERITIES = ("low", "medium", "high", "critical")
-SEVERITY_WORD = {"low": "minor", "medium": "moderate", "high": "serious", "critical": "critical"}  # user-facing
-OPEN_FINDING = {"open", "assigned", "action_recorded", "awaiting_verification"}
-
-FINDING_TRANSITIONS: dict[str, set[str]] = {
-    "open": {"assigned", "void"},
-    "assigned": {"action_recorded"},
-    "action_recorded": {"awaiting_verification"},
-    "awaiting_verification": {"closed", "assigned"},
-    "closed": set(),
-    "void": set(),
-}
+TASK_STATUSES = ("pending", "passed", "failed", "flagged")
+MAX_TEXT = 4000
 
 
 class WorkflowError(Exception):
-    def __init__(self, message: str, status_code: int = 409, details: list[dict] | None = None):
+    def __init__(self, message: str, status_code: int = 409):
         super().__init__(message)
         self.message = message
         self.status_code = status_code
-        self.details = details or []
 
 
-def needs_photo(evidence_type: str) -> bool:
-    return evidence_type in ("photo", "photo_and_manual_confirmation")
+# ----------------------------------------------------------------- access --
+
+def company_users(company_id: str) -> dict[str, dict[str, Any]]:
+    return {u["id"]: u for u in db.select("users", {"company_id": company_id})}
 
 
-def needs_manual(evidence_type: str) -> bool:
-    return evidence_type in ("manual_confirmation", "photo_and_manual_confirmation")
+def job_for(user: dict[str, Any], job_id: str) -> dict[str, Any]:
+    job = db.first("jobs", {"id": job_id})
+    if (not job or job["company_id"] != user["company_id"]
+            or (user["user_class"] == "employee" and job["assigned_to"] != user["id"])):
+        raise WorkflowError("Job not found", 404)
+    return job
 
 
-# ------------------------------------------------------------------ lookup --
-
-def _inspection(conn: sqlite3.Connection, inspection_id: str) -> dict[str, Any]:
-    insp = db.row(conn.execute("SELECT * FROM inspections WHERE id = ?", (inspection_id,)).fetchone())
-    if not insp:
-        raise WorkflowError("Inspection not found", 404)
-    return insp
-
-
-def _item(conn: sqlite3.Connection, inspection_id: str, item_id: str) -> dict[str, Any]:
-    item = db.row(conn.execute("SELECT * FROM inspection_items WHERE id = ? AND inspection_id = ?",
-                               (item_id, inspection_id)).fetchone())
-    if not item:
-        raise WorkflowError("Inspection item not found", 404)
-    return item
+def task_for(user: dict[str, Any], task_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    task = db.first("tasks", {"id": task_id})
+    if not task:
+        raise WorkflowError("Task not found", 404)
+    try:
+        return task, job_for(user, task["job_id"])
+    except WorkflowError:
+        raise WorkflowError("Task not found", 404)
 
 
-def _require_editable(insp: dict[str, Any]) -> None:
-    if insp["status"] not in EDITABLE:
-        raise WorkflowError(f"Inspection is '{insp['status']}' and can no longer be edited by the inspector")
+def media_for(user: dict[str, Any], media_id: str) -> dict[str, Any]:
+    media = db.first("media", {"id": media_id})
+    if not media or media["company_id"] != user["company_id"]:
+        raise WorkflowError("Media not found", 404)
+    return media
 
 
-def latest_evidence_id(conn: sqlite3.Connection, item_id: str) -> str | None:
-    r = conn.execute("SELECT id FROM evidence WHERE inspection_item_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1",
-                     (item_id,)).fetchone()
-    return r["id"] if r else None
+# ------------------------------------------------------------------- jobs --
+
+def _counts(statuses: list[str]) -> dict[str, int]:
+    return {"total": len(statuses), **{s: statuses.count(s) for s in TASK_STATUSES}}
 
 
-def _latest_assessment(conn: sqlite3.Connection, item_id: str) -> dict[str, Any] | None:
-    """Assessment of the most recent photo only; older photos are superseded."""
-    ev = latest_evidence_id(conn, item_id)
-    if not ev:
-        return None
-    return db.row(conn.execute("SELECT * FROM evidence_assessments WHERE evidence_id = ? "
-                               "ORDER BY created_at DESC, rowid DESC LIMIT 1", (ev,)).fetchone())
+def _person(u: dict[str, Any] | None) -> dict[str, Any] | None:
+    return {"id": u["id"], "username": u["username"], "user_class": u["user_class"]} if u else None
 
 
-def _has_open_finding(conn: sqlite3.Connection, item_id: str) -> bool:
-    return bool(conn.execute("SELECT COUNT(*) FROM findings WHERE inspection_item_id = ? AND status IN "
-                             "('open','assigned','action_recorded','awaiting_verification')", (item_id,)).fetchone()[0])
+def list_jobs(user: dict[str, Any]) -> list[dict[str, Any]]:
+    where = ({"company_id": user["company_id"]} if user["user_class"] == "employer"
+             else {"company_id": user["company_id"], "assigned_to": user["id"]})
+    jobs = db.select("jobs", where, order="-created_at")
+    statuses: dict[str, list[str]] = {}
+    for t in db.select("tasks", {"job_id": [j["id"] for j in jobs]}, columns="job_id,status"):
+        statuses.setdefault(t["job_id"], []).append(t["status"])
+    people = company_users(user["company_id"])
+    return [{"id": j["id"], "title": j["title"], "created_at": j["created_at"],
+             "assigned_to": _person(people.get(j["assigned_to"])), "counts": _counts(statuses.get(j["id"], []))}
+            for j in jobs]
 
 
-def _evidence_count(conn: sqlite3.Connection, item_id: str) -> int:
-    return conn.execute("SELECT COUNT(*) FROM evidence WHERE inspection_item_id = ?", (item_id,)).fetchone()[0]
-
-
-def _touch(conn: sqlite3.Connection, inspection_id: str) -> None:
-    conn.execute("UPDATE inspections SET updated_at = ? WHERE id = ?", (db.now(), inspection_id))
-
-
-def assessment_flags_insufficient(assessment: dict[str, Any] | None) -> bool:
-    if not assessment or assessment.get("status") != "completed" or not assessment.get("result"):
-        return False
-    res = assessment["result"]
-    return res.get("recommended_action") == "retake_photo" or res.get("evidence_sufficient") is False
-
-
-# -------------------------------------------------------------- lifecycle --
-
-MODES = ("live", "demo")
-
-
-def start_inspection(conn: sqlite3.Connection, serial_number: str, inspector: str, mode: str = "live") -> dict[str, Any]:
-    """mode 'live': real photos from the device. mode 'demo': may also use the package's prepared demo photos.
-    The mode is fixed for the life of the inspection and shown everywhere it appears."""
-    if mode not in MODES:
-        raise WorkflowError(f"Unknown inspection mode '{mode}'", 400)
-    inst = db.row(conn.execute("SELECT * FROM product_instances WHERE serial_number = ?", (serial_number,)).fetchone())
-    if not inst:
-        raise WorkflowError(f"Unknown product instance {serial_number}", 404)
-    open_insp = conn.execute(
-        "SELECT id, mode FROM inspections WHERE product_instance_id = ? AND status IN ('in_progress','changes_requested') "
-        "ORDER BY started_at DESC LIMIT 1", (inst["id"],)).fetchone()
-    if open_insp:
-        if open_insp["mode"] != mode:
-            raise WorkflowError(f"A {open_insp['mode']} inspection of this unit is already open. "
-                                "Finish it before starting a different mode.")
-        return {"inspection_id": open_insp["id"], "resumed": True}
-    if conn.execute("SELECT 1 FROM inspections WHERE product_instance_id = ? AND status = 'submitted'",
-                    (inst["id"],)).fetchone():
-        raise WorkflowError("An inspection of this unit is awaiting supervisor review. Wait for the decision first.")
-    rev_id = inst["product_revision_id"]
-    proc = db.row(conn.execute("SELECT procedure FROM product_revisions WHERE id = ?", (rev_id,)).fetchone())["procedure"]
-    reqs = db.rows(conn.execute(
-        "SELECT * FROM inspection_requirements WHERE product_revision_id = ? ORDER BY sort", (rev_id,)).fetchall())
-    if not reqs:
-        raise WorkflowError("This product revision has no inspection requirements")
-    ts = db.now()
-    insp_id = db.new_id("insp")
-    conn.execute("INSERT INTO inspections (id, product_instance_id, product_revision_id, procedure_id, inspector, "
-                 "status, started_at, submitted_at, decided_at, updated_at, mode) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                 (insp_id, inst["id"], rev_id, proc.get("procedure_id", ""), inspector, "in_progress", ts, None, None,
-                  ts, mode))
-    for r in reqs:
-        # The requirement definition is snapshotted so later revisions never rewrite this record.
-        conn.execute(
-            "INSERT INTO inspection_items (id, inspection_id, requirement_id, component_id, requirement_snapshot, "
-            "required, status, sort, updated_at) VALUES (?,?,?,?,?,?,?,?,?)",
-            (db.new_id("item"), insp_id, r["id"], r["component_id"], db.dumps(r["definition"]), int(r["required"]),
-             "pending", r["sort"], ts))
-    db.log_event(conn, "inspection", insp_id, "inspection_started", inspector,
-                 {"serial_number": serial_number, "revision": rev_id, "mode": mode})
-    return {"inspection_id": insp_id, "resumed": False}
-
-
-def record_evidence(conn: sqlite3.Connection, inspection_id: str, item_id: str, evidence_id: str, actor: str) -> None:
-    insp = _inspection(conn, inspection_id)
-    _require_editable(insp)
-    item = _item(conn, inspection_id, item_id)
-    if item["status"] in FINAL_ITEM:
-        db.log_event(conn, "inspection_item", item_id, "item_reopened", actor,
-                     {"previous_status": item["status"], "reason": "new evidence submitted"})
-    conn.execute("UPDATE inspection_items SET status='evidence_submitted', status_reason=NULL, updated_at=? WHERE id=?",
-                 (db.now(), item_id))
-    db.log_event(conn, "inspection_item", item_id, "evidence_submitted", actor,
-                 {"evidence_id": evidence_id, "inspection_id": inspection_id})
-    _touch(conn, inspection_id)
-
-
-def apply_assessment(conn: sqlite3.Connection, item_id: str, assessment: dict[str, Any]) -> None:
-    """AI may only hold an item back for more evidence; it never accepts one."""
-    item = db.row(conn.execute("SELECT * FROM inspection_items WHERE id = ?", (item_id,)).fetchone())
-    if not item or item["status"] not in AWAITING_ITEM:
-        return
-    if assessment.get("evidence_id") != latest_evidence_id(conn, item_id):
-        return  # a late result for a superseded photo must not override the newer one
-    if assessment_flags_insufficient(assessment):
-        conn.execute("UPDATE inspection_items SET status='more_evidence_requested', status_reason='ai_retake', "
-                     "updated_at=? WHERE id=?", (db.now(), item_id))
-        db.log_event(conn, "inspection_item", item_id, "more_evidence_recommended", "ai",
-                     {"assessment_id": assessment.get("id")})
-
-
-def decide_item(conn: sqlite3.Connection, inspection_id: str, item_id: str, *, decision: str, actor: str,
-                observation: str | None = None, manual_confirmed: bool = False, override_note: str | None = None,
-                finding: dict[str, Any] | None = None) -> dict[str, Any]:
-    insp = _inspection(conn, inspection_id)
-    _require_editable(insp)
-    item = _item(conn, inspection_id, item_id)
-    etype = item["requirement_snapshot"]["evidence_type"]
-    observation = (observation or "").strip() or None
-    override_note = (override_note or "").strip() or None
-    problems: list[str] = []
-
-    if decision == "pass":
-        if needs_photo(etype) and _evidence_count(conn, item_id) == 0:
-            problems.append("Take a photo first.")
-        if needs_manual(etype) and not manual_confirmed:
-            problems.append("Tick “I checked this myself, in person” first.")
-        if item["status"] == "more_evidence_requested" and item.get("status_reason") == "supervisor_request":
-            if needs_photo(etype):
-                problems.append("Your supervisor asked for a new photo. Take a new photo first.")
-            elif not observation:
-                problems.append("Your supervisor asked you to check this again. Write in the notes what you "
-                                "checked.")
-        elif assessment_flags_insufficient(_latest_assessment(conn, item_id)) and not override_note:
-            problems.append("The AI suggested another photo. Take a new photo, or tap “Use it anyway” and "
-                            "explain why this photo is good enough.")
-        if _has_open_finding(conn, item_id):
-            problems.append("A problem is already reported for this check. Cancel it on the Problems page first if it was a mistake.")
-        new_status = "passed"
-    elif decision == "fail":
-        if needs_photo(etype) and _evidence_count(conn, item_id) == 0:
-            problems.append("Take a photo of the problem first.")
-        if not finding or not (finding.get("description") or "").strip():
-            problems.append("Describe what is wrong.")
-        elif finding.get("severity") not in SEVERITIES:
-            problems.append(f"Finding severity must be one of {', '.join(SEVERITIES)}.")
-        new_status = "failed"
-    elif decision == "not_applicable":
-        if not observation:
-            problems.append("Write in the notes why this check doesn't apply.")
-        if _has_open_finding(conn, item_id):
-            problems.append("A problem is already reported for this check. Cancel it on the Problems page first if it was a mistake.")
-        new_status = "not_applicable"
-    else:
-        raise WorkflowError(f"Unknown decision '{decision}'", 400)
-    if problems:
-        raise WorkflowError("Requirement cannot be dispositioned", 422, [{"reason": p} for p in problems])
+def create_job(user: dict[str, Any], *, title: str, assigned_to: str, tasks: list[dict[str, Any]]) -> str:
+    title = (title or "").strip()
+    if not title:
+        raise WorkflowError("A job needs a title", 422)
+    assignee = company_users(user["company_id"]).get(assigned_to)
+    if not assignee or assignee["user_class"] != "employee":
+        raise WorkflowError("Assign the job to an employee of your company", 422)
+    if not tasks:
+        raise WorkflowError("Add at least one task", 422)
+    media_ids = {m["media_id"] for t in tasks for m in t.get("media") or []}
+    known = {m["id"]: m for m in db.select("media", {"id": sorted(media_ids)})}
+    for mid in media_ids:
+        if mid not in known or known[mid]["company_id"] != user["company_id"]:
+            raise WorkflowError("A linked media item does not exist in your company", 422)
+    for t in tasks:
+        if not (t.get("description") or "").strip():
+            raise WorkflowError("Every task needs a description", 422)
 
     ts = db.now()
-    conn.execute("UPDATE inspection_items SET status=?, status_reason=NULL, observation=?, manual_confirmed=?, "
-                 "override_note=?, decided_by=?, updated_at=? WHERE id=?",
-                 (new_status, observation, int(bool(manual_confirmed)), override_note, actor, ts, item_id))
-    finding_id = None
-    if decision == "fail":
-        existing = conn.execute("SELECT id FROM findings WHERE inspection_item_id = ? AND status = 'open'",
-                                (item_id,)).fetchone()
-        if existing:
-            finding_id = existing["id"]
-            conn.execute("UPDATE findings SET description=?, severity=?, updated_at=? WHERE id=?",
-                         (finding["description"].strip(), finding["severity"], ts, finding_id))
-        else:
-            finding_id = db.new_id("fnd")
-            conn.execute("INSERT INTO findings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                         (finding_id, inspection_id, insp["product_instance_id"], item["component_id"],
-                          item["requirement_id"], item_id, finding["description"].strip(), finding["severity"],
-                          "open", None, actor, ts, ts, None))
-            db.log_event(conn, "finding", finding_id, "finding_created", actor,
-                         {"inspection_id": inspection_id, "component_id": item["component_id"],
-                          "severity": finding["severity"]})
-    db.log_event(conn, "inspection_item", item_id, f"item_{new_status}", actor,
-                 {"inspection_id": inspection_id, "override_note": override_note, "finding_id": finding_id})
-    _touch(conn, inspection_id)
-    return {"item_id": item_id, "status": new_status, "finding_id": finding_id}
+    job_id = db.new_id()
+    db.insert("jobs", {"id": job_id, "company_id": user["company_id"], "assigned_to": assigned_to,
+                       "title": title, "created_at": ts})
+    task_rows, links = [], []
+    for pos, t in enumerate(tasks):
+        tid = db.new_id()
+        task_rows.append({"id": tid, "job_id": job_id, "position": pos, "description": t["description"].strip(),
+                          "status": "pending", "updated_at": ts})
+        links += [{"task_id": tid, "media_id": m["media_id"], "node_ids": list(m.get("node_ids") or [])}
+                  for m in t.get("media") or []]
+    try:
+        db.insert("tasks", task_rows)
+        db.insert("task_media", links)
+    except Exception:
+        db.delete("jobs", {"id": job_id})  # tasks and links cascade: never leave a half-created job
+        raise
+    return job_id
 
 
-def readiness(conn: sqlite3.Connection, inspection_id: str) -> dict[str, Any]:
-    insp = _inspection(conn, inspection_id)
-    items = db.rows(conn.execute("SELECT * FROM inspection_items WHERE inspection_id = ? ORDER BY sort",
-                                 (inspection_id,)).fetchall())
-    findings = db.rows(conn.execute("SELECT * FROM findings WHERE inspection_id = ?", (inspection_id,)).fetchall())
-    blocking: list[dict[str, Any]] = []
-    warnings: list[dict[str, Any]] = []
-
-    def entry(item, reason):
-        return {"item_id": item["id"], "requirement_id": item["requirement_id"],
-                "component_id": item["component_id"], "title": item["requirement_snapshot"]["title"], "reason": reason}
-
-    if insp["status"] not in EDITABLE:
-        blocking.append({"reason": f"Inspection status is '{insp['status']}'"})
-    for it in items:
-        etype = it["requirement_snapshot"]["evidence_type"]
-        if it["required"] and it["status"] not in FINAL_ITEM:
-            reason = {"pending": "Not done yet",
-                      "evidence_submitted": "Photo taken; choose a result",
-                      "more_evidence_requested": "A new photo is needed"}.get(it["status"], it["status"])
-            blocking.append(entry(it, reason))
-        if not it["required"] and it["status"] not in FINAL_ITEM:
-            warnings.append(entry(it, "Optional check not done"))
-        if it["status"] in ("passed", "failed") and needs_photo(etype) and _evidence_count(conn, it["id"]) == 0:
-            blocking.append(entry(it, "Photo missing"))
-        if it["status"] == "failed" and not any(f["inspection_item_id"] == it["id"] for f in findings):
-            blocking.append(entry(it, "Problem reported without a description"))
-        if it["status"] == "not_applicable" and it["required"]:
-            warnings.append(entry(it, "Required check marked \"doesn't apply\" (the supervisor will see the reason)"))
-        if it["override_note"] and it["status"] == "passed":
-            warnings.append(entry(it, "Marked as good although the AI suggested another photo (overridden, with a reason)"))
-        if it["status"] == "passed":
-            latest = _latest_assessment(conn, it["id"])
-            if latest and latest.get("result") and latest["result"].get("conditions_for_human_review"):
-                warnings.append(entry(it, "Marked as good although the AI flagged something to check: "
-                                      + "; ".join(latest["result"]["conditions_for_human_review"])))
-    open_findings = [f for f in findings if f["status"] in OPEN_FINDING]
-    for f in open_findings:
-        if f["severity"] == "critical" and settings.block_submit_on_open_critical:
-            blocking.append({"finding_id": f["id"], "component_id": f["component_id"],
-                             "reason": "A critical problem must be fixed and closed before sending"})
-        else:
-            warnings.append({"finding_id": f["id"], "component_id": f["component_id"],
-                             "reason": f"A {SEVERITY_WORD.get(f['severity'], f['severity'])} problem is open; it will go to the supervisor and be tracked until fixed"})
-    return {"ready": not blocking, "blocking": blocking, "warnings": warnings}
+def delete_job(user: dict[str, Any], job_id: str) -> None:
+    job_for(user, job_id)
+    tasks = [t["id"] for t in db.select("tasks", {"job_id": job_id}, columns="id")]
+    photos = [e["photo_path"] for e in db.select("evidence", {"task_id": tasks}, columns="photo_path")
+              if e["photo_path"]]
+    db.delete("jobs", {"id": job_id})  # tasks, evidence and media links cascade
+    blobs.delete(photos)
 
 
-def submit(conn: sqlite3.Connection, inspection_id: str, actor: str) -> dict[str, Any]:
-    insp = _inspection(conn, inspection_id)
-    check = readiness(conn, inspection_id)
-    if not check["ready"]:
-        raise WorkflowError("Inspection cannot be submitted yet", 409, check["blocking"])
-    ts = db.now()
-    conn.execute("UPDATE inspections SET status='submitted', submitted_at=?, updated_at=? WHERE id=?",
-                 (ts, ts, inspection_id))
-    db.log_event(conn, "inspection", inspection_id, "inspection_submitted", actor,
-                 {"previous_status": insp["status"], "warnings": len(check["warnings"])})
-    return {"inspection_id": inspection_id, "status": "submitted", "warnings": check["warnings"]}
+def job_detail(user: dict[str, Any], job_id: str) -> dict[str, Any]:
+    job = job_for(user, job_id)
+    people = company_users(user["company_id"])
+    tasks = db.select("tasks", {"job_id": job_id}, order="position")
+    task_ids = [t["id"] for t in tasks]
+    evidence = db.select("evidence", {"task_id": task_ids}, order=["created_at", "id"])
+    links = db.select("task_media", {"task_id": task_ids})
+    media = {m["id"]: m for m in db.select("media", {"id": sorted({l["media_id"] for l in links})})}
+    urls = blobs.signed_urls([e["photo_path"] for e in evidence if e["photo_path"]]
+                             + [m["storage_path"] for m in media.values()])
+    out_tasks = []
+    for t in tasks:
+        out_tasks.append({
+            **{k: t[k] for k in ("id", "position", "description", "status", "updated_at")},
+            "evidence": [evidence_view(e, people, urls) for e in evidence if e["task_id"] == t["id"]],
+            "media": [{**media_view(media[l["media_id"]], urls), "node_ids": l["node_ids"]}
+                      for l in links if l["task_id"] == t["id"] and l["media_id"] in media],
+        })
+    return {"id": job["id"], "title": job["title"], "created_at": job["created_at"],
+            "assigned_to": _person(people.get(job["assigned_to"])),
+            "counts": _counts([t["status"] for t in tasks]), "tasks": out_tasks}
 
 
-def review(conn: sqlite3.Connection, inspection_id: str, *, reviewer: str, decision: str,
-           comments: str | None, item_ids: list[str] | None) -> dict[str, Any]:
-    insp = _inspection(conn, inspection_id)
-    if insp["status"] != "submitted":
-        raise WorkflowError(f"Only submitted inspections can be reviewed (status is '{insp['status']}')")
-    if reviewer.strip().lower() == insp["inspector"].strip().lower():
-        raise WorkflowError("The reviewer must be a different person from the inspector", 403)
-    ts = db.now()
-    if decision == "approve":
-        status = "approved"
-    elif decision == "reject":
-        if not (comments or "").strip():
-            raise WorkflowError("A comment is required to reject an inspection", 422)
-        status = "rejected"
-    elif decision == "request_evidence":
-        if not item_ids:
-            raise WorkflowError("Select at least one requirement that needs additional evidence", 422)
-        valid = {r["id"] for r in conn.execute("SELECT id FROM inspection_items WHERE inspection_id = ?",
-                                                (inspection_id,)).fetchall()}
-        if not set(item_ids) <= valid:
-            raise WorkflowError("Unknown inspection item in request", 422)
-        for iid in item_ids:
-            conn.execute("UPDATE inspection_items SET status='more_evidence_requested', status_reason='supervisor_request', "
-                         "updated_at=? WHERE id=?", (ts, iid))
-            db.log_event(conn, "inspection_item", iid, "more_evidence_requested", reviewer, {"comments": comments})
-        status = "changes_requested"
-    else:
-        raise WorkflowError(f"Unknown review decision '{decision}'", 400)
-    conn.execute("INSERT INTO reviews VALUES (?,?,?,?,?,?,?)",
-                 (db.new_id("rev"), inspection_id, reviewer, decision, comments, db.dumps(item_ids or []), ts))
-    conn.execute("UPDATE inspections SET status=?, decided_at=?, updated_at=? WHERE id=?",
-                 (status, ts if status in ("approved", "rejected") else None, ts, inspection_id))
-    db.log_event(conn, "inspection", inspection_id, f"review_{decision}", reviewer, {"comments": comments})
-    return {"inspection_id": inspection_id, "status": status}
+def evidence_view(e: dict[str, Any], people: dict[str, dict[str, Any]], urls: dict[str, str]) -> dict[str, Any]:
+    return {"id": e["id"], "task_id": e["task_id"], "created_by": _person(people.get(e["created_by"])),
+            "text": e["text"], "photo_url": urls.get(e["photo_path"]) if e["photo_path"] else None,
+            "ai_assessment": e["ai_assessment"], "created_at": e["created_at"]}
 
 
-# ---------------------------------------------------------------- findings --
-
-def transition_finding(conn: sqlite3.Connection, finding_id: str, *, to: str, actor: str,
-                       assigned_to: str | None = None, note: str | None = None) -> dict[str, Any]:
-    f = db.row(conn.execute("SELECT * FROM findings WHERE id = ?", (finding_id,)).fetchone())
-    if not f:
-        raise WorkflowError("Finding not found", 404)
-    if to not in FINDING_TRANSITIONS.get(f["status"], set()):
-        raise WorkflowError(f"Finding cannot move from '{f['status']}' to '{to}'")
-    ts = db.now()
-    ca = db.row(conn.execute("SELECT * FROM corrective_actions WHERE finding_id = ? ORDER BY created_at DESC LIMIT 1",
-                             (finding_id,)).fetchone())
-    note = (note or "").strip() or None
-    if to == "assigned":
-        assigned_to = (assigned_to or f.get("assigned_to") or "").strip()
-        if not assigned_to:
-            raise WorkflowError("assigned_to is required", 422)
-        conn.execute("UPDATE findings SET assigned_to=? WHERE id=?", (assigned_to, finding_id))
-        if ca:
-            conn.execute("UPDATE corrective_actions SET status='assigned', assigned_to=?, updated_at=? WHERE id=?",
-                         (assigned_to, ts, ca["id"]))
-        else:
-            conn.execute("INSERT INTO corrective_actions VALUES (?,?,?,?,?,?,?,?,?)",
-                         (db.new_id("ca"), finding_id, assigned_to, None, "assigned", None, None, ts, ts))
-    elif to == "void":
-        if not note:
-            raise WorkflowError("A reason is required to void a finding", 422)
-    elif to == "action_recorded":
-        if not note:
-            raise WorkflowError("Describe the corrective action taken", 422)
-        conn.execute("UPDATE corrective_actions SET status='action_recorded', description=?, recorded_by=?, updated_at=? "
-                     "WHERE id=?", (note, actor, ts, ca["id"]))
-    elif to == "awaiting_verification":
-        conn.execute("UPDATE corrective_actions SET status='awaiting_verification', updated_at=? WHERE id=?", (ts, ca["id"]))
-    elif to == "closed":
-        if ca and ca.get("recorded_by") and ca["recorded_by"].strip().lower() == actor.strip().lower():
-            raise WorkflowError("Verification must be performed by someone other than the person who did the work", 403)
-        after = conn.execute("SELECT COUNT(*) FROM evidence WHERE finding_id = ? AND kind = 'corrective_after'",
-                             (finding_id,)).fetchone()[0]
-        if not after:
-            raise WorkflowError("An 'after' photo of the corrected condition is required to close the finding", 422)
-        conn.execute("UPDATE corrective_actions SET status='closed', verified_by=?, updated_at=? WHERE id=?",
-                     (actor, ts, ca["id"]))
-    conn.execute("UPDATE findings SET status=?, updated_at=?, closed_at=? WHERE id=?",
-                 (to, ts, ts if to in ("closed", "void") else None, finding_id))
-    db.log_event(conn, "finding", finding_id, f"finding_{to}", actor,
-                 {"note": note, "assigned_to": assigned_to, "inspection_id": f["inspection_id"]})
-    return {"finding_id": finding_id, "status": to}
+def media_view(m: dict[str, Any], urls: dict[str, str]) -> dict[str, Any]:
+    title, metadata = i18n.media(m["title"], m["metadata"])
+    metadata = {k: v for k, v in metadata.items() if k != "translations"}  # the reader gets one language
+    return {"id": m["id"], "title": title, "kind": m["kind"], "metadata": metadata,
+            "created_at": m["created_at"], "url": urls.get(m["storage_path"])}
 
 
-# ------------------------------------------------------------------- views --
+# ------------------------------------------------------------------ tasks --
 
-def component_statuses(items: list[dict[str, Any]], findings: list[dict[str, Any]]) -> dict[str, str]:
-    by_comp: dict[str, list[dict[str, Any]]] = {}
-    for it in items:
-        by_comp.setdefault(it["component_id"], []).append(it)
-    open_by_comp = {f["component_id"] for f in findings if f["status"] in OPEN_FINDING}
-    out: dict[str, str] = {}
-    for comp, its in by_comp.items():
-        statuses = {i["status"] for i in its}
-        if "failed" in statuses or comp in open_by_comp:
-            out[comp] = "finding"
-        elif statuses & AWAITING_ITEM:
-            out[comp] = "pending"
-        elif statuses <= {"passed", "not_applicable"}:
-            out[comp] = "accepted"
-        elif statuses & {"passed", "not_applicable"}:
-            out[comp] = "in_progress"
-        else:
-            out[comp] = "not_inspected"
-    for comp in open_by_comp - set(out):
-        out[comp] = "finding"
-    return out
+def set_status(user: dict[str, Any], task_id: str, status: str) -> dict[str, Any]:
+    if status not in TASK_STATUSES:
+        raise WorkflowError(f"Status must be one of {', '.join(TASK_STATUSES)}", 422)
+    _, job = task_for(user, task_id)
+    db.update("tasks", {"status": status, "updated_at": db.now()}, {"id": task_id})
+    return job
+
+
+def add_evidence(user: dict[str, Any], task_id: str, *, text: str | None, photo: bytes | None) -> dict[str, Any]:
+    """Store a photo and/or text on a task. Returns the evidence row (the AI review runs separately)."""
+    text = (text or "").strip()[:MAX_TEXT] or None
+    if not text and not photo:
+        raise WorkflowError("Add a photo, a note, or both", 422)
+    _, job = task_for(user, task_id)
+    evidence_id = db.new_id()
+    path = f"{job['company_id']}/evidence/{task_id}/{evidence_id}.jpg" if photo else None
+    if photo:
+        blobs.put(path, photo, "image/jpeg")
+    row = {"id": evidence_id, "task_id": task_id, "created_by": user["id"], "photo_path": path, "text": text,
+           "ai_assessment": None, "created_at": db.now()}
+    try:
+        db.insert("evidence", row)
+    except Exception:
+        if path:
+            blobs.delete([path])  # no orphan files
+        raise
+    db.update("tasks", {"updated_at": db.now()}, {"id": task_id})
+    return row
+
+
+def assess_evidence(evidence_id: str, image_checks: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Run the AI photo review for one evidence photo and store the outcome on the row."""
+    e = db.first("evidence", {"id": evidence_id})
+    task = db.first("tasks", {"id": e["task_id"]})
+    job = db.first("jobs", {"id": task["job_id"]})
+    company = db.first("companies", {"id": job["company_id"]})
+    links = db.select("task_media", {"task_id": task["id"]})
+    media = db.select("media", {"id": [l["media_id"] for l in links]})
+    parts = []
+    for m in media:
+        wanted = next((set(l["node_ids"]) for l in links if l["media_id"] == m["id"]), set())
+        parts += [p for p in (m["metadata"] or {}).get("parts", []) if p.get("id") in wanted]
+    data = blobs.get(e["photo_path"])
+    if data is None:
+        raise WorkflowError("Evidence photo missing", 404)
+    if image_checks is None:
+        image_checks = (e["ai_assessment"] or {}).get("image_checks")
+    ctx = ai.build_context(company=company["name"], job_title=job["title"], task=task["description"], parts=parts,
+                           media_titles=[m["title"] for m in media], worker_note=e["text"],
+                           image_checks=image_checks, language=i18n.current_lang.get())
+    outcome = ai.get_provider().assess(data, ctx)
+    assessment = {"status": outcome.status, "provider": outcome.provider, "model": outcome.model,
+                  "result": outcome.result, "error": outcome.error, "latency_ms": outcome.latency_ms,
+                  "image_checks": image_checks, "assessed_at": db.now()}
+    db.update("evidence", {"ai_assessment": assessment}, {"id": evidence_id})
+    return assessment

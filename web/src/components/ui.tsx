@@ -1,159 +1,65 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  Armchair, Ban, BadgeCheck, Circle, CircleAlert, CircleCheck, CircleDashed, CircleX, Clock, FireExtinguisher,
-  GraduationCap, Pointer, RefreshCw, Send, Shapes, TriangleAlert, Undo2, Zap, type LucideIcon,
-} from "lucide-react";
-import type { ComponentStatus, Issue, ItemStatus } from "../api";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Circle, CircleAlert, CircleCheck, CircleX, Flag, type LucideIcon } from "lucide-react";
+import type { Counts, TaskStatus } from "../api";
 import { locale, t } from "../i18n";
 
-// Every status also has an icon, so it can be recognised at a glance (and without reading English).
-export const ITEM_ICON: Record<ItemStatus, LucideIcon> = {
+// Every status has an icon too, so it can be recognised at a glance (and without reading).
+export const TASK_ICON: Record<TaskStatus, LucideIcon> = {
   pending: Circle,
-  evidence_submitted: Pointer,
-  more_evidence_requested: RefreshCw,
   passed: CircleCheck,
-  failed: TriangleAlert,
-  not_applicable: Ban,
+  failed: CircleX,
+  flagged: Flag,
 };
 
-export const COMPONENT_ICON: Record<ComponentStatus, LucideIcon> = {
-  not_inspected: Circle,
-  in_progress: CircleDashed,
-  pending: CircleAlert,
-  accepted: CircleCheck,
-  finding: TriangleAlert,
-};
-
-export const INSPECTION_ICON: Record<string, LucideIcon> = {
-  in_progress: Clock,
-  submitted: Send,
-  changes_requested: Undo2,
-  approved: CircleCheck,
-  rejected: CircleX,
-};
-
-export const INDUSTRY_ICON: Record<string, LucideIcon> = {
-  Furniture: Armchair,
-  Electrical: Zap,
-  "Facility Safety": FireExtinguisher,
-};
-
-// Plain-language labels: the people using the app are not necessarily technical.
-export const ITEM_LABEL: Record<ItemStatus, string> = {
+export const TASK_LABEL: Record<TaskStatus, string> = {
   pending: "To do",
-  evidence_submitted: "Choose a result",
-  more_evidence_requested: "New photo needed",
-  passed: "Looks good",
-  failed: "Problem reported",
-  not_applicable: "Doesn't apply",
+  passed: "Passed",
+  failed: "Failed",
+  flagged: "Flagged",
 };
 
-// Server messages rephrased for non-technical users (the reasons below them are already plain sentences).
-const FRIENDLY_ERRORS: Record<string, string> = {
-  "Requirement cannot be dispositioned": "Before you can save this:",
-  "Inspection cannot be submitted yet": "A few checks are still missing. Tap one to go there:",
-  "Cannot reach the server. Check the network connection.": "No connection to the server. Check the Wi-Fi or mobile data and try again.",
-};
-
-export const ITEM_TONE: Record<ItemStatus, string> = {
+export const TASK_TONE: Record<TaskStatus, string> = {
   pending: "neutral",
-  evidence_submitted: "amber",
-  more_evidence_requested: "amber",
   passed: "green",
   failed: "red",
-  not_applicable: "neutral",
+  flagged: "purple",
 };
 
-// Component-level states shared by every industry. "Inspected" means all requirements were dispositioned by a
-// person (passed or N/A); attaching a photo alone never makes a component "Inspected".
-export const COMPONENT_LABEL: Record<ComponentStatus, string> = {
-  not_inspected: "Not checked yet",
-  in_progress: "Partly done",
-  pending: "Needs attention",
-  accepted: "Done",
-  finding: "Problem reported",
-};
-
-export const SEVERITY_LABEL: Record<string, string> = {
-  low: "Minor", medium: "Moderate", high: "Serious", critical: "Critical: stop using it",
-};
-
-export const INSPECTION_LABEL: Record<string, string> = {
-  in_progress: "In progress",
-  submitted: "Sent for review",
-  changes_requested: "Changes requested",
-  approved: "Approved",
-  rejected: "Rejected",
-};
-
-export function ModeBadge({ mode }: { mode: string | undefined | null }) {
-  if (mode !== "demo") return <Chip tone="blue" icon={BadgeCheck}>{t("Real inspection")}</Chip>;
-  return <span className="chip chip-demo" title={t("Uses photos prepared in advance")}><GraduationCap aria-hidden />{t("Practice")}</span>;
-}
-
-export function IndustryChip({ industry }: { industry: string | undefined | null }) {
-  const slug = (industry ?? "general").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  const Icon = INDUSTRY_ICON[industry ?? ""] ?? Shapes;
-  return <span className={`chip chip-industry chip-ind-${slug}`}><Icon aria-hidden />{t(industry ?? "General")}</span>;
-}
-
-export const COMPONENT_TONE: Record<ComponentStatus, string> = {
-  not_inspected: "neutral",
-  in_progress: "amber",
-  pending: "amber",
-  accepted: "green",
-  finding: "red",
-};
-
-export const INSPECTION_TONE: Record<string, string> = {
-  in_progress: "blue",
-  changes_requested: "amber",
-  submitted: "amber",
-  approved: "green",
-  rejected: "red",
-};
-
-export function Chip({ tone = "neutral", icon: Icon, children }: { tone?: string; icon?: LucideIcon; children: React.ReactNode }) {
+export function Chip({ tone = "neutral", icon: Icon, children }: { tone?: string; icon?: LucideIcon; children: ReactNode }) {
   return <span className={`chip chip-${tone}`}>{Icon && <Icon aria-hidden />}{children}</span>;
 }
 
-// Status chips: colour + icon + plain words, the same everywhere.
-export const ItemChip = ({ status }: { status: ItemStatus }) =>
-  <Chip tone={ITEM_TONE[status]} icon={ITEM_ICON[status]}>{t(ITEM_LABEL[status])}</Chip>;
-export const ComponentChip = ({ status }: { status: ComponentStatus }) =>
-  <Chip tone={COMPONENT_TONE[status]} icon={COMPONENT_ICON[status]}>{t(COMPONENT_LABEL[status])}</Chip>;
-export const InspectionChip = ({ status }: { status: string }) =>
-  <Chip tone={INSPECTION_TONE[status]} icon={INSPECTION_ICON[status]}>{t(INSPECTION_LABEL[status] ?? status.replace(/_/g, " "))}</Chip>;
+export function StatusChip({ status }: { status: TaskStatus }) {
+  return <Chip tone={TASK_TONE[status]} icon={TASK_ICON[status]}>{t(TASK_LABEL[status])}</Chip>;
+}
 
-export function Progress({ done, total }: { done: number; total: number }) {
-  const pct = total ? Math.round((done / total) * 100) : 0;
+// Progress of a job: tasks with a decision (passed or failed) out of all tasks.
+export function Progress({ counts }: { counts: Counts }) {
+  const done = counts.passed + counts.failed;
+  const pct = counts.total ? Math.round((done / counts.total) * 100) : 0;
   return (
-    <div className="progress" aria-label={t("{done} of {total} required checks done", { done, total })}>
+    <div className="progress" aria-label={t("{done} of {total} tasks done", { done, total: counts.total })}>
       <div className="progress-bar" style={{ width: `${pct}%` }} />
-      <span>{t("{done} of {total} required checks done", { done, total })}</span>
+      <span>{t("{done} of {total} tasks done", { done, total: counts.total })}</span>
     </div>
   );
 }
 
-export function ErrorBox({ error, onSelect }: { error: { message: string; issues?: Issue[] } | null; onSelect?: (i: Issue) => void }) {
-  if (!error) return null;
+export function CountChips({ counts }: { counts: Counts }) {
   return (
-    <div className="error-box" role="alert">
-      <strong className="with-icon"><CircleAlert aria-hidden />{t(FRIENDLY_ERRORS[error.message] ?? error.message)}</strong>
-      {!!error.issues?.length && (
-        <ul>
-          {error.issues.map((i, n) => (
-            <li key={n}>
-              {onSelect && i.component_id ? (
-                <button className="link" onClick={() => onSelect(i)}>{i.title ?? i.component_id}</button>
-              ) : i.title ? <b>{i.title}</b> : null}
-              {i.title || i.component_id ? ": " : ""}{t(i.reason)}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <span className="row-inline">
+      {counts.flagged > 0 && <Chip tone="purple" icon={Flag}>{t("{n} flagged", { n: counts.flagged })}</Chip>}
+      {counts.failed > 0 && <Chip tone="red" icon={CircleX}>{t("{n} failed", { n: counts.failed })}</Chip>}
+      {counts.passed > 0 && <Chip tone="green" icon={CircleCheck}>{t("{n} passed", { n: counts.passed })}</Chip>}
+      {counts.pending > 0 && <Chip icon={Circle}>{t("{n} pending", { n: counts.pending })}</Chip>}
+    </span>
   );
+}
+
+// Server and client messages are English keys; shown in the reader's language.
+export function ErrorBox({ error }: { error: string | null }) {
+  if (!error) return null;
+  return <div className="error-box with-icon-block" role="alert"><CircleAlert aria-hidden />{t(error)}</div>;
 }
 
 export function usePolling(fn: () => void, ms: number, deps: unknown[] = []) {
@@ -178,7 +84,7 @@ export function Lightbox({ src, onClose }: { src: string | null; onClose: () => 
   if (!src) return null;
   return (
     <div className="lightbox" onClick={onClose} role="dialog">
-      <img src={src} alt={t("Evidence")} />
+      <img src={src} alt={t("Photo")} />
     </div>
   );
 }

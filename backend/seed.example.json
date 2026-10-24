@@ -1,0 +1,11 @@
+{
+  "companies": [
+    {
+      "name": "Border Hackers Demo Co",
+      "users": [
+        {"email": "you+employer@gmail.com", "username": "Boss", "user_class": "employer", "password": "change-me-1"},
+        {"email": "you+employee@gmail.com", "username": "Field Tech", "user_class": "employee", "password": "change-me-2"}
+      ]
+    }
+  ]
+}

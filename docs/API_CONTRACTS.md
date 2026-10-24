@@ -1,42 +1,39 @@
 # API contracts
 
-The live OpenAPI schema is at `http://<host>:8000/docs` (`/openapi.json`). All bodies are JSON unless noted.
-Workflow rule violations return `409` (state conflict) or `422` (missing evidence or justification), with
-`{"detail": str, "issues": [{reason, item_id?, requirement_id?, component_id?, title?}]}`.
+The live OpenAPI schema is at `http://<host>:8000/docs` (`/openapi.json`). Bodies are JSON unless noted.
+Errors return `{"detail": str}`: `401` not logged in or expired, `403` wrong role, `404` not found **or not
+visible to you** (other company, or a job not assigned to you), `409` conflict, `415` file type, `422` validation,
+`503` a service is not configured (AI, document search, login keys).
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/health` | App label, AI provider availability |
-| GET | `/api/products` | Revisions + instances |
-| GET | `/api/revisions/{product_id@rev}` | Components, requirements, `assembly_url`, documents |
-| GET | `/api/instances/{serial}` | Product passport: inspections, findings, timeline |
-| GET | `/api/packages` | Packages on disk + validation report + load status |
-| POST | `/api/packages/{dir}/load` `{actor}` | Validate + import (409 on immutable-revision conflict) |
-| POST | `/api/inspections` `{serial_number, inspector}` | Start (or resume the open) inspection |
-| GET | `/api/inspections?status=` | List |
-| GET | `/api/inspections/{id}` | Full state: items (with evidence + assessments), findings, `component_status`, `progress`, `readiness`, activity |
-| POST | `/api/inspections/{id}/items/{item}/evidence` *(multipart: file, actor, note?, assess?)* | Store photo, run image checks + AI, return assessment + state |
-| POST | `/api/evidence/{id}/assess` | Re-run the AI assessment |
-| GET | `/api/evidence/{id}/file` | Image |
-| POST | `/api/inspections/{id}/items/{item}/decision` `{decision: pass/fail/not_applicable, actor, observation?, manual_confirmed?, override_note?, finding?: {description, severity}}` | Inspector disposition |
-| POST | `/api/inspections/{id}/submit` `{actor}` | Completion validation (409 + blocking issues) |
-| POST | `/api/inspections/{id}/review` `{reviewer, decision: approve/reject/request_evidence, comments?, item_ids?}` | Supervisor decision (reviewer ≠ inspector) |
-| GET | `/api/findings?status=` | Findings + corrective action + evidence |
-| POST | `/api/findings/{id}/transition` `{to, actor, assigned_to?, note?}` | Finding lifecycle |
-| POST | `/api/findings/{id}/evidence` *(multipart: file, actor, kind=corrective_before/after)* | Before/after photos |
-| GET | `/api/activity` | Recent activity events |
-| GET | `/package-files/{dir}/...` | Package files (GLB, drawings, BOM) |
+**Login:** the web client signs in with Supabase Auth (email + password) and sends
+`Authorization: Bearer <access token>` on every call. The backend verifies the token against the project's public
+keys and loads the profile from `users`.
 
-AI assessment result (validated schema): `summary, correct_area_visible (yes/no/uncertain), image_quality,
-evidence_sufficient, observations[], conditions_for_human_review[], missing_information[],
-recommended_action (accept_for_human_review/retake_photo/flag_for_human_review), retake_guidance, uncertainty, limitations[]`.
-Assessment `status`: `completed | unavailable | failed | refused`.
+| Method | Path | Who | Purpose |
+|---|---|---|---|
+| GET | `/api/health` | anyone | Version, data backend, AI and document search availability |
+| GET | `/api/config` | anyone | Supabase URL + publishable key for the browser login |
+| GET | `/api/me` | logged in | Profile: `id, username, user_class, company_id, company{id,name}` |
+| GET | `/api/users` | logged in | People in your company (for assigning jobs) |
+| GET | `/api/jobs` | logged in | Employer: all company jobs. Employee: jobs assigned to them. Each with `counts` per task status |
+| POST | `/api/jobs` `{title, assigned_to, tasks:[{description, media:[{media_id, node_ids}]}]}` | employer | Create a job; returns the job detail |
+| GET | `/api/jobs/{id}` | logged in | Job detail: tasks in order, each with `evidence` and linked `media` (signed URLs) |
+| DELETE | `/api/jobs/{id}` | employer | Delete the job, its tasks, evidence and photos |
+| POST | `/api/tasks/{id}/status` `{status}` | logged in | `pending`, `passed`, `failed` or `flagged`; returns the job detail |
+| POST | `/api/tasks/{id}/evidence` *(multipart: file?, text?, assess?)* | logged in | Photo and/or note. Photos get image checks + the AI review unless `assess=false`; returns the job detail |
+| POST | `/api/evidence/{id}/assess` | logged in | Re-run the AI review of a photo |
+| GET | `/api/media` | employer | Company media library (signed URLs, searchable chunk counts) |
+| POST | `/api/media` *(multipart: file, title?)* | employer | Upload `.glb`, `.pdf`, `.txt`, `.jpg/.png/.webp`. Documents are indexed for search; the response's `indexing` says whether that worked |
+| DELETE | `/api/media/{id}` | employer | Delete a file, its search chunks and task links |
+| POST | `/api/ask` `{question}` | logged in | Answer from the company's documents: `{answer, sources:[{n, title, page, cited_text}]}` |
 
-## Multi-industry additions
-| Method | Path | Purpose |
-|---|---|---|
-| POST | `/api/inspections` `{serial_number, inspector, mode: live/demo}` | Mode is fixed per inspection |
-| GET | `/api/inspections?status=&industry=` | Rows include `mode`, `industry`, `asset_category` |
-| POST | `/api/inspections/{id}/items/{item}/demo-evidence` `{demo_id, actor, live_ai}` | Demo inspections only; live AI first, else the labelled precomputed result, else "unavailable" |
-| GET | `/api/dashboard?industry=` | Totals, by industry, asset, status, finding severity, recent |
-Revisions include `industry`, `asset_category`, `demo_evidence[]`, components' `specs`/`articulation`. Assessments include `origin` and `captured_at`.
+## Shapes
+- **Task status** is set only by people. `flagged` = escalated to the employer, who replies with a text evidence
+  entry and then sets `passed` or `failed`.
+- **Evidence:** `{id, task_id, created_by{id,username,user_class}, text, photo_url, ai_assessment, created_at}`.
+  `ai_assessment` is `{status: completed|unavailable|failed|refused, provider, model, result, error, latency_ms,
+  image_checks}`. `result` follows `AssessmentResult` in `backend/app/ai.py` (advisory, never a certification).
+- **Media:** `{id, title, kind: model_3d|document|image, url, metadata, created_at}`. For 3D models,
+  `metadata.parts` lists the selectable parts (`id, name, model_node_ids, explosion, articulation, specs...`);
+  a task's `node_ids` are part ids from that list.
+- **Signed URLs** (photos, media) expire after one hour; reload the job to get fresh ones.

@@ -1,456 +1,184 @@
-"""FastAPI application: REST API (OpenAPI at /docs), package files, evidence files and the web client."""
+"""FastAPI application: REST API (OpenAPI at /docs) and the built web client.
+
+Every /api route except /api/health and /api/config needs a Supabase login (see auth.py). Access rules live in
+workflow.py; this module only translates HTTP to those calls.
+"""
 from __future__ import annotations
 
-import base64
-import hmac
 import threading
 from contextlib import asynccontextmanager
-from pathlib import Path
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, Response, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse, Response
 from PIL import Image, UnidentifiedImageError
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 from starlette.concurrency import run_in_threadpool
 
-from . import ai, catalog, db, i18n, workflow
+from . import ai, db, i18n, media, rag, workflow
+from .auth import current_user, employer
+from .blobs import blobs
 from .config import settings
-from .packages import discover_packages, validate_package
 from .workflow import WorkflowError
 
-API_VERSION = "0.1.0"
+API_VERSION = "0.2.0"
 
+User = Annotated[dict[str, Any], Depends(current_user)]
+Employer = Annotated[dict[str, Any], Depends(employer)]
 
 _ready = False
 _ready_lock = threading.Lock()
 
 
+def _local_db_missing() -> bool:
+    return settings.data_backend == "local" and not settings.db_path.exists()
+
+
 def ensure_ready() -> None:
-    """Create the schema and load packages. Idempotent; re-runs if a serverless /tmp was wiped."""
+    """Create the schema (local) or check it exists (Supabase). Idempotent."""
     global _ready
-    if _ready and settings.db_path.exists():
+    if _ready and not _local_db_missing():
         return
     with _ready_lock:  # concurrent first requests on a cold instance initialize once
-        if _ready and settings.db_path.exists():
+        if _ready and not _local_db_missing():
             return
         db.init_db()
-        settings.evidence_dir.mkdir(parents=True, exist_ok=True)
-        for result in catalog.bootstrap():
-            print(f"[packages] {result.get('status')}: {result.get('revision_id') or result.get('package_dir')} "
-                  f"{result.get('error', '')}")
         _ready = True
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    ensure_ready()
+    try:
+        ensure_ready()
+    except db.SchemaMissing as exc:  # keep serving; requests answer 503 with the fix until the schema exists
+        print(f"[db] {exc}", flush=True)
     yield
 
 
-app = FastAPI(title="Field Execution Platform API", version=API_VERSION, lifespan=lifespan,
-              description="Engineering-driven inspection platform (hackathon MVP). Internal id: field-execution-platform.")
+app = FastAPI(title="Field Assistant API", version=API_VERSION, lifespan=lifespan,
+              description="Jobs, tasks and evidence for field work (hackathon MVP).")
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["*"], allow_headers=["*"])
 
 
 @app.middleware("http")
-async def access_and_readiness(request: Request, call_next):
-    # Display language for this request (content overlays and AI replies); English when absent.
+async def readiness(request: Request, call_next):
     i18n.current_lang.set(i18n.pick(request.headers.get("x-lang") or request.query_params.get("lang")))
-    # Shared-password gate for hosted test deployments (no user accounts in the MVP).
-    if settings.access_password:
-        ok = False
-        header = request.headers.get("authorization", "")
-        if header.lower().startswith("basic "):
-            try:
-                _, _, password = base64.b64decode(header[6:]).decode("utf-8").partition(":")
-                ok = hmac.compare_digest(password.encode(), settings.access_password.encode())
-            except (ValueError, UnicodeDecodeError):
-                ok = False
-        if not ok:
-            return Response("Password required", status_code=401,
-                            headers={"WWW-Authenticate": 'Basic realm="Field Assistant", charset="UTF-8"'})
-    if not _ready or not settings.db_path.exists():
-        await run_in_threadpool(ensure_ready)
+    if request.url.path.startswith("/api/") and (not _ready or _local_db_missing()):
+        try:
+            await run_in_threadpool(ensure_ready)
+        except db.SchemaMissing as exc:
+            return JSONResponse(status_code=503, content={"detail": str(exc)})
     return await call_next(request)
 
 
 @app.exception_handler(WorkflowError)
-async def workflow_error_handler(_: Request, exc: WorkflowError):
-    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message, "issues": exc.details})
+async def workflow_error(_: Request, exc: WorkflowError):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
+
+
+@app.exception_handler(rag.RagError)
+async def rag_error(_: Request, exc: rag.RagError):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
+
+
+@app.exception_handler(db.Conflict)
+async def conflict(_: Request, exc: db.Conflict):
+    return JSONResponse(status_code=409, content={"detail": "This record already exists or was just changed. "
+                                                            "Reload and try again."})
 
 
 # ------------------------------------------------------------------ models --
 
-# Names are recorded on every action; blank or whitespace-only names are rejected.
-Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
+class TaskMediaIn(BaseModel):
+    media_id: str
+    node_ids: list[str] = []  # part ids from the model's parts list; empty = the whole model
 
 
-class StartInspection(BaseModel):
-    serial_number: str
-    inspector: Name
-    mode: Literal["live", "demo"] = "live"
+class TaskIn(BaseModel):
+    description: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
+    media: list[TaskMediaIn] = []
 
 
-class UseDemoEvidence(BaseModel):
-    demo_id: str
-    actor: Name
-    live_ai: bool = True  # try a real model call first; fall back to the labelled precomputed result
+class JobIn(BaseModel):
+    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+    assigned_to: str
+    tasks: list[TaskIn] = Field(min_length=1, max_length=100)
 
 
-class FindingIn(BaseModel):
-    description: str
-    severity: Literal["low", "medium", "high", "critical"] = "medium"
+class StatusIn(BaseModel):
+    status: str
 
 
-class Decision(BaseModel):
-    decision: Literal["pass", "fail", "not_applicable"]
-    actor: Name
-    observation: str | None = None
-    manual_confirmed: bool = False
-    override_note: str | None = None
-    finding: FindingIn | None = None
-
-
-class Actor(BaseModel):
-    actor: Name
-
-
-class ReviewIn(BaseModel):
-    reviewer: Name
-    decision: Literal["approve", "reject", "request_evidence"]
-    comments: str | None = None
-    item_ids: list[str] = []
-
-
-class FindingTransition(BaseModel):
-    to: Literal["assigned", "void", "action_recorded", "awaiting_verification", "closed"]
-    actor: Name
-    assigned_to: str | None = None
-    note: str | None = None
+class AskIn(BaseModel):
+    question: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=1000)]
 
 
 # ------------------------------------------------------------------ system --
 
 @app.get("/api/health")
 def health() -> dict[str, Any]:
-    provider = ai.get_provider()
-    available, detail = provider.available()
+    available, detail = ai.get_provider().available()
     return {"status": "ok", "version": API_VERSION, "app_label": settings.app_label,
-            "storage": settings.storage_mode,
-            "ai": {"provider": provider.name, "available": available, "detail": detail}}
+            "data_backend": settings.data_backend, "storage": settings.storage_mode,
+            "ai": {"available": available, "detail": detail},
+            "document_search": bool(settings.voyage_api_key)}
 
 
-# ----------------------------------------------------------------- catalog --
-
-@app.get("/api/products")
-def list_products() -> list[dict[str, Any]]:
-    with db.read() as conn:
-        revs = db.rows(conn.execute(
-            "SELECT r.id, r.revision, r.product_model_id AS product_id, m.name AS product_name, "
-            "m.description, mf.name AS manufacturer, p.id AS package_id, p.source_dir, p.manifest, "
-            "(SELECT COUNT(*) FROM components c WHERE c.product_revision_id = r.id) AS component_count, "
-            "(SELECT COUNT(*) FROM inspection_requirements q WHERE q.product_revision_id = r.id) AS requirement_count "
-            "FROM product_revisions r JOIN product_models m ON m.id = r.product_model_id "
-            "JOIN manufacturers mf ON mf.id = m.manufacturer_id "
-            "JOIN engineering_packages p ON p.id = r.engineering_package_id ORDER BY m.name, r.revision").fetchall())
-        for r in revs:
-            r["instances"] = db.rows(conn.execute(
-                "SELECT i.serial_number, i.metadata, (SELECT status FROM inspections s WHERE s.product_instance_id = i.id "
-                "ORDER BY s.started_at DESC LIMIT 1) AS last_inspection_status, (SELECT mode FROM inspections s "
-                "WHERE s.product_instance_id = i.id ORDER BY s.started_at DESC LIMIT 1) AS last_inspection_mode "
-                "FROM product_instances i WHERE i.product_revision_id = ? ORDER BY i.serial_number", (r["id"],)).fetchall())
-            manifest = r.pop("manifest")
-            r["demonstration_package"] = bool(manifest.get("demonstration_package"))
-            r["has_3d"] = bool(manifest.get("assembly_file"))
-            r["industry"] = manifest.get("industry") or "General"
-            r["asset_category"] = manifest.get("asset_category")
-            r["demo_evidence_count"] = len(catalog.demo_evidence(r["source_dir"]))
-            tr = i18n.overlay(r["source_dir"])
-            i18n.product_fields(r, tr)
-            for i in r["instances"]:
-                i["metadata"] = i18n.location(i["serial_number"], i["metadata"], tr)
-    return revs
+@app.get("/api/config")
+def client_config() -> dict[str, Any]:
+    """Public settings the web client needs to log in (the publishable key is meant for browsers)."""
+    return {"app_label": settings.app_label, "supabase_url": settings.supabase_url,
+            "supabase_publishable_key": settings.supabase_publishable_key}
 
 
-@app.get("/api/revisions/{revision_id}")
-def get_revision(revision_id: str) -> dict[str, Any]:
-    with db.read() as conn:
-        rev = catalog.get_revision(conn, revision_id)
-    if not rev:
-        raise HTTPException(404, "Revision not found")
-    return i18n.revision(rev)
+@app.get("/api/me")
+def me(user: User) -> dict[str, Any]:
+    company = db.first("companies", {"id": user["company_id"]})
+    return {**user, "company": company}
 
 
-@app.get("/api/instances/{serial_number}")
-def product_passport(serial_number: str) -> dict[str, Any]:
-    with db.read() as conn:
-        inst = db.row(conn.execute("SELECT * FROM product_instances WHERE serial_number = ?",
-                                   (serial_number,)).fetchone())
-        if not inst:
-            raise HTTPException(404, "Product instance not found")
-        rev = db.row(conn.execute(
-            "SELECT r.id, r.revision, m.name AS product_name, mf.name AS manufacturer, p.source_dir "
-            "FROM product_revisions r JOIN product_models m ON m.id = r.product_model_id "
-            "JOIN manufacturers mf ON mf.id = m.manufacturer_id JOIN engineering_packages p "
-            "ON p.id = r.engineering_package_id WHERE r.id = ?", (inst["product_revision_id"],)).fetchone())
-        inspections = db.rows(conn.execute(
-            "SELECT * FROM inspections WHERE product_instance_id = ? ORDER BY started_at DESC", (inst["id"],)).fetchall())
-        findings = db.rows(conn.execute(
-            "SELECT f.*, s.mode FROM findings f JOIN inspections s ON s.id = f.inspection_id "
-            "WHERE f.product_instance_id = ? ORDER BY f.created_at DESC", (inst["id"],)).fetchall())
-        ids = [inst["id"]] + [i["id"] for i in inspections] + [f["id"] for f in findings]
-        marks = ",".join("?" * len(ids))
-        activity = db.rows(conn.execute(
-            f"SELECT * FROM activity_events WHERE entity_id IN ({marks}) OR json_extract(metadata,'$.inspection_id') "
-            f"IN ({marks}) ORDER BY created_at DESC LIMIT 200", ids + ids).fetchall())
-    tr = i18n.overlay(rev["source_dir"])
-    i18n.product_fields(rev, tr)
-    inst["metadata"] = i18n.location(inst["serial_number"], inst["metadata"], tr)
-    with db.read() as conn:
-        names = dict(conn.execute("SELECT id, name FROM components WHERE product_revision_id = ?",
-                                  (inst["product_revision_id"],)).fetchall())
-    comp_tr = tr.get("components") or {}
-    for f in findings:
-        f["component_name"] = (comp_tr.get(f["component_id"]) or {}).get("name") or names.get(f["component_id"])
-    return {"instance": inst, "revision": rev, "inspections": inspections, "findings": findings, "activity": activity}
+@app.get("/api/users")
+def users(user: User) -> list[dict[str, Any]]:
+    """People in the user's company (the employer uses this to assign jobs)."""
+    return sorted(workflow.company_users(user["company_id"]).values(), key=lambda u: (u["user_class"], u["username"]))
 
 
-# ---------------------------------------------------------------- packages --
+# -------------------------------------------------------------------- jobs --
 
-@app.get("/api/packages")
-def list_packages() -> list[dict[str, Any]]:
-    out = []
-    with db.read() as conn:
-        for pkg in discover_packages(settings.packages_dir):
-            summary = validate_package(pkg).summary()
-            loaded = db.row(conn.execute(
-                "SELECT id, content_hash, created_at FROM engineering_packages WHERE source_dir = ? "
-                "ORDER BY created_at DESC LIMIT 1", (pkg.name,)).fetchone())
-            summary["loaded"] = bool(loaded)
-            summary["loaded_at"] = loaded["created_at"] if loaded else None
-            summary["loaded_matches_disk"] = bool(loaded and loaded["content_hash"] == summary["content_hash"])
-            out.append(summary)
-    return out
+@app.get("/api/jobs")
+def list_jobs(user: User) -> list[dict[str, Any]]:
+    return workflow.list_jobs(user)
 
 
-@app.post("/api/packages/{package_dir}/load")
-def load_package(package_dir: str, body: Actor) -> dict[str, Any]:
-    try:
-        path = catalog.find_package_dir(package_dir)
-    except FileNotFoundError:
-        raise HTTPException(404, "Package not found")
-    try:
-        return catalog.load_package(path, actor=body.actor)
-    except catalog.PackageInvalid as exc:
-        raise HTTPException(422, {"message": "Package failed validation", "errors": exc.report.errors})
-    except catalog.PackageConflict as exc:
-        raise HTTPException(409, str(exc))
+@app.post("/api/jobs")
+def create_job(body: JobIn, user: Employer) -> dict[str, Any]:
+    job_id = workflow.create_job(user, title=body.title, assigned_to=body.assigned_to,
+                                 tasks=[t.model_dump() for t in body.tasks])
+    return workflow.job_detail(user, job_id)
 
 
-# ------------------------------------------------------------- inspections --
-
-def _source_dir(conn, revision_id: str) -> str | None:
-    row = conn.execute("SELECT p.source_dir FROM product_revisions r JOIN engineering_packages p "
-                       "ON p.id = r.engineering_package_id WHERE r.id = ?", (revision_id,)).fetchone()
-    return row[0] if row else None
+@app.get("/api/jobs/{job_id}")
+def get_job(job_id: str, user: User) -> dict[str, Any]:
+    return workflow.job_detail(user, job_id)
 
 
-def _localize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    for r in rows:
-        i18n.product_fields(r, i18n.overlay(r.get("source_dir")))
-    return rows
+@app.delete("/api/jobs/{job_id}")
+def delete_job(job_id: str, user: Employer) -> dict[str, Any]:
+    workflow.delete_job(user, job_id)
+    return {"deleted": job_id}
 
 
-def inspection_state(conn, inspection_id: str) -> dict[str, Any]:
-    insp = db.row(conn.execute("SELECT * FROM inspections WHERE id = ?", (inspection_id,)).fetchone())
-    if not insp:
-        raise HTTPException(404, "Inspection not found")
-    items = db.rows(conn.execute("SELECT * FROM inspection_items WHERE inspection_id = ? ORDER BY sort",
-                                 (inspection_id,)).fetchall())
-    evidence = db.rows(conn.execute("SELECT * FROM evidence WHERE inspection_id = ? ORDER BY created_at",
-                                    (inspection_id,)).fetchall())
-    assessments = db.rows(conn.execute(
-        "SELECT a.* FROM evidence_assessments a JOIN evidence e ON e.id = a.evidence_id WHERE e.inspection_id = ? "
-        "ORDER BY a.created_at", (inspection_id,)).fetchall())
-    latest: dict[str, dict] = {}
-    for a in assessments:
-        latest[a["evidence_id"]] = a
-    for e in evidence:
-        e["url"] = f"/api/evidence/{e['id']}/file"
-        e["assessment"] = latest.get(e["id"])
-    by_item: dict[str, list] = {}
-    for e in evidence:
-        if e["inspection_item_id"]:
-            by_item.setdefault(e["inspection_item_id"], []).append(e)
-    for it in items:
-        it["evidence"] = by_item.get(it["id"], [])
-    findings = db.rows(conn.execute("SELECT * FROM findings WHERE inspection_id = ? ORDER BY created_at",
-                                    (inspection_id,)).fetchall())
-    for f in findings:
-        f["evidence"] = [e for e in evidence if e["finding_id"] == f["id"]]
-        f["corrective_action"] = db.row(conn.execute(
-            "SELECT * FROM corrective_actions WHERE finding_id = ? ORDER BY created_at DESC LIMIT 1",
-            (f["id"],)).fetchone())
-    instance = db.row(conn.execute("SELECT * FROM product_instances WHERE id = ?",
-                                   (insp["product_instance_id"],)).fetchone())
-    reviews = db.rows(conn.execute("SELECT * FROM reviews WHERE inspection_id = ? ORDER BY created_at",
-                                   (inspection_id,)).fetchall())
-    activity = db.rows(conn.execute(
-        "SELECT * FROM activity_events WHERE entity_id = ? OR json_extract(metadata,'$.inspection_id') = ? "
-        "OR entity_id IN (SELECT id FROM inspection_items WHERE inspection_id = ?) ORDER BY created_at",
-        (inspection_id, inspection_id, inspection_id)).fetchall())
-    # Display text in the reader's language; the stored snapshot itself is never changed.
-    tr = i18n.overlay(_source_dir(conn, insp["product_revision_id"]))
-    if tr:
-        for it in items:
-            it["requirement_snapshot"] = i18n.requirement(it["requirement_snapshot"], it["requirement_id"], tr)
-        instance["metadata"] = i18n.location(instance["serial_number"], instance["metadata"], tr)
-    required = [i for i in items if i["required"]]
-    readiness = workflow.readiness(conn, inspection_id)
-    titles = {it["id"]: it["requirement_snapshot"].get("title") for it in items}
-    for entry in readiness["blocking"] + readiness["warnings"]:
-        if entry.get("item_id") in titles:
-            entry["title"] = titles[entry["item_id"]]
-    return {
-        "inspection": insp, "instance": instance, "revision_id": insp["product_revision_id"],
-        "items": items, "findings": findings, "reviews": reviews, "activity": activity,
-        "component_status": workflow.component_statuses(items, findings),
-        "progress": {
-            "total": len(items), "done": sum(i["status"] in workflow.FINAL_ITEM for i in items),
-            "required_total": len(required), "required_done": sum(i["status"] in workflow.FINAL_ITEM for i in required),
-        },
-        "readiness": readiness,
-    }
+# ------------------------------------------------------------------- tasks --
+
+@app.post("/api/tasks/{task_id}/status")
+def set_status(task_id: str, body: StatusIn, user: User) -> dict[str, Any]:
+    job = workflow.set_status(user, task_id, body.status)
+    return workflow.job_detail(user, job["id"])
 
 
-@app.post("/api/inspections")
-def start_inspection(body: StartInspection) -> dict[str, Any]:
-    with db.tx() as conn:
-        result = workflow.start_inspection(conn, body.serial_number, body.inspector, body.mode)
-    with db.read() as conn:
-        return {**result, "state": inspection_state(conn, result["inspection_id"])}
-
-
-INSPECTION_LIST_SQL = (
-    "SELECT s.*, i.serial_number, m.name AS product_name, r.revision, p.source_dir, "
-    "COALESCE(json_extract(p.manifest, '$.industry'), 'General') AS industry, "
-    "json_extract(p.manifest, '$.asset_category') AS asset_category, "
-    "(SELECT COUNT(*) FROM findings f WHERE f.inspection_id = s.id AND f.status NOT IN ('closed','void')) "
-    "AS open_findings FROM inspections s JOIN product_instances i ON i.id = s.product_instance_id "
-    "JOIN product_revisions r ON r.id = s.product_revision_id JOIN product_models m ON m.id = r.product_model_id "
-    "JOIN engineering_packages p ON p.id = r.engineering_package_id")
-
-
-@app.get("/api/inspections")
-def list_inspections(status: str | None = None, industry: str | None = None) -> list[dict[str, Any]]:
-    where, args = [], []
-    if status:
-        where.append("s.status = ?")
-        args.append(status)
-    if industry:
-        where.append("COALESCE(json_extract(p.manifest, '$.industry'), 'General') = ?")
-        args.append(industry)
-    sql = INSPECTION_LIST_SQL + (" WHERE " + " AND ".join(where) if where else "")
-    with db.read() as conn:
-        return _localize_rows(db.rows(conn.execute(sql + " ORDER BY s.updated_at DESC", args).fetchall()))
-
-
-@app.get("/api/dashboard")
-def dashboard(industry: str | None = None) -> dict[str, Any]:
-    """Cross-industry metrics computed from the same inspection records (one data model for every asset type)."""
-    with db.read() as conn:
-        insp = _localize_rows(db.rows(conn.execute(INSPECTION_LIST_SQL).fetchall()))
-        industries = sorted({i["industry"] for i in insp} | {
-            (r["manifest"] or {}).get("industry") or "General" for r in
-            db.rows(conn.execute("SELECT manifest FROM engineering_packages").fetchall())})
-        if industry:
-            insp = [i for i in insp if i["industry"] == industry]
-        ids = [i["id"] for i in insp]
-        marks = ",".join("?" * len(ids)) or "''"
-        items = db.rows(conn.execute(
-            f"SELECT inspection_id, component_id, status FROM inspection_items WHERE inspection_id IN ({marks})",
-            ids).fetchall())
-        findings = db.rows(conn.execute(
-            f"SELECT f.*, s.mode FROM findings f JOIN inspections s ON s.id = f.inspection_id "
-            f"WHERE f.inspection_id IN ({marks})", ids).fetchall())
-    count = lambda rows, key: {k: sum(1 for r in rows if r[key] == k) for k in sorted({r[key] for r in rows})}
-    # A component counts as inspected only when every one of its requirements has a final disposition.
-    per_comp: dict[tuple[str, str], list[str]] = {}
-    for i in items:
-        per_comp.setdefault((i["inspection_id"], i["component_id"]), []).append(i["status"])
-    comp_done = {k for k, sts in per_comp.items() if all(st in workflow.FINAL_ITEM for st in sts)}
-    comp_all = set(per_comp)
-    return {
-        "industries": industries,
-        "filter": industry or "All",
-        "totals": {
-            "inspections": len(insp),
-            "live": sum(1 for i in insp if i["mode"] == "live"),
-            "demo": sum(1 for i in insp if i["mode"] == "demo"),
-            "pending": sum(1 for i in insp if i["status"] in ("in_progress", "changes_requested")),
-            "requires_review": sum(1 for i in insp if i["status"] == "submitted"),
-            "approved": sum(1 for i in insp if i["status"] == "approved"),
-            "components_inspected": len(comp_done),
-            "components_total": len(comp_all),
-            "findings": len(findings),
-            "open_findings": sum(1 for f in findings if f["status"] in workflow.OPEN_FINDING),
-        },
-        "by_industry": count(insp, "industry"),
-        "by_asset": count(insp, "product_name"),
-        "by_status": count(insp, "status"),
-        "findings_by_severity": count(findings, "severity"),
-        "recent": insp[:15],
-    }
-
-
-@app.get("/api/inspections/{inspection_id}")
-def get_inspection(inspection_id: str) -> dict[str, Any]:
-    with db.read() as conn:
-        return inspection_state(conn, inspection_id)
-
-
-@app.post("/api/inspections/{inspection_id}/items/{item_id}/decision")
-def decide(inspection_id: str, item_id: str, body: Decision) -> dict[str, Any]:
-    with db.tx() as conn:
-        workflow.decide_item(conn, inspection_id, item_id, decision=body.decision, actor=body.actor.strip(),
-                             observation=body.observation, manual_confirmed=body.manual_confirmed,
-                             override_note=body.override_note,
-                             finding=body.finding.model_dump() if body.finding else None)
-    with db.read() as conn:
-        return inspection_state(conn, inspection_id)
-
-
-@app.post("/api/inspections/{inspection_id}/submit")
-def submit(inspection_id: str, body: Actor) -> dict[str, Any]:
-    with db.tx() as conn:
-        workflow.submit(conn, inspection_id, body.actor.strip())
-    with db.read() as conn:
-        return inspection_state(conn, inspection_id)
-
-
-@app.post("/api/inspections/{inspection_id}/review")
-def review(inspection_id: str, body: ReviewIn) -> dict[str, Any]:
-    with db.tx() as conn:
-        workflow.review(conn, inspection_id, reviewer=body.reviewer.strip(), decision=body.decision,
-                        comments=body.comments, item_ids=body.item_ids)
-    with db.read() as conn:
-        return inspection_state(conn, inspection_id)
-
-
-# ---------------------------------------------------------------- evidence --
-
-def _form_name(value: str) -> str:
-    value = (value or "").strip()
-    if not value:
-        raise HTTPException(422, "actor is required")
-    return value[:80]
-
-
-async def _read_image(file: UploadFile) -> tuple[bytes, dict[str, Any]]:
-    """Decode/re-encode and run image checks off the event loop (CPU-bound for phone photos)."""
+async def _read_photo(file: UploadFile) -> tuple[bytes, dict[str, Any]]:
+    """Decode, strip metadata, downscale and run image checks, off the event loop."""
     raw = await file.read()
     if len(raw) > settings.max_upload_mb * 1024 * 1024:
         raise HTTPException(413, f"Image larger than {settings.max_upload_mb} MB")
@@ -465,251 +193,81 @@ async def _read_image(file: UploadFile) -> tuple[bytes, dict[str, Any]]:
         raise HTTPException(415, "Uploaded file is not a supported image (use JPEG or PNG)")
 
 
-def _store(evidence_id: str, folder: str, jpeg: bytes) -> str:
-    rel = Path(folder) / f"{evidence_id}.jpg"
-    path = settings.evidence_dir / rel
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(jpeg)
-    return rel.as_posix()
-
-
-def _assessment_context(conn, evidence_id: str, worker_note: str | None) -> dict[str, Any]:
-    e = db.row(conn.execute("SELECT * FROM evidence WHERE id = ?", (evidence_id,)).fetchone())
-    item = db.row(conn.execute("SELECT * FROM inspection_items WHERE id = ?", (e["inspection_item_id"],)).fetchone())
-    insp = db.row(conn.execute("SELECT * FROM inspections WHERE id = ?", (item["inspection_id"],)).fetchone())
-    c = db.row(conn.execute("SELECT * FROM components WHERE product_revision_id = ? AND id = ?",
-                            (insp["product_revision_id"], item["component_id"])).fetchone())
-    # Rows imported before the 'definition' column existed fall back to the base columns.
-    comp = {"component_id": c["id"], "name": c["name"], "part_number": c["part_number"], "quantity": c["quantity"],
-            "category": c["category"], "description": c["description"], **(c.get("definition") or {})}
-    rev = db.row(conn.execute("SELECT r.procedure, p.manifest FROM product_revisions r JOIN engineering_packages p "
-                              "ON p.id = r.engineering_package_id WHERE r.id = ?",
-                              (insp["product_revision_id"],)).fetchone())
-    # The AI always gets the published (English) package text as context; only its reply follows the reader's language.
-    return ai.build_context(
-        manifest=rev["manifest"], procedure=rev["procedure"], component=comp,
-        requirement={"requirement_id": item["requirement_id"], **item["requirement_snapshot"]},
-        serial_number=insp["product_instance_id"], worker_note=worker_note, image_checks=e["image_checks"],
-        inspection_id=insp["id"], language=i18n.current_lang.get())
-
-
-def _store_assessment(evidence_id: str, inspection_id: str, outcome: ai.AssessmentOutcome,
-                      origin: str = "live", captured_at: str | None = None) -> dict[str, Any]:
-    assessment = {"id": db.new_id("asmt"), "evidence_id": evidence_id, "provider": outcome.provider,
-                  "model": outcome.model, "status": outcome.status, "result": outcome.result,
-                  "error": outcome.error, "latency_ms": outcome.latency_ms, "created_at": db.now(),
-                  "origin": origin, "captured_at": captured_at}
-    with db.tx() as conn:
-        conn.execute("INSERT INTO evidence_assessments (id, evidence_id, provider, model, status, result, error, "
-                     "latency_ms, created_at, origin, captured_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                     (assessment["id"], evidence_id, outcome.provider, outcome.model, outcome.status,
-                      db.dumps(outcome.result) if outcome.result else None, outcome.error, outcome.latency_ms,
-                      assessment["created_at"], origin, captured_at))
-        item_id = conn.execute("SELECT inspection_item_id FROM evidence WHERE id = ?", (evidence_id,)).fetchone()[0]
-        workflow.apply_assessment(conn, item_id, assessment)
-        db.log_event(conn, "evidence", evidence_id, f"assessment_{outcome.status}", "ai",
-                     {"inspection_id": inspection_id, "origin": origin,
-                      "provider": outcome.provider, "model": outcome.model, "latency_ms": outcome.latency_ms,
-                      "recommended_action": (outcome.result or {}).get("recommended_action"), "error": outcome.error})
-    return assessment
-
-
-def _run_assessment(evidence_id: str, worker_note: str | None) -> dict[str, Any]:
-    with db.read() as conn:
-        ctx = _assessment_context(conn, evidence_id, worker_note)
-        path = settings.evidence_dir / db.row(conn.execute("SELECT storage_path FROM evidence WHERE id = ?",
-                                                           (evidence_id,)).fetchone())["storage_path"]
-    outcome = ai.get_provider().assess(path.read_bytes(), ctx)  # no DB lock held during the model call
-    return _store_assessment(evidence_id, ctx["inspection_id"], outcome)
-
-
-@app.post("/api/inspections/{inspection_id}/items/{item_id}/evidence")
-async def upload_evidence(inspection_id: str, item_id: str, file: UploadFile = File(...),
-                          actor: str = Form(...), note: str | None = Form(None),
-                          assess: bool = Form(True)) -> dict[str, Any]:
-    actor = _form_name(actor)
-    with db.read() as conn:  # validate before touching the disk (404/409 instead of FK errors)
-        workflow._require_editable(workflow._inspection(conn, inspection_id))
-        workflow._item(conn, inspection_id, item_id)
-    jpeg, checks = await _read_image(file)
-    evidence_id = db.new_id("ev")
-    storage_path = _store(evidence_id, inspection_id, jpeg)
-    try:
-        with db.tx() as conn:
-            conn.execute("INSERT INTO evidence VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                         (evidence_id, inspection_id, item_id, None, "inspection", storage_path, "image/jpeg",
-                          note, db.dumps(checks), actor, db.now()))
-            workflow.record_evidence(conn, inspection_id, item_id, evidence_id, actor)
-    except Exception:
-        (settings.evidence_dir / storage_path).unlink(missing_ok=True)  # no orphan files
-        raise
-    assessment = await run_in_threadpool(_run_assessment, evidence_id, note) if assess else None
-    with db.read() as conn:
-        return {"evidence_id": evidence_id, "image_checks": checks, "assessment": assessment,
-                "state": inspection_state(conn, inspection_id)}
-
-
-@app.post("/api/inspections/{inspection_id}/items/{item_id}/demo-evidence")
-async def use_demo_evidence(inspection_id: str, item_id: str, body: UseDemoEvidence) -> dict[str, Any]:
-    """Attach a prepared demonstration photo (demo-mode inspections only).
-
-    The AI result is either a real call made now, or a precomputed result that was produced earlier by a
-    real model call and is stored with origin='precomputed' and its capture date. Nothing is fabricated."""
-    with db.read() as conn:
-        insp = workflow._inspection(conn, inspection_id)
-        workflow._require_editable(insp)
-        item = workflow._item(conn, inspection_id, item_id)
-        if insp.get("mode") != "demo":
-            raise WorkflowError("Prepared demo photos can only be used in a demo inspection", 409)
-        source_dir = conn.execute("SELECT p.source_dir FROM product_revisions r JOIN engineering_packages p "
-                                  "ON p.id = r.engineering_package_id WHERE r.id = ?",
-                                  (insp["product_revision_id"],)).fetchone()[0]
-    found = catalog.demo_evidence_entry(source_dir, body.demo_id)
-    if not found:
-        raise HTTPException(404, "Demo evidence not found")
-    path, entry = found
-    if entry["requirement_id"] != item["requirement_id"]:
-        raise WorkflowError("This demo photo belongs to a different requirement", 422)
-
-    def prepare():
-        jpeg, img = ai.normalize_image(path.read_bytes())
-        return jpeg, ai.image_checks(img)
-
-    jpeg, checks = await run_in_threadpool(prepare)
-    evidence_id = db.new_id("ev")
-    storage_path = _store(evidence_id, inspection_id, jpeg)
-    lang = i18n.current_lang.get()
-    caption = ((i18n.overlay(source_dir).get("demo_evidence") or {}).get(entry["id"]) or {}).get("caption")
-    note = (f"FOTO DE PRÁCTICA: {caption or entry.get('caption') or entry['id']}" if lang == "es"
-            else f"DEMO PHOTO: {entry.get('caption') or entry['id']}")
-    try:
-        with db.tx() as conn:
-            conn.execute("INSERT INTO evidence VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                         (evidence_id, inspection_id, item_id, None, "demo", storage_path, "image/jpeg",
-                          note, db.dumps(checks), body.actor, db.now()))
-            workflow.record_evidence(conn, inspection_id, item_id, evidence_id, body.actor)
-    except Exception:
-        (settings.evidence_dir / storage_path).unlink(missing_ok=True)
-        raise
-
-    # Saved results are kept per language; fall back to the English one when none was captured for this language.
-    pre = (lang != "en" and entry.get(f"precomputed_assessment_{lang}")) or entry.get("precomputed_assessment")
-    assessment = None
-    if body.live_ai and ai.get_provider().available()[0]:
-        assessment = await run_in_threadpool(_run_assessment, evidence_id, note)
-    if (assessment is None or assessment["status"] != "completed") and pre:
-        outcome = ai.AssessmentOutcome(pre.get("provider", "anthropic"), pre.get("model"), "completed",
-                                       ai.AssessmentResult.model_validate(pre["result"]).model_dump(), None,
-                                       int(pre.get("latency_ms") or 0))
-        assessment = await run_in_threadpool(_store_assessment, evidence_id, inspection_id, outcome,
-                                             "precomputed", pre.get("captured_at"))
-    if assessment is None:
-        assessment = await run_in_threadpool(
-            _store_assessment, evidence_id, inspection_id,
-            ai.AssessmentOutcome("none", None, "unavailable", None,
-                                 "No live AI available and no precomputed result for this demo photo.", 0))
-    with db.read() as conn:
-        return {"evidence_id": evidence_id, "image_checks": checks, "assessment": assessment,
-                "state": inspection_state(conn, inspection_id)}
+@app.post("/api/tasks/{task_id}/evidence")
+async def add_evidence(task_id: str, user: User, file: UploadFile | None = File(None),
+                       text: str | None = Form(None), assess: bool = Form(True)) -> dict[str, Any]:
+    """A photo, a text note, or both. Photos get the advisory AI review unless assess=false."""
+    photo, checks = await _read_photo(file) if file is not None else (None, None)
+    row = await run_in_threadpool(lambda: workflow.add_evidence(user, task_id, text=text, photo=photo))
+    if photo is not None and assess:
+        await run_in_threadpool(workflow.assess_evidence, row["id"], checks)
+    elif photo is not None:
+        await run_in_threadpool(lambda: db.update("evidence", {"ai_assessment": {"image_checks": checks}},
+                                                  {"id": row["id"]}))
+    _, job = await run_in_threadpool(workflow.task_for, user, task_id)
+    return await run_in_threadpool(workflow.job_detail, user, job["id"])
 
 
 @app.post("/api/evidence/{evidence_id}/assess")
-def reassess(evidence_id: str) -> dict[str, Any]:
-    with db.read() as conn:
-        e = db.row(conn.execute("SELECT * FROM evidence WHERE id = ?", (evidence_id,)).fetchone())
-        if not e or not e["inspection_item_id"]:
-            raise HTTPException(404, "Inspection evidence not found")
-        workflow._require_editable(workflow._inspection(conn, e["inspection_id"]))
-    return _run_assessment(evidence_id, e["note"])
+def reassess(evidence_id: str, user: User) -> dict[str, Any]:
+    e = db.first("evidence", {"id": evidence_id})
+    if not e or not e["photo_path"]:
+        raise HTTPException(404, "Photo evidence not found")
+    _, job = workflow.task_for(user, e["task_id"])
+    workflow.assess_evidence(evidence_id)
+    return workflow.job_detail(user, job["id"])
 
 
-@app.get("/api/evidence/{evidence_id}/file")
-def evidence_file(evidence_id: str):
-    with db.read() as conn:
-        e = db.row(conn.execute("SELECT storage_path, content_type FROM evidence WHERE id = ?",
-                                (evidence_id,)).fetchone())
-    if not e:
-        raise HTTPException(404, "Evidence not found")
-    path = (settings.evidence_dir / e["storage_path"]).resolve()
-    if settings.evidence_dir.resolve() not in path.parents or not path.exists():
-        raise HTTPException(404, "Evidence file missing")
-    return FileResponse(path, media_type=e["content_type"])
+# ------------------------------------------------------------------- media --
+
+@app.get("/api/media")
+def list_media(user: Employer) -> list[dict[str, Any]]:
+    rows = db.select("media", {"company_id": user["company_id"]}, order="-created_at")
+    urls = blobs.signed_urls([m["storage_path"] for m in rows])
+    chunks: dict[str, int] = {}
+    for c in db.select("document_chunks", {"company_id": user["company_id"]}, columns="media_id"):
+        chunks[c["media_id"]] = chunks.get(c["media_id"], 0) + 1
+    return [{**workflow.media_view(m, urls), "chunks": chunks.get(m["id"], 0)} for m in rows]
 
 
-# ---------------------------------------------------------------- findings --
-
-@app.get("/api/findings")
-def list_findings(status: str | None = None) -> list[dict[str, Any]]:
-    sql = ("SELECT f.*, c.name AS component_name, c.part_number, s.product_revision_id, s.mode, pk.source_dir "
-           "FROM findings f JOIN inspections s ON s.id = f.inspection_id "
-           "JOIN product_revisions rv ON rv.id = s.product_revision_id "
-           "JOIN engineering_packages pk ON pk.id = rv.engineering_package_id "
-           "LEFT JOIN components c ON c.id = f.component_id AND c.product_revision_id = s.product_revision_id")
-    args: tuple = ()
-    if status:
-        sql += " WHERE f.status = ?"
-        args = (status,)
-    with db.read() as conn:
-        findings = db.rows(conn.execute(sql + " ORDER BY f.updated_at DESC", args).fetchall())
-        for f in findings:
-            f["corrective_action"] = db.row(conn.execute(
-                "SELECT * FROM corrective_actions WHERE finding_id = ? ORDER BY created_at DESC LIMIT 1",
-                (f["id"],)).fetchone())
-            f["evidence"] = db.rows(conn.execute(
-                "SELECT id, kind, note, created_at, submitted_by FROM evidence WHERE finding_id = ? "
-                "OR (inspection_item_id = ? AND kind IN ('inspection','demo')) ORDER BY created_at",
-                (f["id"], f["inspection_item_id"])).fetchall())
-            for e in f["evidence"]:
-                e["url"] = f"/api/evidence/{e['id']}/file"
-            name = ((i18n.overlay(f["source_dir"]).get("components") or {}).get(f["component_id"]) or {}).get("name")
-            f["component_name"] = name or f["component_name"]
-    return findings
+@app.post("/api/media")
+async def upload_media(user: Employer, file: UploadFile = File(...),
+                       title: str | None = Form(None)) -> dict[str, Any]:
+    data = await file.read()
+    if len(data) > settings.max_upload_mb * 1024 * 1024:
+        raise HTTPException(413, f"File larger than {settings.max_upload_mb} MB")
+    row = await run_in_threadpool(media.create_media, user["company_id"], file.filename or "upload", data, title)
+    urls = await run_in_threadpool(blobs.signed_urls, [row["storage_path"]])
+    return {**workflow.media_view(row, urls), "indexing": row["indexing"]}
 
 
-@app.post("/api/findings/{finding_id}/transition")
-def finding_transition(finding_id: str, body: FindingTransition) -> dict[str, Any]:
-    with db.tx() as conn:
-        return workflow.transition_finding(conn, finding_id, to=body.to, actor=body.actor.strip(),
-                                           assigned_to=body.assigned_to, note=body.note)
+@app.delete("/api/media/{media_id}")
+def delete_media(media_id: str, user: Employer) -> dict[str, Any]:
+    media.delete_media(workflow.media_for(user, media_id))
+    return {"deleted": media_id}
 
 
-@app.post("/api/findings/{finding_id}/evidence")
-async def finding_evidence(finding_id: str, file: UploadFile = File(...), actor: str = Form(...),
-                           kind: Literal["corrective_before", "corrective_after"] = Form(...),
-                           note: str | None = Form(None)) -> dict[str, Any]:
-    with db.read() as conn:
-        f = db.row(conn.execute("SELECT * FROM findings WHERE id = ?", (finding_id,)).fetchone())
-    if not f:
-        raise HTTPException(404, "Finding not found")
-    if f["status"] in ("closed", "void"):
-        raise HTTPException(409, "Finding is closed")
-    actor = _form_name(actor)
-    jpeg, checks = await _read_image(file)
-    evidence_id = db.new_id("ev")
-    storage_path = _store(evidence_id, f"findings/{finding_id}", jpeg)
-    with db.tx() as conn:
-        conn.execute("INSERT INTO evidence VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                     (evidence_id, f["inspection_id"], None, finding_id, kind, storage_path, "image/jpeg", note,
-                      db.dumps(checks), actor, db.now()))
-        db.log_event(conn, "finding", finding_id, f"evidence_{kind}", actor,
-                     {"evidence_id": evidence_id, "inspection_id": f["inspection_id"]})
-    return {"evidence_id": evidence_id, "url": f"/api/evidence/{evidence_id}/file"}
+# --------------------------------------------------------- document search --
 
-
-@app.get("/api/activity")
-def activity(limit: int = 100) -> list[dict[str, Any]]:
-    with db.read() as conn:
-        return db.rows(conn.execute("SELECT * FROM activity_events ORDER BY created_at DESC LIMIT ?",
-                                    (min(limit, 500),)).fetchall())
+@app.post("/api/ask")
+def ask(body: AskIn, user: User) -> dict[str, Any]:
+    """Answer a question from the company's documents, with numbered sources."""
+    return rag.answer(body.question, rag.search(user["company_id"], body.question))
 
 
 # ------------------------------------------------------------ static files --
 
-app.mount("/package-files", StaticFiles(directory=settings.packages_dir), name="package-files")
+if settings.data_backend == "local":
+    @app.get("/api/local-files/{path:path}", include_in_schema=False)
+    def local_file(path: str):
+        """Stand-in for Supabase signed URLs when running on local storage (tests, offline development)."""
+        data = blobs.get(path)
+        if data is None:
+            raise HTTPException(404, "File not found")
+        return Response(data, media_type=media.KINDS.get("." + path.rsplit(".", 1)[-1].lower(),
+                                                         ("", "application/octet-stream"))[1])
 
 if settings.web_dist_dir.exists():
-    app.mount("/assets", StaticFiles(directory=settings.web_dist_dir / "assets"), name="web-assets")
-
     @app.get("/{full_path:path}", include_in_schema=False)
     def spa(full_path: str):
         candidate = (settings.web_dist_dir / full_path).resolve()

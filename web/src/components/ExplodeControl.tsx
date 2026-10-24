@@ -1,6 +1,5 @@
 import { DoorClosed, DoorOpen, Expand, RotateCcw, Shrink, ZoomIn } from "lucide-react";
 import { t } from "../i18n";
-import { STATUS_COLORS } from "./AssemblyViewer";
 
 interface Props {
   value: number;
@@ -32,24 +31,6 @@ export function ExplodeControl({ value, onChange, articulationLabel, articulatio
           {partSelected ? <><ZoomIn aria-hidden />{t("Zoom to part")}</> : <><RotateCcw aria-hidden />{t("Reset view")}</>}
         </button>
       )}
-    </div>
-  );
-}
-
-export function StatusLegend() {
-  // English keys; translated when shown.
-  const entries: [string, string][] = [
-    ["Not checked yet", STATUS_COLORS.not_inspected],
-    ["Selected", STATUS_COLORS.selected],
-    ["In progress", STATUS_COLORS.pending],
-    ["Done", STATUS_COLORS.accepted],
-    ["Problem", STATUS_COLORS.finding],
-  ];
-  return (
-    <div className="legend">
-      {entries.map(([l, c]) => (
-        <span key={l}><i style={{ background: c }} />{t(l)}</span>
-      ))}
     </div>
   );
 }

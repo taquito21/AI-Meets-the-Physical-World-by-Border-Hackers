@@ -63,3 +63,24 @@
 - Assets without a 3D model are supported (assembly_file optional).
 - Viewer: tapping empty space clears the selection; the selected part is strongly highlighted.
 - 36 tests passing; 10 real AI calls on synthetic test images (behaviour matched expectations); no real extinguisher photos yet.
+
+## 2026-10-24: Supabase storage
+- Data moved to Supabase Postgres + Storage through the REST API (HTTPS only: the venue network blocks Postgres ports).
+- `db.py` is now a small query interface with a REST backend and a SQLite backend (tests, offline). Raw SQL joins
+  were rewritten as Python joins; workflow transitions use conditional updates. Schema: `backend/supabase/schema.sql`.
+- See DATABASE.md. Authentication (Supabase Auth) is next.
+
+## 2026-10-24: jobs and tasks on Supabase (rebuild)
+- New data model (8 tables): companies, users, jobs, tasks, evidence, media, task_media, document_chunks. The
+  engineering-package catalog, inspections, findings, reviews and activity log were removed.
+- Supabase Auth login (backend verifies the token with the project's JWKS); company-scoped access in workflow.py.
+- Media library with 3D models (parts lists), documents and images; signed Storage URLs.
+- Document search: Voyage AI embeddings + pgvector function + Claude answers with citations.
+- New web client: login, jobs, job detail with tasks/evidence/3D, new job, media library, ask the documents.
+
+## 2026-10-24: merged main (UX audit 3, Spanish interface) into the rebuild
+- Kept from main: ES | EN switch (Spanish default), `t()` dictionaries, lucide icons, plain-language AI card and
+  wording, bigger touch targets and contrast, Spanish AI replies, package `translations/es.json` (now stored with
+  the demo 3D models and applied per request).
+- Dropped with the old screens: their page-specific changes, inspection/requirement translations, Spanish practice
+  results. New-screen strings translated in `web/src/i18n/es-app.ts` / `es-server.ts`.

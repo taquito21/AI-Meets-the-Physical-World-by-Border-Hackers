@@ -1,69 +1,41 @@
-import { NavLink, Route, Routes } from "react-router-dom";
-import { ChartColumn, ClipboardCheck, FlaskConical, Languages, Package, TriangleAlert } from "lucide-react";
-import { t, useLang, type Lang } from "./i18n";
+import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { BookOpen, ClipboardList, FolderOpen, LogOut } from "lucide-react";
+import { AskBox } from "./components/AskBox";
+import { LanguageSwitch } from "./components/LanguageSwitch";
+import { t } from "./i18n";
+import JobDetail from "./pages/JobDetail";
+import Jobs from "./pages/Jobs";
+import Login from "./pages/Login";
+import Media from "./pages/Media";
+import NewJob from "./pages/NewJob";
 import { useSession } from "./session";
-import Home from "./pages/Home";
-import Catalog from "./pages/Catalog";
-import ProductDetail from "./pages/ProductDetail";
-import Inspection from "./pages/Inspection";
-import Summary from "./pages/Summary";
-import Supervisor from "./pages/Supervisor";
-import Findings from "./pages/Findings";
-import ImportStudio from "./pages/ImportStudio";
-import Passport from "./pages/Passport";
-import Dashboard from "./pages/Dashboard";
-import Render from "./pages/Render";
-
-// Always visible in the top bar: the person can switch language from any screen.
-function LanguageSwitch() {
-  const { lang, setLang } = useLang();
-  const options: [Lang, string][] = [["es", "Español"], ["en", "English"]];
-  return (
-    <div className="lang-switch" role="group" aria-label={t("Language")}>
-      <Languages aria-hidden />
-      {options.map(([l, name]) => (
-        <button key={l} className={lang === l ? "on" : ""} aria-pressed={lang === l} title={name} lang={l}
-          onClick={() => setLang(l)}>{l.toUpperCase()}</button>
-      ))}
-    </div>
-  );
-}
 
 export default function App() {
-  const { label, name, role, health } = useSession();
-  if (window.location.pathname.startsWith("/render/")) {
-    return <Routes><Route path="/render/:revisionId" element={<Render />} /></Routes>;
-  }
+  const { me, loading, signOut } = useSession();
+  if (loading) return <div className="page muted">{t("Loading…")}</div>;
+  if (!me) return <Login />;
+  const employer = me.user_class === "employer";
   return (
     <div className="app">
       <header className="topbar">
-        <NavLink to="/" className="brand">{label}</NavLink>
+        <NavLink to="/" className="brand">{t("Field Assistant")}</NavLink>
         <nav>
-          <NavLink to="/catalog"><Package aria-hidden /><span>{t("Equipment")}</span></NavLink>
-          <NavLink to="/supervisor"><ClipboardCheck aria-hidden /><span>{t("Review")}</span></NavLink>
-          <NavLink to="/findings"><TriangleAlert aria-hidden /><span>{t("Problems")}</span></NavLink>
-          <NavLink to="/dashboard"><ChartColumn aria-hidden /><span>{t("Dashboard")}</span></NavLink>
+          <NavLink to="/" end><ClipboardList aria-hidden /><span>{t(employer ? "Jobs" : "My jobs")}</span></NavLink>
+          {employer && <NavLink to="/media"><FolderOpen aria-hidden /><span>{t("Media")}</span></NavLink>}
+          <NavLink to="/ask"><BookOpen aria-hidden /><span>{t("Ask docs")}</span></NavLink>
         </nav>
-        <span className="who" title={t("Change on the home screen")}>{name} · {t(role)}</span>
+        <span className="who">{me.username} · {t(me.user_class)} · {me.company.name}</span>
         <LanguageSwitch />
+        <button className="link signout with-icon" onClick={signOut}><LogOut aria-hidden />{t("Sign out")}</button>
       </header>
-      {health?.storage === "ephemeral" && (
-        <div className="test-banner"><FlaskConical aria-hidden /> {t("Temporary test deployment: data is not permanent and may reset at any time.")}</div>
-      )}
       <main>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/catalog" element={<Catalog />} />
-          <Route path="/products/:revisionId" element={<ProductDetail />} />
-          <Route path="/inspections/:id" element={<Inspection />} />
-          <Route path="/inspections/:id/summary" element={<Summary />} />
-          <Route path="/supervisor" element={<Supervisor />} />
-          <Route path="/supervisor/:id" element={<Summary review />} />
-          <Route path="/findings" element={<Findings />} />
-          <Route path="/import" element={<ImportStudio />} />
-          <Route path="/p/:serial" element={<Passport />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="*" element={<div className="page"><h1>{t("Page not found")}</h1><NavLink to="/">{t("Go to the start")}</NavLink></div>} />
+          <Route path="/" element={<Jobs />} />
+          <Route path="/jobs/new" element={employer ? <NewJob /> : <Navigate to="/" />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
+          <Route path="/media" element={employer ? <Media /> : <Navigate to="/" />} />
+          <Route path="/ask" element={<div className="page"><AskBox /></div>} />
+          <Route path="*" element={<div className="page"><h1>{t("Page not found")}</h1></div>} />
         </Routes>
       </main>
     </div>
