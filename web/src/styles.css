@@ -344,3 +344,14 @@ label input, label select, label textarea { color: var(--ink); }
 .topbar .brand .brand-sight { color: #5ec4c0; }
 .login-logo { margin: 0; flex: 1; }
 .login-logo img { display: block; width: min(280px, 70vw); height: auto; border-radius: 16px; box-shadow: 0 1px 3px rgba(15, 23, 42, .08); }
+/* Employer overview */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .6rem; margin: .4rem 0 .8rem; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: .7rem .8rem;
+  display: grid; grid-template-columns: auto 1fr; column-gap: .5rem; align-items: center; }
+.stat svg.lucide { grid-row: span 2; width: 1.6rem; height: 1.6rem; color: var(--muted); }
+.stat b { font-size: 1.5rem; line-height: 1.1; }
+.stat span { font-size: .82rem; color: var(--muted); }
+.stat-blue svg.lucide, .stat-blue b { color: var(--blue); }
+.stat-red { border-color: #fecaca; } .stat-red svg.lucide, .stat-red b { color: var(--red); }
+.stat-purple { border-color: #c4b5fd; } .stat-purple svg.lucide, .stat-purple b { color: var(--purple); }
+.team-row { gap: .9rem; }

@@ -79,6 +79,8 @@ def test_evidence_status_and_flag_escalation(world):
 
     boss = world.login("acme-employer")
     assert [j["counts"]["flagged"] for j in boss.get("/api/jobs").json()] == [1]
+    r = boss.post(f"/api/tasks/{task}/evidence", data={"text": "my photo"}, files={"file": ("p.jpg", photo(), "image/jpeg")})
+    assert r.status_code == 403  # the employer replies with notes; photos come from the field
     boss.post(f"/api/tasks/{task}/evidence", data={"text": "Fine, pass it."})
     r = boss.post(f"/api/tasks/{task}/status", json={"status": "passed"})
     t = r.json()["tasks"][0]
@@ -226,3 +228,48 @@ def test_requests_without_login_are_rejected(world):
     app.dependency_overrides.clear()
     assert world.client.get("/api/jobs").status_code == 401
     assert world.client.get("/api/health").status_code == 200
+
+
+# ----------------------------------------------------------------- dashboard --
+
+def test_due_dates_order_jobs_and_are_validated(world):
+    boss = world.login("acme-employer")
+    emp = world.users["acme-employee"]["id"]
+    later = boss.post("/api/jobs", json={"title": "Later", "assigned_to": emp, "due_date": "2030-05-01",
+                                         "tasks": [{"description": "a"}]}).json()
+    soon = boss.post("/api/jobs", json={"title": "Soon", "assigned_to": emp, "due_date": "2030-01-15",
+                                        "tasks": [{"description": "a"}]}).json()
+    undated = boss.post("/api/jobs", json={"title": "Undated", "assigned_to": emp,
+                                           "tasks": [{"description": "a"}]}).json()
+    assert soon["due_date"] == "2030-01-15" and undated["due_date"] is None
+    assert [j["title"] for j in world.login("acme-employee").get("/api/jobs").json()] == ["Soon", "Later", "Undated"]
+    assert boss.post("/api/jobs", json={"title": "x", "assigned_to": emp, "due_date": "next week",
+                                        "tasks": [{"description": "a"}]}).status_code == 422
+
+    # A finished job (no task pending or flagged) moves below the open ones.
+    boss.post(f"/api/tasks/{soon['tasks'][0]['id']}/status", json={"status": "passed"})
+    jobs = world.login("acme-employee").get("/api/jobs").json()
+    assert [j["title"] for j in jobs] == ["Later", "Undated", "Soon"] and jobs[-1]["finished"] is True
+    assert later["finished"] is False
+
+
+def test_dashboard_lists_what_needs_the_employer_and_team_workload(world):
+    job = make_job(world)  # two tasks for acme-employee
+    emp = world.login("acme-employee")
+    emp.post(f"/api/tasks/{job['tasks'][0]['id']}/status", json={"status": "flagged"})
+    emp.post(f"/api/tasks/{job['tasks'][1]['id']}/status", json={"status": "failed"})
+
+    r = world.login("acme-employer").get("/api/dashboard")
+    assert r.status_code == 200
+    d = r.json()
+    assert sorted(a["status"] for a in d["attention"]) == ["failed", "flagged"]
+    flagged = next(a for a in d["attention"] if a["status"] == "flagged")
+    assert flagged["job_title"] == "Monthly check" and flagged["description"] == "Check the gauge"
+    assert flagged["assigned_to"]["username"] == "acme-employee"
+    assert d["team"] == [{"id": world.users["acme-employee"]["id"], "username": "acme-employee",
+                          "user_class": "employee", "open_jobs": 1, "tasks_done": 1, "tasks_total": 2}]
+    assert [j["id"] for j in d["jobs"]] == [job["id"]]
+
+    assert emp.get("/api/dashboard").status_code == 403
+    other = world.login("other-employer").get("/api/dashboard").json()
+    assert other["jobs"] == [] and other["attention"] == []

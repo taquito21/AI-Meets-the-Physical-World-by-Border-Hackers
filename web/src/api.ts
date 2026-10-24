@@ -82,14 +82,31 @@ export interface Task {
   media: (MediaItem & { node_ids: string[] })[];
 }
 
-export interface JobSummary { id: string; title: string; created_at: string; assigned_to: Person | null; counts: Counts }
+export interface JobSummary {
+  id: string;
+  title: string;
+  created_at: string;
+  due_date: string | null; // "YYYY-MM-DD"
+  finished: boolean; // no task is still to do or waiting for the employer
+  assigned_to: Person | null;
+  counts: Counts;
+}
 export interface Job extends JobSummary { tasks: Task[] }
 
 export interface NewJob {
   title: string;
   assigned_to: string;
+  due_date: string | null;
   tasks: { description: string; media: { media_id: string; node_ids: string[] }[] }[];
 }
+
+// Employer overview: tasks waiting for them (flagged) or failed, and each employee's workload.
+export interface AttentionTask {
+  id: string; job_id: string; job_title: string; position: number; description: string;
+  status: "flagged" | "failed"; updated_at: string; assigned_to: Person | null;
+}
+export interface TeamMember extends Person { open_jobs: number; tasks_done: number; tasks_total: number }
+export interface Dashboard { jobs: JobSummary[]; attention: AttentionTask[]; team: TeamMember[] }
 
 export interface AskResult {
   answer: string;
@@ -164,6 +181,7 @@ export const api = {
   me: () => request<Me>("/api/me"),
   users: () => request<(Person & { company_id: string })[]>("/api/users"),
   jobs: () => request<JobSummary[]>("/api/jobs"),
+  dashboard: () => request<Dashboard>("/api/dashboard"),
   job: (id: string) => request<Job>(`/api/jobs/${id}`),
   createJob: (body: NewJob) => request<Job>("/api/jobs", json("POST", body)),
   deleteJob: (id: string) => request<{ deleted: string }>(`/api/jobs/${id}`, { method: "DELETE" }),
