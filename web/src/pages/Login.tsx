@@ -26,7 +26,12 @@ export default function Login() {
   };
   return (
     <div className="page login">
-      <div className="card-head"><h1>{t("Field Assistant")}</h1><LanguageSwitch /></div>
+      <div className="card-head">
+        <h1 className="login-logo">
+          <img src="/brand/fieldsight-logo.jpg" alt="FieldSight: AI-powered 3D field inspections" width={900} height={626} />
+        </h1>
+        <LanguageSwitch />
+      </div>
       <p className="muted">{t("Your jobs, step by step: take photos, write notes, and mark each task done.")}</p>
       <form className="card" onSubmit={submit}>
         <label>{t("Email")}<input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>

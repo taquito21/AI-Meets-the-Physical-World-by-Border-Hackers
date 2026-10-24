@@ -40,7 +40,7 @@ _DATA_BACKEND = os.environ.get("DATA_BACKEND") or ("supabase" if _SUPABASE_URL a
 
 @dataclass(frozen=True)
 class Settings:
-    app_label: str = os.environ.get("APP_LABEL", "Field Assistant")
+    app_label: str = os.environ.get("APP_LABEL", "FieldSight")
     # On Vercel the deployment is read-only; only /tmp is writable, and it is per-instance and temporary.
     data_dir: Path = Path(os.environ.get("DATA_DIR") or ("/tmp/field-platform" if os.environ.get("VERCEL")
                                                           else BACKEND_DIR / "data"))
