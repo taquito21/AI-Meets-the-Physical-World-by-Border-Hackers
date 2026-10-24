@@ -1,84 +1,113 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
-import { Chip, INSPECTION_TONE, useAsync, when } from "../components/ui";
+import { Chip, INSPECTION_LABEL, INSPECTION_TONE, ModeBadge, useAsync, when } from "../components/ui";
 import { useSession } from "../session";
+
+const SCENARIOS = [
+  { industry: "Furniture", cls: "", tag: "Furniture", title: "Chairs and tables", text: "Includes a real chair from the venue, rebuilt in 3D from photos." },
+  { industry: "Electrical", cls: "scenario-electrical", tag: "Electrical", title: "Electrical control panel", text: "Visual and paperwork check. You never open the panel or touch live parts." },
+  { industry: "Facility Safety", cls: "scenario-safety", tag: "Fire safety", title: "Fire extinguisher", text: "Look at the gauge, pin, hose, label and tag without handling it." },
+];
 
 export default function Home() {
   const { name, setName, role, setRole, health, label, setIndustry } = useSession();
   const nav = useNavigate();
-  const { data: open } = useAsync(() => api.inspections(), []);
-  const active = (open ?? []).filter((i) => ["in_progress", "changes_requested", "submitted"].includes(i.status));
+  const { data: all } = useAsync(() => api.inspections(), []);
+  const [editingName, setEditingName] = useState(!name.trim());
+  const ongoing = (all ?? []).filter((i) => ["in_progress", "changes_requested"].includes(i.status)).slice(0, 5);
+  const waitingReview = (all ?? []).filter((i) => i.status === "submitted").length;
 
   return (
     <div className="page">
       <section className="hero">
         <h1>{label}</h1>
-        <p>An AI-assisted inspection platform for field work in any industry. Each asset's engineering data drives the inspection, findings are tied to components, and every decision is traceable.</p>
+        <p>Check equipment step by step from your phone. The app shows you what to look at, the AI tells you if your photo is clear, and you decide the result.</p>
       </section>
 
-      <section className="card">
-        <h2>Who is working?</h2>
-        <div className="row">
-          <input value={name} onChange={(e) => setName(e.target.value)} aria-label="Your name" placeholder="Your name" />
-          <div className="segmented">
-            <button className={role === "inspector" ? "on" : ""} onClick={() => setRole("inspector")}>Inspector</button>
-            <button className={role === "supervisor" ? "on" : ""} onClick={() => setRole("supervisor")}>Supervisor</button>
-          </div>
-        </div>
-        <p className="muted small">Demo identity only, with no authentication. Your name is recorded on every action, and a supervisor must be a different person from the inspector.</p>
-        <p className="small">
-          AI evidence assessment:{" "}
-          {health ? (
-            health.ai.available ? <Chip tone="green">{health.ai.detail}</Chip> : <Chip tone="amber">Unavailable: {health.ai.detail}</Chip>
-          ) : <Chip tone="red">Server unreachable</Chip>}
-        </p>
-      </section>
-
-      <section>
-        <h2>Choose a scenario</h2>
-        <div className="scenarios">
-          <button className="scenario" onClick={() => { setIndustry("Furniture"); nav("/catalog"); }}>
-            <span className="scenario-tag">Furniture · manufactured products</span>
-            <b>Furniture Inspection</b>
-            <span>Chair and table built from the manufacturer's engineering package</span>
-          </button>
-          <button className="scenario scenario-electrical" onClick={() => { setIndustry("Electrical"); nav("/catalog"); }}>
-            <span className="scenario-tag">Electrical · industrial equipment</span>
-            <b>Industrial Electrical Panel Inspection</b>
-            <span>Low-voltage control panel ICP-001: visual and documentation inspection</span>
-          </button>
-          <button className="scenario scenario-safety" onClick={() => { setIndustry("Facility Safety"); nav("/catalog"); }}>
-            <span className="scenario-tag">Facility safety · fire equipment</span>
-            <b>Fire Safety Equipment Inspection</b>
-            <span>Portable fire extinguisher FE-001: guided visual condition inspection</span>
-          </button>
-        </div>
-        <p className="muted small">Same inspection engine, evidence workflow, AI assessment and dashboard. Only the asset definition and its inspection profile change.</p>
-      </section>
-
-      <section className="tiles">
-        <Link to="/dashboard" className="tile"><b>Dashboard</b><span>Inspections and findings across industries</span></Link>
-        <Link to="/supervisor" className="tile"><b>Supervisor review</b><span>Approve submitted inspections</span></Link>
-        <Link to="/findings" className="tile"><b>Findings</b><span>Corrective actions and verification</span></Link>
-        <Link to="/import" className="tile"><b>Engineering Import Studio</b><span>Manufacturer packages (demo)</span></Link>
-      </section>
-
-      {active.length > 0 && (
+      {ongoing.length > 0 && (
         <section className="card">
-          <h2>Active inspections</h2>
+          <h2>Continue where you left off</h2>
           <ul className="list">
-            {active.map((i) => (
-              <li key={i.id}>
-                <Link to={i.status === "submitted" ? `/supervisor/${i.id}` : `/inspections/${i.id}`}>
-                  <b>{i.product_name}</b> · {i.serial_number} · rev {i.revision} {i.mode === "demo" && <span className="chip chip-demo">DEMO</span>}
-                </Link>
-                <span className="muted small"> {i.inspector}, {when(i.updated_at)} </span>
-                <Chip tone={INSPECTION_TONE[i.status]}>{i.status.replace("_", " ")}</Chip>
+            {ongoing.map((i) => (
+              <li key={i.id} className="resume">
+                <span className="grow">
+                  <b>{i.product_name}</b> <span className="muted small">{i.serial_number} · {i.inspector}, {when(i.updated_at)}</span>
+                </span>
+                <ModeBadge mode={i.mode} />
+                <Chip tone={INSPECTION_TONE[i.status]}>{INSPECTION_LABEL[i.status] ?? i.status}</Chip>
+                <Link className="btn btn-primary btn-small" to={`/inspections/${i.id}`}>Continue →</Link>
               </li>
             ))}
           </ul>
         </section>
       )}
+
+      <section>
+        <h2>{ongoing.length ? "Or start a new inspection" : "Start an inspection"}</h2>
+        <p className="muted small">What kind of equipment are you checking?</p>
+        <div className="scenarios">
+          {SCENARIOS.map((s) => (
+            <button key={s.industry} className={`scenario ${s.cls}`} onClick={() => { setIndustry(s.industry); nav("/catalog"); }}>
+              <span className="scenario-tag">{s.tag}</span>
+              <b>{s.title}</b>
+              <span>{s.text}</span>
+              <span className="scenario-go">Choose →</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="card">
+        <h2>How it works</h2>
+        <ol className="how-steps">
+          <li><b>Choose the equipment</b><span>Pick the unit in front of you. First time? Choose <i>Practice</i> to try it with sample photos.</span></li>
+          <li><b>Follow the steps</b><span>The app tells you which part to check next. Take a photo and the AI says if it is clear enough.</span></li>
+          <li><b>Choose a result and send it</b><span>For each check tap <i>Looks good</i> or <i>Report a problem</i>. At the end, send it for review.</span></li>
+        </ol>
+        <p className="muted small">The AI only helps. A person always makes the decision.</p>
+      </section>
+
+      {health && !health.ai.available && (
+        <div className="notice small" title={health.ai.detail}>
+          <b>AI photo feedback is off right now.</b> You can still inspect: look at each part yourself and choose the result.
+        </div>
+      )}
+
+      <section className="card">
+        {editingName ? (
+          <>
+            <h2>Who is working?</h2>
+            <div className="row">
+              <input value={name} onChange={(e) => setName(e.target.value)} aria-label="Your name" placeholder="Your name" />
+              <div className="segmented">
+                <button className={role === "inspector" ? "on" : ""} onClick={() => setRole("inspector")}>Inspector</button>
+                <button className={role === "supervisor" ? "on" : ""} onClick={() => setRole("supervisor")}>Supervisor</button>
+              </div>
+              <button className="btn btn-primary" disabled={!name.trim()} onClick={() => setEditingName(false)}>Save</button>
+            </div>
+            <p className="muted small">Your name is saved with everything you do. A supervisor must be a different person from the inspector. This demo has no passwords.</p>
+          </>
+        ) : (
+          <div className="row">
+            <span className="grow">Working as <b>{name}</b> ({role === "supervisor" ? "supervisor" : "inspector"})</span>
+            <button className="btn btn-ghost btn-small" onClick={() => setEditingName(true)}>Change</button>
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2>For supervisors</h2>
+        <div className="tiles">
+          <Link to="/supervisor" className="tile">
+            <b>Review inspections</b>
+            <span>{waitingReview ? `${waitingReview} waiting for your review` : "Approve or ask for changes"}</span>
+          </Link>
+          <Link to="/findings" className="tile"><b>Problems to fix</b><span>Assign a fix, add photos, close it</span></Link>
+          <Link to="/dashboard" className="tile"><b>Dashboard</b><span>All inspections and problems at a glance</span></Link>
+        </div>
+      </section>
+      <p className="tiny muted"><Link to="/import">Add equipment from a manufacturer package (administrators)</Link></p>
     </div>
   );
 }

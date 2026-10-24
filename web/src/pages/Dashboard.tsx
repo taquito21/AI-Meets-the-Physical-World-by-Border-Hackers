@@ -61,7 +61,7 @@ export default function Dashboard() {
       </div>
       <section className="card">
         <h2>Recent inspections</h2>
-        {data.recent.length === 0 && <p className="muted small">No inspections yet. Start one from <Link to="/catalog">Assets</Link>.</p>}
+        {data.recent.length === 0 && <p className="muted small">No inspections yet. Start one from <Link to="/catalog">Equipment</Link>.</p>}
         <ul className="list">
           {data.recent.map((r) => (
             <li key={r.id}>

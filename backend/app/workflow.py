@@ -16,6 +16,7 @@ EDITABLE = {"in_progress", "changes_requested"}
 FINAL_ITEM = {"passed", "failed", "not_applicable"}
 AWAITING_ITEM = {"evidence_submitted", "more_evidence_requested"}
 SEVERITIES = ("low", "medium", "high", "critical")
+SEVERITY_WORD = {"low": "minor", "medium": "moderate", "high": "serious", "critical": "critical"}  # user-facing
 OPEN_FINDING = {"open", "assigned", "action_recorded", "awaiting_verification"}
 
 FINDING_TRANSITIONS: dict[str, set[str]] = {
@@ -190,34 +191,34 @@ def decide_item(conn: sqlite3.Connection, inspection_id: str, item_id: str, *, d
 
     if decision == "pass":
         if needs_photo(etype) and _evidence_count(conn, item_id) == 0:
-            problems.append("Photo evidence is required before this requirement can pass.")
+            problems.append("Take a photo first.")
         if needs_manual(etype) and not manual_confirmed:
-            problems.append("The inspector must confirm the physical check (manual confirmation).")
+            problems.append("Tick “I checked this myself, in person” first.")
         if item["status"] == "more_evidence_requested" and item.get("status_reason") == "supervisor_request":
             if needs_photo(etype):
-                problems.append("The supervisor requested new evidence for this requirement. Submit a new photo first.")
+                problems.append("Your supervisor asked for a new photo. Take a new photo first.")
             elif not observation:
-                problems.append("The supervisor asked for this check to be repeated. Describe what you re-checked "
-                                "in the observation.")
+                problems.append("Your supervisor asked you to check this again. Write in the notes what you "
+                                "checked.")
         elif assessment_flags_insufficient(_latest_assessment(conn, item_id)) and not override_note:
-            problems.append("The AI assessment recommends another photo. Retake the photo, or record an override "
-                            "justification explaining why the evidence is sufficient.")
+            problems.append("The AI suggested another photo. Take a new photo, or tap “Use it anyway” and "
+                            "explain why this photo is good enough.")
         if _has_open_finding(conn, item_id):
-            problems.append("This requirement has an open finding. Void it (if raised in error) before passing.")
+            problems.append("A problem is already reported for this check. Cancel it on the Problems page first if it was a mistake.")
         new_status = "passed"
     elif decision == "fail":
         if needs_photo(etype) and _evidence_count(conn, item_id) == 0:
-            problems.append("Photo evidence of the condition is required to fail this requirement.")
+            problems.append("Take a photo of the problem first.")
         if not finding or not (finding.get("description") or "").strip():
-            problems.append("A finding description is required when a requirement fails.")
+            problems.append("Describe what is wrong.")
         elif finding.get("severity") not in SEVERITIES:
             problems.append(f"Finding severity must be one of {', '.join(SEVERITIES)}.")
         new_status = "failed"
     elif decision == "not_applicable":
         if not observation:
-            problems.append("A justification is required to mark a requirement not applicable.")
+            problems.append("Write in the notes why this check doesn't apply.")
         if _has_open_finding(conn, item_id):
-            problems.append("This requirement has an open finding. Void it (if raised in error) first.")
+            problems.append("A problem is already reported for this check. Cancel it on the Problems page first if it was a mistake.")
         new_status = "not_applicable"
     else:
         raise WorkflowError(f"Unknown decision '{decision}'", 400)
@@ -268,33 +269,33 @@ def readiness(conn: sqlite3.Connection, inspection_id: str) -> dict[str, Any]:
     for it in items:
         etype = it["requirement_snapshot"]["evidence_type"]
         if it["required"] and it["status"] not in FINAL_ITEM:
-            reason = {"pending": "Not yet inspected",
-                      "evidence_submitted": "Evidence submitted, awaiting inspector decision",
-                      "more_evidence_requested": "Additional evidence requested"}.get(it["status"], it["status"])
+            reason = {"pending": "Not done yet",
+                      "evidence_submitted": "Photo taken; choose a result",
+                      "more_evidence_requested": "A new photo is needed"}.get(it["status"], it["status"])
             blocking.append(entry(it, reason))
         if not it["required"] and it["status"] not in FINAL_ITEM:
-            warnings.append(entry(it, "Optional requirement not completed"))
+            warnings.append(entry(it, "Optional check not done"))
         if it["status"] in ("passed", "failed") and needs_photo(etype) and _evidence_count(conn, it["id"]) == 0:
-            blocking.append(entry(it, "Required photo evidence missing"))
+            blocking.append(entry(it, "Photo missing"))
         if it["status"] == "failed" and not any(f["inspection_item_id"] == it["id"] for f in findings):
-            blocking.append(entry(it, "Failed requirement has no recorded finding"))
+            blocking.append(entry(it, "Problem reported without a description"))
         if it["status"] == "not_applicable" and it["required"]:
-            warnings.append(entry(it, "Mandatory requirement marked not applicable (documented exception for supervisor)"))
+            warnings.append(entry(it, "Required check marked \"doesn't apply\" (the supervisor will see the reason)"))
         if it["override_note"] and it["status"] == "passed":
-            warnings.append(entry(it, "Passed with AI evidence recommendation overridden"))
+            warnings.append(entry(it, "Marked as good although the AI suggested another photo (overridden, with a reason)"))
         if it["status"] == "passed":
             latest = _latest_assessment(conn, it["id"])
             if latest and latest.get("result") and latest["result"].get("conditions_for_human_review"):
-                warnings.append(entry(it, "Passed although the AI flagged conditions for human review: "
+                warnings.append(entry(it, "Marked as good although the AI flagged something to check: "
                                       + "; ".join(latest["result"]["conditions_for_human_review"])))
     open_findings = [f for f in findings if f["status"] in OPEN_FINDING]
     for f in open_findings:
         if f["severity"] == "critical" and settings.block_submit_on_open_critical:
             blocking.append({"finding_id": f["id"], "component_id": f["component_id"],
-                             "reason": "Open critical finding must be closed before submission (closure policy)"})
+                             "reason": "A critical problem must be fixed and closed before sending"})
         else:
             warnings.append({"finding_id": f["id"], "component_id": f["component_id"],
-                             "reason": f"Open {f['severity']} finding will be submitted for review and corrective action"})
+                             "reason": f"A {SEVERITY_WORD.get(f['severity'], f['severity'])} problem is open; it will go to the supervisor and be tracked until fixed"})
     return {"ready": not blocking, "blocking": blocking, "warnings": warnings}
 
 

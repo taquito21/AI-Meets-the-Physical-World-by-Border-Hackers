@@ -67,10 +67,10 @@ server: photo upload + AI in 6.4 s, then fail → finding, and premature submit 
 the textured GLB without errors.
 
 ## Demo (15–25 s)
-1. Home → **Fire Safety Equipment Inspection** → FE-001-SN-0002 → **Demo inspection**.
-2. Rotate → **Explode** → tap the **gauge** → requirement and technical sheet.
-3. In "Safety pin and tamper seal", use the prepared photo with **Offline: precomputed result**: the AI flags a
-   possible missing pin (labelled DEMO RESULT, synthetic image). **Fail → finding**.
+1. Home → **Fire extinguisher** → FE-001-SN-0002 → **Practice**.
+2. Rotate → **Separate parts** → tap the **gauge** → its check and technical details.
+3. Follow the step guide to "Safety pin and tamper seal" and use the prepared photo with **No internet: use saved AI
+   result**: the AI flags a possible missing pin (labelled SAVED PRACTICE RESULT, synthetic image). **Report a problem**.
 4. Line: *"The same platform guides workers from office furniture to electrical systems and fire safety assets. The 3D
    model identifies components, the engine guides the workflow, the AI analyses evidence, and the human decides."*
 

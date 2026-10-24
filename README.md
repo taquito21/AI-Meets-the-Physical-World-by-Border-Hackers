@@ -58,3 +58,4 @@ Three scenarios run on the same engine: **Furniture** (chair, table, real venue 
 Test deployment: https://field-execution-platform.vercel.app (see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)).
 
 See [docs/DEMO.md](docs/DEMO.md) for the 2-minute pitch flow and [docs/LIMITATIONS.md](docs/LIMITATIONS.md) for what is simulated.
+The app guides first-time, non-technical users step by step; see [docs/UX_AUDIT.md](docs/UX_AUDIT.md).

@@ -19,22 +19,22 @@ export function ExplodeControl({ value, onChange, articulationLabel, articulatio
         </button>
       )}
       <button className="btn btn-small" onClick={() => onChange(value > 0.5 ? 0 : 1)}>
-        {value > 0.5 ? "Assemble" : "Explode"}
+        {value > 0.5 ? "Put back together" : "Separate parts"}
       </button>
-      <input type="range" min={0} max={1} step={0.01} value={value} aria-label="Explosion"
+      <input type="range" min={0} max={1} step={0.01} value={value} aria-label="How far apart the parts are"
         onChange={(e) => onChange(parseFloat(e.target.value))} />
-      {onFocus && <button className="btn btn-small btn-ghost" onClick={onFocus}>{focusLabel ?? "Fit"}</button>}
+      {onFocus && <button className="btn btn-small btn-ghost" onClick={onFocus}>{focusLabel ?? "Reset view"}</button>}
     </div>
   );
 }
 
 export function StatusLegend() {
   const entries: [string, string][] = [
-    ["Pending", STATUS_COLORS.not_inspected],
+    ["Not checked yet", STATUS_COLORS.not_inspected],
     ["Selected", STATUS_COLORS.selected],
-    ["In progress / requires review", STATUS_COLORS.pending],
-    ["Inspected", STATUS_COLORS.accepted],
-    ["Finding reported", STATUS_COLORS.finding],
+    ["In progress", STATUS_COLORS.pending],
+    ["Done", STATUS_COLORS.accepted],
+    ["Problem", STATUS_COLORS.finding],
   ];
   return (
     <div className="legend">

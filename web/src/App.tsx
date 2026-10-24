@@ -22,11 +22,10 @@ export default function App() {
       <header className="topbar">
         <NavLink to="/" className="brand">{label}</NavLink>
         <nav>
-          <NavLink to="/catalog">Assets</NavLink>
-          <NavLink to="/dashboard">Dashboard</NavLink>
+          <NavLink to="/catalog">Equipment</NavLink>
           <NavLink to="/supervisor">Review</NavLink>
-          <NavLink to="/findings">Findings</NavLink>
-          <NavLink to="/import">Import</NavLink>
+          <NavLink to="/findings">Problems</NavLink>
+          <NavLink to="/dashboard">Dashboard</NavLink>
         </nav>
         <span className="who" title="Change on the home screen">{name} · {role}</span>
       </header>
@@ -46,7 +45,7 @@ export default function App() {
           <Route path="/import" element={<ImportStudio />} />
           <Route path="/p/:serial" element={<Passport />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="*" element={<div className="page"><h1>Not found</h1></div>} />
+          <Route path="*" element={<div className="page"><h1>Page not found</h1><NavLink to="/">Go to the start</NavLink></div>} />
         </Routes>
       </main>
     </div>

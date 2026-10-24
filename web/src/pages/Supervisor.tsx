@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { IndustryFilter } from "../components/IndustryFilter";
-import { Chip, INSPECTION_TONE, IndustryChip, ModeBadge, useAsync, usePolling, when } from "../components/ui";
+import { Chip, INSPECTION_LABEL, INSPECTION_TONE, IndustryChip, ModeBadge, useAsync, usePolling, when } from "../components/ui";
 import { useSession } from "../session";
 
 export default function Supervisor() {
@@ -17,27 +17,28 @@ export default function Supervisor() {
     <li>
       <IndustryChip industry={r.industry} />
       <Link to={r.status === "submitted" ? `/supervisor/${r.id}` : `/inspections/${r.id}/summary`}>
-        <b>{r.product_name}</b> · {r.serial_number} · rev {r.revision}
+        <b>{r.product_name}</b> · {r.serial_number}
       </Link>
       <span className="small muted"> {r.inspector} · {when(r.submitted_at ?? r.updated_at)}</span>
       <ModeBadge mode={r.mode} />
-      {r.open_findings > 0 && <Chip tone="red">{r.open_findings} open finding(s)</Chip>}
-      <Chip tone={INSPECTION_TONE[r.status]}>{r.status.replace("_", " ")}</Chip>
+      {r.open_findings > 0 && <Chip tone="red">{r.open_findings} problem{r.open_findings > 1 ? "s" : ""} to fix</Chip>}
+      <Chip tone={INSPECTION_TONE[r.status]}>{INSPECTION_LABEL[r.status] ?? r.status}</Chip>
     </li>
   );
 
   return (
     <div className="page">
       <div className="card-head">
-        <h1>Supervisor review</h1>
+        <h1>Review inspections</h1>
         <IndustryFilter industries={[...new Set(all.map((r) => r.industry))]} />
       </div>
       <section className="card">
-        <h2>Awaiting review ({queue.length})</h2>
-        {queue.length ? <ul className="list">{queue.map((r) => <Row key={r.id} r={r} />)}</ul> : <p className="muted small">Nothing to review. This list refreshes automatically.</p>}
+        <h2>Waiting for your review ({queue.length})</h2>
+        {queue.length ? <><p className="muted small">Tap one to open it, look at the photos and results, then approve it or ask for changes.</p><ul className="list">{queue.map((r) => <Row key={r.id} r={r} />)}</ul></>
+          : <p className="muted small">Nothing to review right now. This list updates by itself.</p>}
       </section>
       <section className="card">
-        <h2>All inspections</h2>
+        <h2>Other inspections</h2>
         <ul className="list">{rest.map((r) => <Row key={r.id} r={r} />)}</ul>
       </section>
     </div>

@@ -87,14 +87,14 @@ Industry is read from the package manifest, so there is no new table and no seco
 
 ## 6. Demo script for the electrical segment (20–30 s)
 
-Before the pitch, have a **demo inspection already open** on `ICP-001-SN-0002`, or start one from Assets → Electrical → *Demo inspection*.
+Before the pitch, have a **demo inspection already open** on `ICP-001-SN-0002`, or start one from Equipment → Electrical → *Practice*.
 
-1. (Chair segment ends) Tap **Assets** → **Electrical**. *"Same platform, different industry."*
-2. Open the ICP-001 demo inspection → **Open door** → tap the breakers (or pick them from the list) → **Zoom to part**.
+1. (Chair segment ends) Tap **Equipment** → **Electrical**. *"Same platform, different industry."*
+2. Open the ICP-001 practice inspection → **Open door** → tap the breakers (or pick them from the list) → **Zoom to part**.
 3. Show the technical sheet and inspection points (*"defined by the asset's inspection profile, not hard-coded"*).
-4. **Use demo photo (live AI)**: the AI flags missing circuit labels for human review. If the network is slow,
-   use **Offline: precomputed result**, which is labelled as a demo result.
-5. **Fail… → Record finding** → the breakers turn red → **Dashboard → All industries** shows both scenarios.
+4. **Use this photo** (live AI): the AI flags missing circuit labels for human review. If the network is slow,
+   use **No internet: use saved AI result**, which is labelled as a saved practice result.
+5. **Report a problem → Save problem** → the breakers turn red → **Dashboard → All industries** shows both scenarios.
 
 Line: *"We didn't build a chair inspection app. We built an AI-powered inspection platform that adapts to different
 industries, assets and field workflows."*

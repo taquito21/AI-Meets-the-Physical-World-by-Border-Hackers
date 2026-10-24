@@ -2,8 +2,11 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, type ApiError } from "../api";
 import { IndustryFilter } from "../components/IndustryFilter";
-import { Chip, ErrorBox, INSPECTION_TONE, IndustryChip, ModeBadge, useAsync } from "../components/ui";
+import { Chip, ErrorBox, INSPECTION_LABEL, INSPECTION_TONE, IndustryChip, ModeBadge, useAsync } from "../components/ui";
 import { useSession } from "../session";
+
+// First sentence only: the full engineering description lives under "About this equipment".
+const firstSentence = (t: string) => (t.match(/^.*?[.!?](\s|$)/)?.[0] ?? t).trim();
 
 export default function Catalog() {
   const { data, error } = useAsync(() => api.products(), []);
@@ -29,10 +32,11 @@ export default function Catalog() {
   return (
     <div className="page">
       <div className="card-head">
-        <h1>Assets</h1>
+        <h1>Equipment</h1>
         <IndustryFilter industries={[...new Set((data ?? []).map((p) => p.industry))]} />
       </div>
-      <p className="muted small">The same inspection engine runs every asset. Only the asset definition (3D model, components, technical data) and its inspection profile change.</p>
+      <p className="muted">Find the unit in front of you and tap <b>Start inspection</b>. To try the app first, tap <b>Practice</b>.</p>
+      {!data && !error && <p className="muted">Loading equipment…</p>}
       {error && <ErrorBox error={{ message: error }} />}
       <ErrorBox error={err} />
       {assets.map((p) => (
@@ -40,46 +44,42 @@ export default function Catalog() {
           <div className="card-head">
             <div>
               <h2>{p.product_name}</h2>
-              <div className="muted small">{p.manufacturer} · {p.product_id} · Engineering revision {p.revision}</div>
+              <div className="muted small">{p.asset_category}</div>
             </div>
-            <div className="row">
-              <IndustryChip industry={p.industry} />
-              {p.demonstration_package && <Chip tone="amber">Demonstration package</Chip>}
-            </div>
+            <IndustryChip industry={p.industry} />
           </div>
-          <p className="small">{p.description}</p>
-          <p className="small muted">{p.asset_category} · {p.component_count} components · {p.requirement_count} inspection points{p.demo_evidence_count ? ` · ${p.demo_evidence_count} prepared demo photos` : ""}</p>
-          <Link className="btn btn-ghost" to={`/products/${encodeURIComponent(p.id)}`}>{p.has_3d ? "View 3D assembly & technical data" : "View technical data"}</Link>
-          <h3>Units</h3>
+          <p className="small">{firstSentence(p.description ?? "")}</p>
           <ul className="list">
             {p.instances.map((i) => {
               const open = i.last_inspection_status === "in_progress" || i.last_inspection_status === "changes_requested";
               return (
                 <li key={i.serial_number} className="instance">
                   <div>
-                    <Link to={`/p/${i.serial_number}`}><b>{i.serial_number}</b></Link>
-                    <div className="muted small">{i.metadata.location}</div>
+                    <b>{i.metadata.location ?? i.serial_number}</b>
+                    <div className="muted small">Serial {i.serial_number}</div>
                   </div>
                   {i.last_inspection_status && (
                     <>
                       <ModeBadge mode={i.last_inspection_mode} />
-                      <Chip tone={INSPECTION_TONE[i.last_inspection_status]}>{i.last_inspection_status.replace("_", " ")}</Chip>
+                      <Chip tone={INSPECTION_TONE[i.last_inspection_status]}>{INSPECTION_LABEL[i.last_inspection_status] ?? i.last_inspection_status}</Chip>
                     </>
                   )}
                   {i.last_inspection_status === "submitted" ? (
-                    <Link className="btn btn-ghost" to={`/p/${i.serial_number}`}>Under review</Link>
+                    <Link className="btn btn-ghost" to={`/p/${i.serial_number}`}>See history</Link>
                   ) : open ? (
-                    <button className="btn" disabled={!!busy}
-                      onClick={() => start(i.serial_number, (i.last_inspection_mode as "live" | "demo") ?? "live")}>Resume</button>
+                    <button className="btn btn-primary" disabled={!!busy}
+                      onClick={() => start(i.serial_number, (i.last_inspection_mode as "live" | "demo") ?? "live")}>
+                      {busy?.startsWith(`${i.serial_number}:`) ? "Opening…" : "Continue"}
+                    </button>
                   ) : (
                     <>
-                      <button className="btn" disabled={!!busy} onClick={() => start(i.serial_number, "live")}>
-                        {busy === `${i.serial_number}:live` ? "Opening…" : "Inspect"}
+                      <button className="btn btn-primary" disabled={!!busy} onClick={() => start(i.serial_number, "live")}>
+                        {busy === `${i.serial_number}:live` ? "Opening…" : "Start inspection"}
                       </button>
                       {p.demo_evidence_count > 0 && (
                         <button className="btn btn-demo" disabled={!!busy} onClick={() => start(i.serial_number, "demo")}
-                          aria-describedby="demo-hint">
-                          {busy === `${i.serial_number}:demo` ? "Opening…" : "Demo inspection"}
+                          title="Try it with sample photos" aria-describedby="demo-hint">
+                          {busy === `${i.serial_number}:demo` ? "Opening…" : "Practice"}
                         </button>
                       )}
                     </>
@@ -88,10 +88,23 @@ export default function Catalog() {
               );
             })}
           </ul>
+          <details className="more">
+            <summary>About this equipment</summary>
+            <p className="small">{p.description}</p>
+            <p className="small muted">
+              {p.manufacturer} · {p.product_id} · engineering revision {p.revision} · {p.component_count} parts · {p.requirement_count} checks
+              {p.demo_evidence_count ? ` · ${p.demo_evidence_count} practice photos` : ""}
+            </p>
+            {p.demonstration_package && <p className="small"><Chip tone="amber">Demonstration package</Chip> Sample engineering data, not from a real manufacturer.</p>}
+            <div className="row">
+              <Link className="btn btn-ghost btn-small" to={`/products/${encodeURIComponent(p.id)}`}>{p.has_3d ? "3D model and technical data" : "Technical data"}</Link>
+              {p.instances.map((i) => <Link key={i.serial_number} className="btn btn-ghost btn-small" to={`/p/${i.serial_number}`}>History of {i.serial_number}</Link>)}
+            </div>
+          </details>
         </section>
       ))}
-      {data && assets.length === 0 && <p className="muted">No assets in this industry.</p>}
-      <p id="demo-hint" className="tiny muted">Demo inspections use prepared, clearly labelled demonstration photos and never mix with live inspection records.</p>
+      {data && assets.length === 0 && <p className="muted">No equipment of this kind yet.</p>}
+      <p id="demo-hint" className="tiny muted">Practice uses sample photos prepared in advance. Practice inspections are always labelled and never mixed with real ones.</p>
     </div>
   );
 }

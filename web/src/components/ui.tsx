@@ -1,13 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import type { ComponentStatus, Issue, ItemStatus } from "../api";
 
+// Plain-language labels: the people using the app are not necessarily technical.
 export const ITEM_LABEL: Record<ItemStatus, string> = {
-  pending: "Not inspected",
-  evidence_submitted: "Awaiting decision",
-  more_evidence_requested: "More evidence needed",
-  passed: "Passed",
-  failed: "Failed",
-  not_applicable: "Not applicable",
+  pending: "To do",
+  evidence_submitted: "Choose a result",
+  more_evidence_requested: "New photo needed",
+  passed: "Looks good",
+  failed: "Problem reported",
+  not_applicable: "Doesn't apply",
+};
+
+// Server messages rephrased for non-technical users (the reasons below them are already plain sentences).
+const FRIENDLY_ERRORS: Record<string, string> = {
+  "Requirement cannot be dispositioned": "Before you can save this:",
+  "Inspection cannot be submitted yet": "A few checks are still missing. Tap one to go there:",
+  "Cannot reach the server. Check the network connection.": "No connection to the server. Check the Wi-Fi or mobile data and try again.",
 };
 
 export const ITEM_TONE: Record<ItemStatus, string> = {
@@ -22,16 +30,28 @@ export const ITEM_TONE: Record<ItemStatus, string> = {
 // Component-level states shared by every industry. "Inspected" means all requirements were dispositioned by a
 // person (passed or N/A); attaching a photo alone never makes a component "Inspected".
 export const COMPONENT_LABEL: Record<ComponentStatus, string> = {
-  not_inspected: "Pending",
+  not_inspected: "Not checked yet",
+  in_progress: "Partly done",
+  pending: "Needs attention",
+  accepted: "Done",
+  finding: "Problem reported",
+};
+
+export const SEVERITY_LABEL: Record<string, string> = {
+  low: "Minor", medium: "Moderate", high: "Serious", critical: "Critical: stop using it",
+};
+
+export const INSPECTION_LABEL: Record<string, string> = {
   in_progress: "In progress",
-  pending: "Requires review",
-  accepted: "Inspected",
-  finding: "Finding reported",
+  submitted: "Sent for review",
+  changes_requested: "Changes requested",
+  approved: "Approved",
+  rejected: "Rejected",
 };
 
 export function ModeBadge({ mode }: { mode: string | undefined | null }) {
-  if (mode !== "demo") return <Chip tone="blue">Live inspection</Chip>;
-  return <span className="chip chip-demo" title="Uses prepared demonstration material">DEMO inspection</span>;
+  if (mode !== "demo") return <Chip tone="blue">Real inspection</Chip>;
+  return <span className="chip chip-demo" title="Uses photos prepared in advance">Practice</span>;
 }
 
 export function IndustryChip({ industry }: { industry: string | undefined | null }) {
@@ -64,7 +84,7 @@ export function Progress({ done, total }: { done: number; total: number }) {
   return (
     <div className="progress" aria-label={`${done} of ${total}`}>
       <div className="progress-bar" style={{ width: `${pct}%` }} />
-      <span>{done}/{total} required</span>
+      <span>{done} of {total} required checks done</span>
     </div>
   );
 }
@@ -73,7 +93,7 @@ export function ErrorBox({ error, onSelect }: { error: { message: string; issues
   if (!error) return null;
   return (
     <div className="error-box" role="alert">
-      <strong>{error.message}</strong>
+      <strong>{FRIENDLY_ERRORS[error.message] ?? error.message}</strong>
       {!!error.issues?.length && (
         <ul>
           {error.issues.map((i, n) => (

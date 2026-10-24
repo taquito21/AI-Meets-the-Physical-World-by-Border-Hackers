@@ -47,7 +47,7 @@ export default function Passport() {
       <section className="card">
         <h2>Findings</h2>
         {data.findings.length === 0 && <p className="muted small">No findings.</p>}
-        {data.findings.map((f: any) => <div key={f.id} className="small">{when(f.created_at)}: {f.mode === "demo" && <span className="chip chip-demo">DEMO</span>} <b>{f.component_id}</b> {f.description} <Chip>{f.status.replace(/_/g, " ")}</Chip></div>)}
+        {data.findings.map((f: any) => <div key={f.id} className="small">{when(f.created_at)}: {f.mode === "demo" && <span className="chip chip-demo">Practice</span>} <b>{f.component_id}</b> {f.description} <Chip>{f.status.replace(/_/g, " ")}</Chip></div>)}
       </section>
       <section className="card">
         <h2>Timeline</h2>

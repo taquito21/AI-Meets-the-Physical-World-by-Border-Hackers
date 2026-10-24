@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, ApiError, type InspectionState, type Revision } from "../api";
 import { AssessmentView } from "../components/EvidenceCard";
-import { Chip, COMPONENT_LABEL, COMPONENT_TONE, ErrorBox, INSPECTION_TONE, IndustryChip, ITEM_LABEL, ITEM_TONE, Lightbox, ModeBadge, usePolling, when } from "../components/ui";
+import { Chip, COMPONENT_LABEL, COMPONENT_TONE, ErrorBox, INSPECTION_LABEL, INSPECTION_TONE, IndustryChip, ITEM_LABEL, ITEM_TONE, Lightbox, ModeBadge, SEVERITY_LABEL, usePolling, when } from "../components/ui";
 import { useSession } from "../session";
 
 export default function Summary({ review = false }: { review?: boolean }) {
@@ -55,10 +55,10 @@ export default function Summary({ review = false }: { review?: boolean }) {
         <div className="row">
           <IndustryChip industry={rev.industry} />
           <ModeBadge mode={s.mode} />
-          <Chip tone={INSPECTION_TONE[s.status]}>{s.status.replace("_", " ")}</Chip>
+          <Chip tone={INSPECTION_TONE[s.status]}>{INSPECTION_LABEL[s.status] ?? s.status}</Chip>
         </div>
       </div>
-      {s.mode === "demo" && <div className="notice notice-demo"><b>Demo inspection.</b> Contains prepared demonstration photos; not a record of a real inspection.</div>}
+      {s.mode === "demo" && <div className="notice notice-demo"><b>Practice inspection.</b> It uses photos prepared in advance; it is not a record of a real inspection.</div>}
       <dl className="kv card">
         <dt>Asset</dt><dd>{rev.product_name} ({rev.product_model_id}) · {rev.asset_category}</dd>
         <dt>Serial number</dt><dd><Link to={`/p/${state.instance.serial_number}`}>{state.instance.serial_number}</Link></dd>
@@ -72,28 +72,34 @@ export default function Summary({ review = false }: { review?: boolean }) {
 
       {canReview && (
         <section className="card review-box">
-          <h2>Supervisor decision</h2>
-          <p className="small muted">Reviewing as <b>{name}</b>. To request more evidence, tick the requirements below. Approving the inspection does not close corrective actions or release the product.</p>
-          <textarea rows={2} value={comments} onChange={(e) => setComments(e.target.value)} placeholder="Comments" />
+          <h2>Your decision</h2>
+          <ol className="small review-steps">
+            <li>Look at the photos and results below.</li>
+            <li>If a check needs a new photo or a second look, tick its box below.</li>
+            <li>Write a comment for the inspector, then choose.</li>
+          </ol>
+          <textarea rows={2} value={comments} onChange={(e) => setComments(e.target.value)} placeholder="Comment for the inspector (optional)" />
           <div className="row">
-            <button className="btn btn-green" disabled={busy} onClick={() => decide("approve")}>Approve inspection</button>
-            <button className="btn" disabled={busy || requested.size === 0} onClick={() => decide("request_evidence")}>Request evidence ({requested.size})</button>
+            <button className="btn btn-green btn-big" disabled={busy} onClick={() => decide("approve")}>Approve</button>
+            <button className="btn btn-big" disabled={busy || requested.size === 0} onClick={() => decide("request_evidence")}
+              title={requested.size === 0 ? "Tick at least one check below first" : undefined}>Ask for changes ({requested.size})</button>
             <button className="btn btn-red-ghost" disabled={busy} onClick={() => decide("reject")}>Reject</button>
           </div>
+          <p className="tiny muted">Reviewing as {name}. Approving does not close the problems found or release the equipment.</p>
           <ErrorBox error={err} />
         </section>
       )}
 
       {state.findings.length > 0 && (
         <section className="card">
-          <h2>Findings</h2>
+          <h2>Problems found</h2>
           {state.findings.map((f) => (
             <div key={f.id} className="finding-inline">
-              <Chip tone={f.status === "closed" ? "green" : f.status === "void" ? "neutral" : "red"}>{f.severity}</Chip>{" "}
-              <b>{compName(f.component_id)}</b>: {f.description} <span className="muted small">· {f.status.replace(/_/g, " ")} · {f.created_by}</span>
+              <Chip tone={f.status === "closed" ? "green" : f.status === "void" ? "neutral" : "red"}>{SEVERITY_LABEL[f.severity] ?? f.severity}</Chip>{" "}
+              <b>{compName(f.component_id)}</b>: {f.description} <span className="muted small">· {f.created_by}</span>
             </div>
           ))}
-          <Link to="/findings" className="small">Manage corrective actions →</Link>
+          <Link to="/findings" className="small">Go to problems to fix →</Link>
         </section>
       )}
 
