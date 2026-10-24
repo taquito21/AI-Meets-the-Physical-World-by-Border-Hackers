@@ -2,6 +2,7 @@ import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { BookOpen, ClipboardList, FolderOpen, LogOut, ScanFace } from "lucide-react";
 import { AskBox } from "./components/AskBox";
 import { LanguageSwitch } from "./components/LanguageSwitch";
+import { TechBackground } from "./components/TechBackground";
 import { t } from "./i18n";
 import JobDetail from "./pages/JobDetail";
 import Jobs from "./pages/Jobs";
@@ -18,9 +19,10 @@ export default function App() {
   const employer = me.user_class === "employer";
   return (
     <div className="app">
+      <TechBackground variant="app" />
       <header className="topbar">
         <NavLink to="/" className="brand" aria-label="FieldSight">
-          <img src="/brand/fieldsight-mark.png" alt="" width={30} height={30} />
+          <img src="/brand/fieldsight-mark-clear.png" alt="" width={40} height={35} />
           <span>Field<span className="brand-sight">Sight</span></span>
         </NavLink>
         <nav>

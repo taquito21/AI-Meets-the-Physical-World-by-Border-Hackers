@@ -1,6 +1,7 @@
 import { Suspense, lazy, useState } from "react";
 import { LogIn, ScanFace } from "lucide-react";
 import { LanguageSwitch } from "../components/LanguageSwitch";
+import { TechBackground } from "../components/TechBackground";
 import { ErrorBox } from "../components/ui";
 import { t } from "../i18n";
 import { useSession } from "../session";
@@ -41,14 +42,14 @@ export default function Login() {
     }
   };
   return (
+    <div className="login-shell">
+    <TechBackground variant="login" />
+    <div className="login-lang"><LanguageSwitch /></div>
     <div className="page login">
-      <div className="card-head">
-        <h1 className="login-logo">
-          <img src="/brand/fieldsight-logo.jpg" alt="FieldSight: AI-powered 3D field inspections" width={900} height={626} />
-        </h1>
-        <LanguageSwitch />
-      </div>
-      <p className="muted">{t("Your jobs, step by step: take photos, write notes, and mark each task done.")}</p>
+      <h1 className="login-logo">
+        <img src="/brand/fieldsight-logo-clear.png" alt="FieldSight: AI-powered 3D field inspections" width={820} height={570} />
+      </h1>
+      <p className="muted login-intro">{t("Your jobs, step by step: take photos, write notes, and mark each task done.")}</p>
       {usingFace ? (
         <section className="card">
           <Suspense fallback={<p className="muted">{t("Preparing the camera…")}</p>}>
@@ -71,6 +72,7 @@ export default function Login() {
         <button className="btn btn-big btn-primary" disabled={busy}><LogIn aria-hidden />{busy ? t("Signing in…") : t("Sign in")}</button>
         <ErrorBox error={error ?? sessionError} />
       </form>
+    </div>
     </div>
   );
 }
