@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import io
 import re
+import time
 from typing import Any
 
 import httpx
@@ -18,12 +19,15 @@ from .config import settings
 CHUNK_CHARS = 1500
 OVERLAP_CHARS = 200
 EMBED_BATCH = 64
+RATE_LIMIT_RETRIES = 2  # on HTTP 429, wait as long as Voyage asks (capped) and try again
+MAX_WAIT_S = 25
 TOP_K = 6
 
 ANSWER_SYSTEM = """You answer questions from field workers and their employers using only the company documents \
 provided. Each document is one excerpt from a manual or procedure. If the excerpts do not contain the answer, say \
 so plainly instead of guessing, and suggest what to look for. Keep answers short and practical. Never state that \
-equipment is safe, compliant or certified."""
+equipment is safe, compliant or certified. Write plain text without Markdown (no asterisks or headings); for steps, \
+put each on its own line starting with "- "."""
 
 
 class RagError(Exception):
@@ -65,13 +69,23 @@ def embed(texts: list[str], input_type: str) -> list[list[float]]:
         raise RagError("Document search is not configured (set VOYAGE_API_KEY in backend/.env).")
     out: list[list[float]] = []
     for i in range(0, len(texts), EMBED_BATCH):
-        try:
-            resp = httpx.post(settings.voyage_url, timeout=60,
-                              headers={"Authorization": f"Bearer {settings.voyage_api_key}"},
-                              json={"input": texts[i:i + EMBED_BATCH], "model": settings.voyage_model,
-                                    "input_type": input_type})
-        except httpx.TransportError:
-            raise RagError("Could not reach the embedding service (network).")
+        for attempt in range(RATE_LIMIT_RETRIES + 1):
+            try:
+                resp = httpx.post(settings.voyage_url, timeout=60,
+                                  headers={"Authorization": f"Bearer {settings.voyage_api_key}"},
+                                  json={"input": texts[i:i + EMBED_BATCH], "model": settings.voyage_model,
+                                        "input_type": input_type})
+            except httpx.TransportError:
+                raise RagError("Could not reach the embedding service (network).")
+            if resp.status_code != 429 or attempt == RATE_LIMIT_RETRIES:
+                break
+            try:
+                wait = float(resp.headers.get("retry-after") or 20)
+            except ValueError:
+                wait = 20
+            time.sleep(min(wait, MAX_WAIT_S))
+        if resp.status_code == 429:
+            raise RagError("Document search is busy right now. Try again in a minute.", 429)
         if resp.status_code >= 400:
             raise RagError(f"Embedding service error ({resp.status_code}): {resp.text[:200]}")
         out.extend(d["embedding"] for d in sorted(resp.json()["data"], key=lambda d: d["index"]))
@@ -82,14 +96,15 @@ def vector_literal(vec: list[float]) -> str:
     return "[" + ",".join(f"{v:.7g}" for v in vec) + "]"
 
 
-def ingest(media: dict[str, Any], data: bytes, filename: str) -> int:
-    """Index one uploaded document. Returns the number of chunks stored."""
+def ingest(media: dict[str, Any], data: bytes, filename: str, start_index: int = 0) -> int:
+    """Index one uploaded document. Returns the number of chunks stored. `start_index` numbers the new chunks
+    after existing ones, so a re-index can write before it deletes the old chunks."""
     chunks = chunk_pages(extract_pages(data, filename))
     if not chunks:
         raise RagError("No text found in this file. Scanned PDFs (images of pages) cannot be searched yet.", 422)
     vectors = embed(chunks, "document")
     db.insert("document_chunks", [
-        {"id": db.new_id(), "company_id": media["company_id"], "media_id": media["id"], "chunk_index": i,
+        {"id": db.new_id(), "company_id": media["company_id"], "media_id": media["id"], "chunk_index": start_index + i,
          "content": text, "embedding": vector_literal(vec)}
         for i, (text, vec) in enumerate(zip(chunks, vectors))])
     return len(chunks)
@@ -125,8 +140,10 @@ def answer(question: str, hits: list[dict[str, Any]]) -> dict[str, Any]:
     try:
         response = ai.claude_client().messages.create(
             model=settings.ai_model, max_tokens=4000,
-            system=ANSWER_SYSTEM + (" Answer in plain, neutral Latin-American Spanish, even if the documents are in "
-                                    "English." if i18n.current_lang.get() == "es" else ""),
+            system=ANSWER_SYSTEM + (" Answer in plain, neutral Latin-American Spanish, addressing the reader as tú "
+                                    "(informal imperatives). If the documents are in English, paraphrase them in Spanish: "
+                                    "never copy English sentences into the answer."
+                                    if i18n.current_lang.get() == "es" else ""),
             output_config={"effort": settings.ai_effort},
             messages=[{"role": "user", "content": [*docs, {"type": "text", "text": question}]}],
             **ai.request_options())
@@ -151,8 +168,9 @@ def answer(question: str, hits: list[dict[str, Any]]) -> dict[str, Any]:
             if idx not in numbers:
                 numbers[idx] = len(numbers) + 1
                 h = hits[idx]
+                cited = re.sub(r"^\(page \d+\) ", "", getattr(c, "cited_text", "") or "")  # internal page marker
                 sources.append({"n": numbers[idx], "media_id": h["media_id"], "title": h["title"], "page": h["page"],
-                                "cited_text": getattr(c, "cited_text", "")})
+                                "cited_text": cited})
             if f"[{numbers[idx]}]" not in marks:
                 marks.append(f"[{numbers[idx]}]")
         parts.append(block.text + ("".join(marks) if marks else ""))

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Box, Eye, EyeOff, FileText, Image, Trash2, Upload, type LucideIcon } from "lucide-react";
+import { Box, Eye, EyeOff, FileText, Image, RefreshCw, Trash2, Upload, type LucideIcon } from "lucide-react";
 import { api, type MediaItem } from "../api";
 import { AskBox } from "../components/AskBox";
 import { ModelView } from "../components/ModelView";
@@ -17,6 +17,7 @@ export default function Media() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [indexing, setIndexing] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
 
   const upload = async (e: React.FormEvent) => {
@@ -40,6 +41,23 @@ export default function Media() {
       setError((err as Error).message);
     } finally {
       setBusy(false);
+    }
+  };
+  // Documents saved while search wasn't available (no key, rate limit) can be made searchable later.
+  const reindex = async (m: MediaItem) => {
+    setIndexing(m.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const r = await api.reindexMedia(m.id);
+      setNotice(r.indexing?.indexed
+        ? t("\"{title}\" can now be searched ({n} sections).", { title: m.title, n: r.indexing.chunks ?? 0 })
+        : t("\"{title}\" was saved but cannot be searched: {reason}", { title: m.title, reason: t(r.indexing?.error ?? "") }));
+      reload();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setIndexing(null);
     }
   };
   const remove = async (m: MediaItem) => {
@@ -85,6 +103,11 @@ export default function Media() {
                   ? <button className="btn btn-small" onClick={() => setPreview(preview === m.id ? null : m.id)}>
                     {preview === m.id ? <><EyeOff aria-hidden />{t("Hide")}</> : <><Eye aria-hidden />{t("View")}</>}</button>
                   : m.url && <a className="btn btn-small" href={m.url} target="_blank" rel="noreferrer"><Eye aria-hidden />{t("Open")}</a>}
+                {m.kind === "document" && !m.chunks && (
+                  <button className="btn btn-small" disabled={indexing === m.id} onClick={() => reindex(m)}>
+                    <RefreshCw aria-hidden />{indexing === m.id ? t("Indexing…") : t("Make searchable")}
+                  </button>
+                )}
                 <button className="btn btn-small btn-red-ghost" onClick={() => remove(m)}><Trash2 aria-hidden />{t("Delete")}</button>
                 {preview === m.id && <div className="full"><ModelView model={m} /></div>}
               </li>

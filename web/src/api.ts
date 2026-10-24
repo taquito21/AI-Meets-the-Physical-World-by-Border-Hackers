@@ -110,7 +110,8 @@ export interface Dashboard { jobs: JobSummary[]; attention: AttentionTask[]; tea
 
 export interface AskResult {
   answer: string;
-  sources: { n: number; media_id: string; title: string; page: number | null; cited_text: string }[];
+  // url: short-lived link to the document, opening PDFs at the cited page
+  sources: { n: number; media_id: string; title: string; page: number | null; cited_text: string; url: string | null }[];
 }
 
 export class ApiError extends Error {
@@ -200,6 +201,7 @@ export const api = {
     if (title.trim()) fd.append("title", title.trim());
     return request<MediaItem>("/api/media", { method: "POST", body: fd });
   },
+  reindexMedia: (id: string) => request<MediaItem>(`/api/media/${id}/reindex`, { method: "POST" }),
   deleteMedia: (id: string) => request<{ deleted: string }>(`/api/media/${id}`, { method: "DELETE" }),
   ask: (question: string) => request<AskResult>("/api/ask", json("POST", { question })),
 };

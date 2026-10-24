@@ -335,6 +335,7 @@ label input, label select, label textarea { color: var(--ink); }
 .media-row .full { flex-basis: 100%; }
 .sources { margin-top: .4rem; }
 .answer { border-top: 1px dashed var(--line); margin-top: .6rem; padding-top: .4rem; }
+.answer-text { white-space: pre-line; }
 .topbar .lang-switch + .signout { margin-left: .6rem; }
 .btn svg.lucide { width: 1.15em; height: 1.15em; }
 

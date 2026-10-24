@@ -249,6 +249,15 @@ async def upload_media(user: Employer, file: UploadFile = File(...),
     return {**workflow.media_view(row, urls), "indexing": row["indexing"]}
 
 
+@app.post("/api/media/{media_id}/reindex")
+def reindex_media(media_id: str, user: Employer) -> dict[str, Any]:
+    """Make a stored document searchable (again). Returns the media item with an `indexing` report."""
+    m = workflow.media_for(user, media_id)
+    indexing = media.reindex(m)
+    chunks = db.count("document_chunks", {"media_id": media_id})
+    return {**workflow.media_view(m, blobs.signed_urls([m["storage_path"]])), "chunks": chunks, "indexing": indexing}
+
+
 @app.delete("/api/media/{media_id}")
 def delete_media(media_id: str, user: Employer) -> dict[str, Any]:
     media.delete_media(workflow.media_for(user, media_id))
@@ -259,8 +268,17 @@ def delete_media(media_id: str, user: Employer) -> dict[str, Any]:
 
 @app.post("/api/ask")
 def ask(body: AskIn, user: User) -> dict[str, Any]:
-    """Answer a question from the company's documents, with numbered sources."""
-    return rag.answer(body.question, rag.search(user["company_id"], body.question))
+    """Answer a question from the company's documents, with numbered sources that link to the cited page."""
+    out = rag.answer(body.question, rag.search(user["company_id"], body.question))
+    docs = {m["id"]: m for m in db.select("media", {"id": sorted({s["media_id"] for s in out["sources"]}),
+                                                     "company_id": user["company_id"]}, columns="id,storage_path")}
+    urls = blobs.signed_urls([m["storage_path"] for m in docs.values()])
+    for s in out["sources"]:
+        path = (docs.get(s["media_id"]) or {}).get("storage_path")
+        url = urls.get(path) if path else None
+        # PDF viewers open at a page given as #page=N (browsers ignore it for text files)
+        s["url"] = f"{url}#page={s['page']}" if url and s["page"] and path.endswith(".pdf") else url
+    return out
 
 
 # ------------------------------------------------------------ static files --
