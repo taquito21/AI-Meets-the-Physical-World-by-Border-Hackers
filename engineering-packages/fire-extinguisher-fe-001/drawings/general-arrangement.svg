@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 374" font-family="monospace">
+<rect width="780" height="374" fill="#fff"/>
+<rect x="4" y="4" width="772" height="366" fill="none" stroke="#000" stroke-width="2"/>
+<text x="40" y="28" font-size="13" font-weight="bold">FRONT VIEW (looking -Z)</text>
+<rect x="48.5" y="64.1" width="36.0" height="119.1" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>cylinder_body</title></rect>
+<rect x="47.9" y="176.9" width="37.2" height="7.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>cylinder_base</title></rect>
+<rect x="60.2" y="59.6" width="12.6" height="4.8" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>valve_collar</title></rect>
+<rect x="59.9" y="47.6" width="13.2" height="12.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>valve_body</title></rect>
+<rect x="72.5" y="53.0" width="6.6" height="4.8" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>valve_outlet</title></rect>
+<rect x="61.4" y="46.7" width="10.2" height="10.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>gauge_housing</title></rect>
+<rect x="62.2" y="47.5" width="8.7" height="8.7" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>gauge_face</title></rect>
+<rect x="62.6" y="46.3" width="7.8" height="1.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>handle_bar</title></rect>
+<rect x="62.6" y="45.5" width="7.8" height="6.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>handle_end</title></rect>
+<rect x="62.9" y="40.0" width="7.2" height="1.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>lever</title></rect>
+<rect x="57.5" y="44.3" width="18.0" height="1.3" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>pin_shaft</title></rect>
+<rect x="50.4" y="44.4" width="7.7" height="1.1" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>pin_ring</title></rect>
+<rect x="51.9" y="48.5" width="4.7" height="1.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>tamper_seal</title></rect>
+<rect x="78.1" y="53.2" width="15.3" height="86.4" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hose</title></rect>
+<rect x="85.5" y="139.4" width="5.9" height="18.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>nozzle</title></rect>
+<rect x="50.8" y="101.9" width="31.5" height="45.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>instructions_label</title></rect>
+<rect x="40.0" y="58.4" width="9.9" height="21.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>tag_card</title></rect>
+<rect x="45.3" y="46.9" width="9.4" height="11.7" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>tag_string</title></rect>
+<rect x="58.3" y="73.4" width="16.5" height="42.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>bracket_plate</title></rect>
+<rect x="48.4" y="92.0" width="36.2" height="4.8" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>bracket_strap</title></rect>
+<rect x="62.0" y="65.3" width="9.0" height="1.8" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>bracket_hook</title></rect>
+<text x="40" y="206.45" font-size="11">overall 178 x 482 mm (nominal)</text>
+<text x="153.39433066666385" y="28" font-size="13" font-weight="bold">SIDE VIEW (looking -X)</text>
+<rect x="154.0" y="64.1" width="36.0" height="119.1" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>cylinder_body</title></rect>
+<rect x="153.4" y="176.9" width="37.2" height="7.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>cylinder_base</title></rect>
+<rect x="165.7" y="59.6" width="12.6" height="4.8" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>valve_collar</title></rect>
+<rect x="164.5" y="47.6" width="15.0" height="12.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>valve_body</title></rect>
+<rect x="169.6" y="53.0" width="4.8" height="4.8" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>valve_outlet</title></rect>
+<rect x="161.5" y="46.7" width="3.0" height="10.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>gauge_housing</title></rect>
+<rect x="161.4" y="47.5" width="1.0" height="8.7" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>gauge_face</title></rect>
+<rect x="178.1" y="46.3" width="34.5" height="1.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>handle_bar</title></rect>
+<rect x="212.0" y="45.5" width="1.5" height="6.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>handle_end</title></rect>
+<rect x="166.7" y="40.0" width="37.5" height="1.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>lever</title></rect>
+<rect x="173.1" y="44.3" width="1.3" height="1.3" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>pin_shaft</title></rect>
+<rect x="170.0" y="44.4" width="7.7" height="1.1" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>pin_ring</title></rect>
+<rect x="173.3" y="48.5" width="4.7" height="1.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>tamper_seal</title></rect>
+<rect x="159.0" y="53.2" width="15.2" height="86.4" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hose</title></rect>
+<rect x="158.3" y="139.4" width="5.9" height="18.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>nozzle</title></rect>
+<rect x="153.8" y="101.9" width="9.1" height="45.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>instructions_label</title></rect>
+<rect x="165.5" y="58.4" width="5.7" height="21.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>tag_card</title></rect>
+<rect x="168.8" y="46.9" width="5.9" height="11.7" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>tag_string</title></rect>
+<rect x="196.0" y="73.4" width="1.2" height="42.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>bracket_plate</title></rect>
+<rect x="176.8" y="92.0" width="13.9" height="4.8" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>bracket_strap</title></rect>
+<rect x="181.9" y="65.3" width="15.0" height="1.8" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>bracket_hook</title></rect>
+<text x="153.39433066666385" y="206.45" font-size="11">overall 200 x 482 mm (nominal)</text>
+<text x="273.5443306666639" y="28" font-size="13" font-weight="bold">TOP VIEW</text>
+<rect x="282.1" y="63.6" width="36.0" height="36.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>cylinder_body</title></rect>
+<rect x="281.5" y="63.0" width="37.2" height="37.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>cylinder_base</title></rect>
+<rect x="293.8" y="75.2" width="12.6" height="12.6" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>valve_collar</title></rect>
+<rect x="293.5" y="74.1" width="13.2" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>valve_body</title></rect>
+<rect x="306.1" y="79.2" width="6.6" height="4.8" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>valve_outlet</title></rect>
+<rect x="295.0" y="89.1" width="10.2" height="3.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>gauge_housing</title></rect>
+<rect x="295.7" y="92.1" width="8.7" height="1.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>gauge_face</title></rect>
+<rect x="296.2" y="40.9" width="7.8" height="34.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>handle_bar</title></rect>
+<rect x="296.2" y="40.0" width="7.8" height="1.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>handle_end</title></rect>
+<rect x="296.5" y="49.3" width="7.2" height="37.5" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>lever</title></rect>
+<rect x="291.1" y="79.1" width="18.0" height="1.3" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>pin_shaft</title></rect>
+<rect x="283.9" y="75.9" width="7.7" height="7.7" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>pin_ring</title></rect>
+<rect x="285.4" y="75.6" width="4.7" height="4.7" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>tamper_seal</title></rect>
+<rect x="311.7" y="79.4" width="15.3" height="15.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>hose</title></rect>
+<rect x="319.0" y="89.4" width="5.9" height="5.9" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>nozzle</title></rect>
+<rect x="284.3" y="90.6" width="31.5" height="9.1" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>instructions_label</title></rect>
+<rect x="273.5" y="82.3" width="9.9" height="5.7" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>tag_card</title></rect>
+<rect x="278.9" y="78.9" width="9.4" height="5.9" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>tag_string</title></rect>
+<rect x="291.8" y="56.4" width="16.5" height="1.2" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>bracket_plate</title></rect>
+<rect x="282.0" y="62.8" width="36.2" height="13.9" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>bracket_strap</title></rect>
+<rect x="295.6" y="56.7" width="9.0" height="15.0" fill="#cfd8e3" fill-opacity="0.5" stroke="#000" stroke-width="0.8"><title>bracket_hook</title></rect>
+<text x="273.5443306666639" y="206.45" font-size="11">overall 178 x 200 mm (nominal)</text>
+<line x1="4" y1="294" x2="776" y2="294" stroke="#000"/>
+<text x="16" y="316" font-size="12">Generic / Demonstration (no real manufacturer) - Portable Fire Extinguisher (FE-001)</text>
+<text x="16" y="334" font-size="12">Engineering revision A - General arrangement - generated from source/geometry.json</text>
+<text x="16" y="352" font-size="12">DEMONSTRATION DRAWING - simplified projection, nominal dimensions, not for manufacture.</text>
+</svg>

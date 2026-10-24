@@ -47,6 +47,11 @@ export default function Home() {
             <b>Industrial Electrical Panel Inspection</b>
             <span>Low-voltage control panel ICP-001: visual and documentation inspection</span>
           </button>
+          <button className="scenario scenario-safety" onClick={() => { setIndustry("Facility Safety"); nav("/catalog"); }}>
+            <span className="scenario-tag">Facility safety · fire equipment</span>
+            <b>Fire Safety Equipment Inspection</b>
+            <span>Portable fire extinguisher FE-001: guided visual condition inspection</span>
+          </button>
         </div>
         <p className="muted small">Same inspection engine, evidence workflow, AI assessment and dashboard. Only the asset definition and its inspection profile change.</p>
       </section>

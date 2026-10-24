@@ -89,10 +89,16 @@ export default function Inspection() {
             <Chip tone={INSPECTION_TONE[state.inspection.status]}>{state.inspection.status.replace("_", " ")}</Chip>
           </div>
         </div>
-        <AssemblyViewer assemblyUrl={rev.assembly_url} components={rev.components} status={state.component_status}
-          selectedId={selected} onSelect={select} {...viewerProps} />
-        {controls}
-        <StatusLegend />
+        {rev.assembly_url ? (
+          <>
+            <AssemblyViewer assemblyUrl={rev.assembly_url} components={rev.components} status={state.component_status}
+              selectedId={selected} onSelect={select} {...viewerProps} />
+            {controls}
+            <StatusLegend />
+          </>
+        ) : (
+          <div className="viewer-none">Standard inspection (no 3D model): choose a component from the list.</div>
+        )}
       </div>
 
       <div className="split-panel">

@@ -48,12 +48,12 @@ backend/.venv/Scripts/python tools/reset_demo_data.py --yes      # wipe local DB
 backend/app/        FastAPI app: packages.py (validation), catalog.py (import), workflow.py (rules), ai.py, main.py (REST)
 backend/tests/      end-to-end API tests
 web/src/            React + Three.js (React Three Fiber) client; AssemblyViewer.tsx is the reusable 3D viewer
-engineering-packages/  chair-model-001, table-model-001, electrical-panel-icp-001, utep-conference-chair-rw (real venue chair)
+engineering-packages/  chair, table, electrical panel ICP-001, real venue chair, fire extinguisher FE-001
 tools/              package builder, validator, data reset, demo AI precompute
 docs/               architecture, package spec, API, demo script, limitations, model replacement, photo checklist
 ```
 
-Two scenarios run on the same engine: **Furniture** (chair, table) and **Electrical** (control panel ICP-001). See [docs/MULTI_INDUSTRY.md](docs/MULTI_INDUSTRY.md).
+Three scenarios run on the same engine: **Furniture** (chair, table, real venue chair), **Electrical** (control panel ICP-001) and **Facility Safety** (fire extinguisher FE-001). See [docs/MULTI_INDUSTRY.md](docs/MULTI_INDUSTRY.md) and [docs/FIRE_EXTINGUISHER.md](docs/FIRE_EXTINGUISHER.md).
 
 Test deployment: https://field-execution-platform.vercel.app (see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)).
 

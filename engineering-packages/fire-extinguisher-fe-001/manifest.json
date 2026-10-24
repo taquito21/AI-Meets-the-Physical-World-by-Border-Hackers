@@ -1,0 +1,23 @@
+{
+  "package_version": "1.0",
+  "package_id": "PKG-FE-001-A",
+  "manufacturer": "Generic / Demonstration (no real manufacturer)",
+  "manufacturer_id": "MFR-GENERIC-DEMO",
+  "product_id": "FE-001",
+  "product_name": "Portable Fire Extinguisher",
+  "product_description": "Portable stored-pressure ABC dry chemical fire extinguisher: generic illustrative engineering model for component identification and visual condition inspection. Not a real product; no certified ratings, capacities or pressures are given (manufacturer-dependent). The exploded view identifies components and is not a disassembly or service procedure.",
+  "industry": "Facility Safety",
+  "asset_category": "Fire Safety Equipment",
+  "engineering_revision": "A",
+  "released_at": "2026-10-24",
+  "units": "m",
+  "assembly_file": "assembly.glb",
+  "components_file": "components.json",
+  "bom_file": "bom.csv",
+  "inspection_procedure_file": "inspection-procedure.json",
+  "documents": [
+    {"id": "DWG-FE-GA", "title": "General arrangement (illustrative)", "type": "drawing", "path": "drawings/general-arrangement.svg"}
+  ],
+  "demonstration_package": true,
+  "provenance": "Illustrative model prepared by the hackathon team. Not attributed to any manufacturer; contains no certified technical data."
+}

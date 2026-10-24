@@ -21,9 +21,15 @@ export default function ProductDetail() {
   return (
     <div className="split">
       <div className="split-viewer">
-        <AssemblyViewer assemblyUrl={rev.assembly_url} components={rev.components} selectedId={selected}
-          onSelect={setSelected} {...viewerProps} />
-        {controls}
+        {rev.assembly_url ? (
+          <>
+            <AssemblyViewer assemblyUrl={rev.assembly_url} components={rev.components} selectedId={selected}
+              onSelect={setSelected} {...viewerProps} />
+            {controls}
+          </>
+        ) : (
+          <div className="viewer-none">No 3D model for this asset. Choose components from the list.</div>
+        )}
       </div>
       <div className="split-panel">
         <h1>{rev.product_name} <small>rev {rev.revision}</small></h1>

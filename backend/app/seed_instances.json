@@ -68,5 +68,23 @@
       "identified_by": "Team photos, 2026-10-24",
       "note": "Real venue chair; asset tag not recorded"
     }
+  },
+  {
+    "serial_number": "FE-001-SN-0001",
+    "product_model_id": "FE-001",
+    "product_revision_id": "FE-001@A",
+    "metadata": {
+      "location": "Corridor B, wall bracket near exit (sample data)",
+      "note": "Demonstration asset instance (illustrative extinguisher)"
+    }
+  },
+  {
+    "serial_number": "FE-001-SN-0002",
+    "product_model_id": "FE-001",
+    "product_revision_id": "FE-001@A",
+    "metadata": {
+      "location": "Workshop entrance, wall bracket (sample data)",
+      "note": "Demonstration asset instance (illustrative extinguisher)"
+    }
   }
 ]

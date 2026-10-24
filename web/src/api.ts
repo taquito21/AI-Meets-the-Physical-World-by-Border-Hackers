@@ -58,7 +58,7 @@ export interface Revision {
   procedure: Record<string, any>;
   components: Component[];
   requirements: Requirement[];
-  assembly_url: string;
+  assembly_url: string | null; // null: asset without a 3D model (inspected from the component list)
   bom_url: string;
   documents: DocumentRef[];
   industry: string;
@@ -80,6 +80,7 @@ export interface ProductSummary {
   industry: string;
   asset_category: string | null;
   demo_evidence_count: number;
+  has_3d: boolean;
   instances: { serial_number: string; metadata: Record<string, string>; last_inspection_status: string | null; last_inspection_mode: string | null }[];
 }
 

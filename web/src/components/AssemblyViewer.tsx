@@ -119,11 +119,14 @@ function Assembly({ assemblyUrl, components, status, selectedId, onSelect, explo
         n.material.emissive.copy(tmp).multiplyScalar(0.18);
       }
       if (selected) {
-        n.material.emissive.set(STATUS_COLORS.selected).multiplyScalar(0.55);
-        if (!st || st === "not_inspected") n.material.color.lerp(tmp.set(STATUS_COLORS.selected), 0.35);
+        // The selected part is always clearly coloured; the rest of the assembly fades back.
+        n.material.color.lerp(tmp.set(STATUS_COLORS.selected), 0.55);
+        n.material.emissive.set(STATUS_COLORS.selected).multiplyScalar(0.45);
       }
-      n.material.transparent = !!selectedId && !selected;
-      n.material.opacity = selectedId && !selected ? 0.55 : 1;
+      const faded = !!selectedId && !selected;
+      n.material.transparent = faded;
+      n.material.opacity = faded ? 0.4 : 1;
+      n.material.depthWrite = !faded; // faded parts never hide the selected one
       n.material.needsUpdate = true;
     }
   }, [nodes, status, selectedId]);
@@ -217,7 +220,8 @@ export default function AssemblyViewer(props: ViewerProps) {
     <div className={props.className ?? "viewer"}>
       <ViewerBoundary fallback={fallback}>
         <Canvas shadows camera={{ position: props.cameraPosition ?? [1.3, 1.0, 1.5], fov: 40, near: 0.01, far: 50 }}
-          dpr={[1, 2]} gl={{ preserveDrawingBuffer: !!props.preserveDrawingBuffer }}>
+          dpr={[1, 2]} gl={{ preserveDrawingBuffer: !!props.preserveDrawingBuffer }}
+          onPointerMissed={(e) => { if (e.type === "click") props.onSelect(null); }}>
           <color attach="background" args={["#eef2f7"]} />
           <hemisphereLight args={["#ffffff", "#8090a0", 1.1]} />
           <directionalLight position={[2, 4, 3]} intensity={1.6} castShadow shadow-mapSize={[1024, 1024]} />

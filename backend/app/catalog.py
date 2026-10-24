@@ -72,7 +72,9 @@ def load_package(package_dir: Path, actor: str = "system") -> dict[str, Any]:
                 "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (rev_id, c["component_id"], c.get("parent_component_id"), c["part_number"], c["name"],
                  c["quantity"], c.get("category"), c.get("material"), c.get("description"),
-                 db.dumps(c["model_node_ids"]), db.dumps(c["explosion"]), db.dumps(c.get("documents", [])), i,
+                 db.dumps(c.get("model_node_ids") or []),
+                 db.dumps(c.get("explosion") or {"direction": [0, 1, 0], "distance": 0}),
+                 db.dumps(c.get("documents", [])), i,
                  db.dumps(c)))
         for i, r in enumerate(report.procedure.get("requirements", [])):
             conn.execute("INSERT INTO inspection_requirements VALUES (?,?,?,?,?,?,?,?,?)",
@@ -131,7 +133,8 @@ def get_revision(conn, rev_id: str) -> dict[str, Any] | None:
     rev["requirements"] = [_public_requirement(r) for r in reqs]
     base = f"/package-files/{rev['source_dir']}"
     manifest = rev["manifest"]
-    rev["assembly_url"] = f"{base}/{manifest['assembly_file']}"
+    # None for assets without a 3D model; the inspection workflow does not depend on it.
+    rev["assembly_url"] = f"{base}/{manifest['assembly_file']}" if manifest.get("assembly_file") else None
     rev["documents"] = [{**d, "url": f"{base}/{d['path']}"} for d in manifest.get("documents", [])]
     rev["bom_url"] = f"{base}/{manifest['bom_file']}"
     rev["industry"] = manifest.get("industry") or "General"

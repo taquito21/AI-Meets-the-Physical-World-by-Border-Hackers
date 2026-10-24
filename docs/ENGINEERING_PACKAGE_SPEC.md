@@ -71,3 +71,13 @@ During development, `tools/reset_demo_data.py --yes` wipes the local demo data.
 - `demo-evidence/demo-evidence.json`: `items: [{id, requirement_id, file, caption, source, precomputed_assessment?}]`.
   It is excluded from the content hash and is used only by demo-mode inspections.
 - Validation: a quantity-1 part may have several nodes; a set with quantity n > 1 should have n nodes.
+
+## Geometry source shapes and textures (tools/build_package.py)
+`box`, `cylinder`, `torus`, `lathe` (profile of [r, y] bottom→top), `tube` (path of points + radius), `arc_panel`
+(radius, height, a0_deg, a1_deg; 90° faces +Z), `disc` (faces +Z), `plane` (double-sided). A material can set
+`"texture": "textures/x.png"` (relative to `source/`); the PNG is embedded in the GLB and the meshes using it get UVs
+(lathe, tube, arc_panel, disc and plane only).
+
+## Assets without a 3D model
+`assembly_file` is optional. Without it, components need no `model_node_ids` or `explosion`, and the app inspects them
+from the component list. The inspection engine is unchanged.

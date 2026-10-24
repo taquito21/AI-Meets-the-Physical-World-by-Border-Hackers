@@ -17,7 +17,7 @@ from typing import Any
 EVIDENCE_TYPES = {"photo", "manual_confirmation", "photo_and_manual_confirmation"}
 REQUIRED_MANIFEST_FIELDS = [
     "package_version", "manufacturer", "product_id", "product_name", "engineering_revision",
-    "assembly_file", "components_file", "bom_file", "inspection_procedure_file",
+    "components_file", "bom_file", "inspection_procedure_file",
 ]
 
 
@@ -125,9 +125,12 @@ def validate_package(package_dir: Path) -> PackageReport:
     if not manifest.get("industry"):
         report.warnings.append("manifest: no 'industry' (shown as 'General')")
 
-    # --- geometry
-    glb_path = pkg / manifest["assembly_file"]
-    if not glb_path.exists():
+    # --- geometry (optional: assets without a 3D model are inspected from the component list)
+    has_3d = bool(manifest.get("assembly_file"))
+    glb_path = pkg / manifest["assembly_file"] if has_3d else None
+    if glb_path is None:
+        pass
+    elif not glb_path.exists():
         report.errors.append(f"missing assembly file: {manifest['assembly_file']}")
     else:
         try:
@@ -165,8 +168,10 @@ def validate_package(package_dir: Path) -> PackageReport:
         if not isinstance(qty, int) or qty < 1:
             report.errors.append(f"{cid}: quantity must be a positive integer")
         nodes = c.get("model_node_ids") or []
-        if not nodes:
+        if has_3d and not nodes:
             report.errors.append(f"{cid}: no model_node_ids")
+        if not has_3d and nodes:
+            report.errors.append(f"{cid}: model_node_ids given but the package has no assembly_file")
         for n in nodes:
             if report.glb_nodes and n not in glb_set:
                 report.errors.append(f"{cid}: model node '{n}' not found in {manifest['assembly_file']}")
@@ -186,12 +191,14 @@ def validate_package(package_dir: Path) -> PackageReport:
                   and any(art["axis"]) and isinstance(art.get("angle_deg"), (int, float)))
             if not ok:
                 report.errors.append(f"{cid}: articulation must be {{type: hinge, pivot[3], axis[3], angle_deg}}")
-        exp = c.get("explosion") or {}
-        direction = exp.get("direction")
-        if not (isinstance(direction, list) and len(direction) == 3 and any(direction)):
-            report.errors.append(f"{cid}: explosion.direction must be a non-zero 3-vector")
-        if not isinstance(exp.get("distance"), (int, float)) or exp.get("distance") < 0:
-            report.errors.append(f"{cid}: explosion.distance must be >= 0")
+        exp = c.get("explosion")
+        if has_3d or exp is not None:
+            exp = exp or {}
+            direction = exp.get("direction")
+            if not (isinstance(direction, list) and len(direction) == 3 and any(direction)):
+                report.errors.append(f"{cid}: explosion.direction must be a non-zero 3-vector")
+            if not isinstance(exp.get("distance"), (int, float)) or exp.get("distance") < 0:
+                report.errors.append(f"{cid}: explosion.distance must be >= 0")
         for doc in c.get("documents", []):
             if doc not in doc_ids:
                 report.errors.append(f"{cid}: references unknown document {doc}")

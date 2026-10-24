@@ -149,3 +149,81 @@ def test_dashboard_filters_by_industry(client):
     assert all_["by_industry"] == {"Electrical": 2}
     assert all(r["industry"] == "Electrical" for r in elec["recent"])
     assert client.get("/api/inspections?industry=Furniture").json() == []
+
+
+def test_asset_without_3d_model_is_fully_inspectable(client, tmp_path):
+    """Mode B: no assembly_file. The inspection engine must work from the component list alone."""
+    from app import catalog, db
+    pkg = tmp_path / "no3d"
+    shutil.copytree(settings.packages_dir / "table-model-001", pkg)
+    m = json.loads((pkg / "manifest.json").read_text(encoding="utf-8"))
+    m.pop("assembly_file")
+    m["product_id"], m["package_id"], m["product_name"] = "NO3D-001", "PKG-NO3D-001-A", "Asset without 3D"
+    (pkg / "manifest.json").write_text(json.dumps(m), encoding="utf-8")
+    (pkg / "assembly.glb").unlink()
+    comps = json.loads((pkg / "components.json").read_text(encoding="utf-8"))
+    comps["product_id"] = "NO3D-001"
+    for c in comps["components"]:
+        c["component_id"] = c["component_id"].replace("TABLE-001", "NO3D-001")
+        c.pop("model_node_ids"); c.pop("explosion")
+    (pkg / "components.json").write_text(json.dumps(comps), encoding="utf-8")
+    proc = json.loads((pkg / "inspection-procedure.json").read_text(encoding="utf-8"))
+    proc["product_id"] = "NO3D-001"
+    for r in proc["requirements"]:
+        r["component_id"] = r["component_id"].replace("TABLE-001", "NO3D-001")
+    (pkg / "inspection-procedure.json").write_text(json.dumps(proc), encoding="utf-8")
+
+    report = validate_package(pkg)
+    assert report.ok, report.errors
+    assert catalog.load_package(pkg)["status"] == "loaded"
+    with db.tx() as conn:
+        conn.execute("INSERT INTO product_instances VALUES (?,?,?,?,?,?)",
+                     ("NO3D-SN-1", "NO3D-001", "NO3D-001@A", "NO3D-SN-1", "{}", db.now()))
+    rev = client.get("/api/revisions/NO3D-001@A").json()
+    assert rev["assembly_url"] is None and len(rev["components"]) == 12
+    s = client.post("/api/inspections", json={"serial_number": "NO3D-SN-1", "inspector": INSPECTOR}).json()
+    item = next(i for i in s["state"]["items"] if i["requirement_id"] == "TOP-SURFACE")
+    r = client.post(f"/api/inspections/{s['inspection_id']}/items/{item['id']}/evidence",
+                    data={"actor": INSPECTOR}, files={"file": ("p.jpg", photo(), "image/jpeg")})
+    assert r.status_code == 200
+    r = client.post(f"/api/inspections/{s['inspection_id']}/items/{item['id']}/decision",
+                    json={"decision": "fail", "actor": INSPECTOR, "finding": {"description": "chip", "severity": "low"}})
+    assert r.status_code == 200 and r.json()["component_status"]["NO3D-001-TOP"] == "finding"
+
+
+def test_fire_extinguisher_asset_end_to_end(client):
+    """FE-001: textured 3D model, stable component IDs shared with the inspection engine, demo flow, dashboard."""
+    import struct
+    pkg = settings.packages_dir / "fire-extinguisher-fe-001"
+    report = validate_package(pkg)
+    assert report.ok and not report.warnings, (report.errors, report.warnings)
+    data = (pkg / "assembly.glb").read_bytes()
+    gltf = json.loads(data[20:20 + struct.unpack_from("<I", data, 12)[0]])
+    assert len(gltf["images"]) == 3 and all(i["mimeType"] == "image/png" for i in gltf["images"])  # label, gauge, tag
+    textured = [m for m in gltf["meshes"] if "TEXCOORD_0" in m["primitives"][0]["attributes"]]
+    assert {m["name"] for m in textured} == {"gauge_face_mesh", "instructions_label_mesh", "tag_card_mesh"}
+    ids = {c["component_id"] for c in report.components}
+    assert {"FE-001-CYL", "FE-001-GAU", "FE-001-PIN", "FE-001-SEA", "FE-001-HOS", "FE-001-NOZ", "FE-001-BRK"} <= ids
+    assert {r["component_id"] for r in report.procedure["requirements"]} == ids  # every component is inspectable
+    assert any("not a disassembly" in n for n in report.procedure["safety_notes"])
+
+    rev = client.get("/api/revisions/FE-001@A").json()
+    assert rev["industry"] == "Facility Safety" and rev["assembly_url"].endswith("assembly.glb")
+    s = client.post("/api/inspections", json={"serial_number": "FE-001-SN-0002", "inspector": INSPECTOR, "mode": "demo"}).json()
+    iid = s["inspection_id"]
+    item = next(i for i in s["state"]["items"] if i["requirement_id"] == "PIN-AND-SEAL")
+    r = client.post(f"/api/inspections/{iid}/items/{item['id']}/demo-evidence",
+                    json={"demo_id": "DEMO-FE-PIN", "actor": INSPECTOR, "live_ai": True})
+    assert r.status_code == 200
+    assert r.json()["assessment"]["origin"] == "precomputed"  # AI disabled in tests -> labelled replay
+    assert r.json()["state"]["component_status"]["FE-001-PIN"] != "accepted"  # a photo never passes a part by itself
+    r = client.post(f"/api/inspections/{iid}/items/{item['id']}/decision",
+                    json={"decision": "fail", "actor": INSPECTOR, "finding": {"description": "Safety pin missing", "severity": "high"}})
+    assert r.status_code == 200 and r.json()["component_status"]["FE-001-PIN"] == "finding"
+    d = client.get("/api/dashboard?industry=Facility%20Safety").json()
+    assert d["totals"]["inspections"] == 1 and d["totals"]["open_findings"] == 1
+    assert "Facility Safety" in client.get("/api/dashboard").json()["industries"]
+
+
+def test_system_prompt_has_safety_equipment_rule():
+    assert "never state that it is charged" in ai.SYSTEM_PROMPT

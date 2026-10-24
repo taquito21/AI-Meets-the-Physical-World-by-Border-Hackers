@@ -88,6 +88,153 @@ def torus_mesh(radius: float, tube: float, radial: int = 48, tubular: int = 12):
     return pos, nrm, idx
 
 
+# Shapes below also return UVs (u, v with v=0 at the top of the image, glTF convention), so they can carry textures.
+
+def lathe_mesh(profile: list, segments: int = 36):
+    """Surface of revolution around local Y from a (radius, y) profile listed bottom to top."""
+    pos, nrm, idx, uv = [], [], [], []
+    n = len(profile)
+    for i in range(segments + 1):
+        a = 2 * math.pi * i / segments
+        ca, sa = math.cos(a), math.sin(a)
+        for j, (r, y) in enumerate(profile):
+            pr, py = profile[max(j - 1, 0)]
+            nr, ny = profile[min(j + 1, n - 1)]
+            dr, dy = nr - pr, ny - py
+            ln = math.hypot(dr, dy) or 1.0
+            n_r, n_y = dy / ln, -dr / ln  # outward for a profile walked bottom -> top
+            pos.append((r * ca, y, r * sa))
+            nrm.append((n_r * ca, n_y, n_r * sa))
+            uv.append((i / segments, 1 - j / (n - 1)))
+    for i in range(segments):
+        for j in range(n - 1):
+            a, b = i * n + j, (i + 1) * n + j
+            idx += [a, a + 1, b + 1, a, b + 1, b]
+    return pos, nrm, idx, uv
+
+
+def tube_mesh(path: list, radius: float, radial: int = 12):
+    """Tube of constant radius swept along a polyline (e.g. a flexible hose). Open ends."""
+    pts = [tuple(p) for p in path]
+    m = len(pts)
+
+    def sub(p, q): return (p[0] - q[0], p[1] - q[1], p[2] - q[2])
+    def dot(p, q): return p[0] * q[0] + p[1] * q[1] + p[2] * q[2]
+    def cross(p, q): return (p[1] * q[2] - p[2] * q[1], p[2] * q[0] - p[0] * q[2], p[0] * q[1] - p[1] * q[0])
+    def norm(p):
+        ln = math.sqrt(dot(p, p)) or 1.0
+        return (p[0] / ln, p[1] / ln, p[2] / ln)
+
+    tangents = [norm(sub(pts[min(i + 1, m - 1)], pts[max(i - 1, 0)])) for i in range(m)]
+    ref = (0, 0, 1) if abs(tangents[0][2]) < 0.9 else (1, 0, 0)
+    normal = norm(cross(tangents[0], ref))
+    pos, nrm, idx, uv = [], [], [], []
+    for i, (p, t) in enumerate(zip(pts, tangents)):
+        normal = norm(sub(normal, tuple(t_ * dot(normal, t) for t_ in t)))  # parallel transport
+        binormal = cross(t, normal)
+        for j in range(radial + 1):
+            v = 2 * math.pi * j / radial
+            d = tuple(math.cos(v) * normal[k] + math.sin(v) * binormal[k] for k in range(3))
+            pos.append(tuple(p[k] + radius * d[k] for k in range(3)))
+            nrm.append(d)
+            uv.append((i / (m - 1), j / radial))
+    row = radial + 1
+    for i in range(m - 1):
+        for j in range(radial):
+            a, b = i * row + j, (i + 1) * row + j
+            idx += [a, a + 1, b + 1, a, b + 1, b]
+    return pos, nrm, idx, uv
+
+
+def arc_panel_mesh(radius: float, height: float, a0_deg: float, a1_deg: float, segments: int = 24):
+    """Curved strip on a cylinder of the given radius (axis local Y), e.g. a wrap-around label.
+    Angles in the XZ plane: 90 deg faces +Z. The texture reads left-to-right when seen from outside."""
+    pos, nrm, idx, uv = [], [], [], []
+    hy = height / 2
+    for i in range(segments + 1):
+        a = math.radians(a0_deg + (a1_deg - a0_deg) * i / segments)
+        c, s = math.cos(a), math.sin(a)
+        u = 1 - i / segments
+        pos += [(radius * c, -hy, radius * s), (radius * c, hy, radius * s)]
+        nrm += [(c, 0, s), (c, 0, s)]
+        uv += [(u, 1.0), (u, 0.0)]
+    for i in range(segments):
+        a, b = 2 * i, 2 * i + 2
+        idx += [a, a + 1, b + 1, a, b + 1, b]
+    return pos, nrm, idx, uv
+
+
+def disc_mesh(radius: float, segments: int = 36):
+    """Flat disc in the local XY plane facing +Z (e.g. a gauge face)."""
+    pos, nrm, idx, uv = [(0, 0, 0)], [(0, 0, 1)], [], [(0.5, 0.5)]
+    for i in range(segments + 1):
+        a = 2 * math.pi * i / segments
+        x, y = radius * math.cos(a), radius * math.sin(a)
+        pos.append((x, y, 0))
+        nrm.append((0, 0, 1))
+        uv.append((0.5 + 0.5 * x / radius, 0.5 - 0.5 * y / radius))
+    for i in range(segments):
+        idx += [0, i + 1, i + 2]
+    return pos, nrm, idx, uv
+
+
+def plane_mesh(width: float, height: float):
+    """Double-sided rectangle in the local XY plane (front faces +Z), e.g. a hanging tag."""
+    hx, hy = width / 2, height / 2
+    pos = [(-hx, -hy, 0), (hx, -hy, 0), (hx, hy, 0), (-hx, hy, 0),
+           (hx, -hy, 0), (-hx, -hy, 0), (-hx, hy, 0), (hx, hy, 0)]
+    nrm = [(0, 0, 1)] * 4 + [(0, 0, -1)] * 4
+    uv = [(0, 1), (1, 1), (1, 0), (0, 0)] * 2
+    idx = [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7]
+    return pos, nrm, idx, uv
+
+
+def make_mesh(node: dict):
+    """(positions, normals, indices, uvs or None) for a geometry node."""
+    shape = node["shape"]
+    if shape == "box":
+        return (*box_mesh(*node["size"]), None)
+    if shape == "cylinder":
+        return (*cylinder_mesh(node["radius"], node["height"]), None)
+    if shape == "torus":
+        return (*torus_mesh(node["radius"], node["tube"]), None)
+    if shape == "lathe":
+        return lathe_mesh(node["profile"], node.get("segments", 36))
+    if shape == "tube":
+        return tube_mesh(node["path"], node["radius"], node.get("radial", 12))
+    if shape == "arc_panel":
+        return arc_panel_mesh(node["radius"], node["height"], node["a0_deg"], node["a1_deg"], node.get("segments", 24))
+    if shape == "disc":
+        return disc_mesh(node["radius"], node.get("segments", 36))
+    if shape == "plane":
+        return plane_mesh(*node["size"])
+    raise ValueError(f"unsupported shape {shape} on {node['id']}")
+
+
+def check_winding(nid: str, pos, nrm, idx) -> None:
+    """Every triangle must face the same way as its vertex normals (outward), or it renders inside-out."""
+    bad = total = 0
+    for k in range(0, len(idx), 3):
+        a, b, c = (pos[i] for i in idx[k:k + 3])
+        e1 = [b[i] - a[i] for i in range(3)]
+        e2 = [c[i] - a[i] for i in range(3)]
+        fn = (e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0])
+        if sum(v * v for v in fn) < 1e-18:
+            continue  # degenerate (e.g. lathe pole)
+        vn = [sum(nrm[i][j] for i in idx[k:k + 3]) for j in range(3)]
+        total += 1
+        bad += sum(fn[j] * vn[j] for j in range(3)) <= 0
+    if total and bad / total > 0.02:
+        raise ValueError(f"{nid}: {bad}/{total} triangles face inward")
+
+
+def rotate(v, q):
+    """Rotate vector v by quaternion q = [x, y, z, w]."""
+    x, y, z, w = q
+    tx, ty, tz = 2 * (y * v[2] - z * v[1]), 2 * (z * v[0] - x * v[2]), 2 * (x * v[1] - y * v[0])
+    return (v[0] + w * tx + y * tz - z * ty, v[1] + w * ty + z * tx - x * tz, v[2] + w * tz + x * ty - y * tx)
+
+
 def euler_deg_to_quat(rx: float, ry: float, rz: float):
     """XYZ intrinsic euler (degrees) -> glTF quaternion [x, y, z, w]."""
     x, y, z = (math.radians(v) / 2 for v in (rx, ry, rz))
@@ -102,7 +249,8 @@ def euler_deg_to_quat(rx: float, ry: float, rz: float):
 
 # --------------------------------------------------------------------- GLB --
 
-def build_glb(geometry: dict) -> bytes:
+def build_glb(geometry: dict, base_dir: Path | None = None) -> bytes:
+    """base_dir: folder that material "texture" paths are relative to (the package's source/ folder)."""
     materials_src = geometry["materials"]
     mat_names = list(materials_src.keys())
     gltf = {
@@ -116,26 +264,39 @@ def build_glb(geometry: dict) -> bytes:
         "bufferViews": [],
         "buffers": [],
     }
-    for name in mat_names:
-        m = materials_src[name]
-        gltf["materials"].append({
-            "name": name,
-            "pbrMetallicRoughness": {
-                "baseColorFactor": list(m["color"]) + [1.0],
-                "metallicFactor": m.get("metallic", 0.0),
-                "roughnessFactor": m.get("roughness", 0.8),
-            },
-        })
-
     blob = bytearray()
 
-    def add_view(data: bytes, target: int) -> int:
+    def add_view(data: bytes, target: int | None) -> int:
         while len(blob) % 4:
             blob.append(0)
         offset = len(blob)
         blob.extend(data)
-        gltf["bufferViews"].append({"buffer": 0, "byteOffset": offset, "byteLength": len(data), "target": target})
+        view = {"buffer": 0, "byteOffset": offset, "byteLength": len(data)}
+        if target is not None:
+            view["target"] = target
+        gltf["bufferViews"].append(view)
         return len(gltf["bufferViews"]) - 1
+
+    textured: set[str] = set()
+    for name in mat_names:
+        m = materials_src[name]
+        pbr = {
+            "baseColorFactor": list(m["color"]) + [1.0],
+            "metallicFactor": m.get("metallic", 0.0),
+            "roughnessFactor": m.get("roughness", 0.8),
+        }
+        if m.get("texture"):
+            # Embedded PNG (no extra request on mobile). Only materials that use one get UVs on their meshes.
+            png = (Path(base_dir or ".") / m["texture"]).read_bytes()
+            for key in ("images", "textures", "samplers"):
+                gltf.setdefault(key, [])
+            if not gltf["samplers"]:
+                gltf["samplers"].append({"magFilter": 9729, "minFilter": 9987, "wrapS": 33071, "wrapT": 33071})
+            gltf["images"].append({"bufferView": add_view(png, None), "mimeType": "image/png", "name": name})
+            gltf["textures"].append({"sampler": 0, "source": len(gltf["images"]) - 1})
+            pbr["baseColorTexture"] = {"index": len(gltf["textures"]) - 1}
+            textured.add(name)
+        gltf["materials"].append({"name": name, "pbrMetallicRoughness": pbr})
 
     seen = set()
     for node in geometry["nodes"]:
@@ -143,14 +304,10 @@ def build_glb(geometry: dict) -> bytes:
         if nid in seen:
             raise ValueError(f"duplicate node id {nid}")
         seen.add(nid)
-        if node["shape"] == "box":
-            pos, nrm, idx = box_mesh(*node["size"])
-        elif node["shape"] == "cylinder":
-            pos, nrm, idx = cylinder_mesh(node["radius"], node["height"])
-        elif node["shape"] == "torus":
-            pos, nrm, idx = torus_mesh(node["radius"], node["tube"])
-        else:
-            raise ValueError(f"unsupported shape {node['shape']} on {nid}")
+        pos, nrm, idx, uv = make_mesh(node)
+        check_winding(nid, pos, nrm, idx)
+        if node["material"] in textured and uv is None:
+            raise ValueError(f"{nid}: shape {node['shape']} cannot carry the texture of material {node['material']}")
 
         pos_bytes = b"".join(struct.pack("<3f", *p) for p in pos)
         nrm_bytes = b"".join(struct.pack("<3f", *n) for n in nrm)
@@ -163,9 +320,14 @@ def build_glb(geometry: dict) -> bytes:
         acc.append({"bufferView": nv, "componentType": 5126, "count": len(nrm), "type": "VEC3"})
         acc.append({"bufferView": iv, "componentType": 5123, "count": len(idx), "type": "SCALAR"})
         a0 = len(acc) - 3
+        attributes = {"POSITION": a0, "NORMAL": a0 + 1}
+        if node["material"] in textured:
+            uv_view = add_view(b"".join(struct.pack("<2f", *t) for t in uv), 34962)
+            acc.append({"bufferView": uv_view, "componentType": 5126, "count": len(uv), "type": "VEC2"})
+            attributes["TEXCOORD_0"] = len(acc) - 1
         gltf["meshes"].append({
             "name": f"{nid}_mesh",
-            "primitives": [{"attributes": {"POSITION": a0, "NORMAL": a0 + 1}, "indices": a0 + 2,
+            "primitives": [{"attributes": attributes, "indices": a0 + 2,
                             "material": mat_names.index(node["material"])}],
         })
         gnode = {"name": nid, "mesh": len(gltf["meshes"]) - 1, "translation": list(node["position"])}
@@ -191,6 +353,14 @@ def build_glb(geometry: dict) -> bytes:
 
 def node_bounds(node: dict):
     """Axis-aligned extents (ignores rotation except 90-degree swaps for cylinders)."""
+    if node["shape"] not in ("box", "torus", "cylinder"):
+        # Newer shapes: exact bounds from the transformed mesh vertices.
+        q = euler_deg_to_quat(*node.get("rotation_deg", [0, 0, 0]))
+        pts = [rotate(p, q) for p in make_mesh(node)[0]]
+        x, y, z = node["position"]
+        lo = tuple(min(p[i] for p in pts) + (x, y, z)[i] for i in range(3))
+        hi = tuple(max(p[i] for p in pts) + (x, y, z)[i] for i in range(3))
+        return lo, hi
     if node["shape"] == "box":
         sx, sy, sz = node["size"]
     elif node["shape"] == "torus":
@@ -257,7 +427,7 @@ def main(package_dir: str) -> None:
     pkg = Path(package_dir)
     geometry = json.loads((pkg / "source" / "geometry.json").read_text(encoding="utf-8"))
     manifest = json.loads((pkg / "manifest.json").read_text(encoding="utf-8"))
-    glb = build_glb(geometry)
+    glb = build_glb(geometry, pkg / "source")
     (pkg / manifest["assembly_file"]).write_bytes(glb)
     (pkg / "drawings").mkdir(exist_ok=True)
     (pkg / "drawings" / "general-arrangement.svg").write_text(build_drawing(geometry, manifest), encoding="utf-8")

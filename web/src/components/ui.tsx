@@ -35,7 +35,8 @@ export function ModeBadge({ mode }: { mode: string | undefined | null }) {
 }
 
 export function IndustryChip({ industry }: { industry: string | undefined | null }) {
-  return <span className={`chip chip-industry chip-ind-${(industry ?? "general").toLowerCase()}`}>{industry ?? "General"}</span>;
+  const slug = (industry ?? "general").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  return <span className={`chip chip-industry chip-ind-${slug}`}>{industry ?? "General"}</span>;
 }
 
 export const COMPONENT_TONE: Record<ComponentStatus, string> = {

@@ -35,3 +35,4 @@
 - The AI never establishes electrical safety, de-energization, wiring correctness, conformity, voltage, continuity, insulation or torque.
 - Dependencies: 2 moderate advisories remain in react-router v6 (fixed only in v7); not applicable to this app (see AUDIT.md, audit 2).
 - UTEP Conference Chair: an approximate model built from photos (estimated dimensions, simplified shapes). Some reference photos show bystanders.
+- FE-001 extinguisher: an illustrative model (no manufacturer, no certified values). The exploded view is not a disassembly procedure. Demo images are synthetic until real photos are added.

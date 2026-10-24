@@ -49,7 +49,7 @@ export default function Catalog() {
           </div>
           <p className="small">{p.description}</p>
           <p className="small muted">{p.asset_category} · {p.component_count} components · {p.requirement_count} inspection points{p.demo_evidence_count ? ` · ${p.demo_evidence_count} prepared demo photos` : ""}</p>
-          <Link className="btn btn-ghost" to={`/products/${encodeURIComponent(p.id)}`}>View 3D assembly &amp; technical data</Link>
+          <Link className="btn btn-ghost" to={`/products/${encodeURIComponent(p.id)}`}>{p.has_3d ? "View 3D assembly & technical data" : "View technical data"}</Link>
           <h3>Units</h3>
           <ul className="list">
             {p.instances.map((i) => {

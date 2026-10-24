@@ -162,6 +162,7 @@ def list_products() -> list[dict[str, Any]]:
                 "FROM product_instances i WHERE i.product_revision_id = ? ORDER BY i.serial_number", (r["id"],)).fetchall())
             manifest = r.pop("manifest")
             r["demonstration_package"] = bool(manifest.get("demonstration_package"))
+            r["has_3d"] = bool(manifest.get("assembly_file"))
             r["industry"] = manifest.get("industry") or "General"
             r["asset_category"] = manifest.get("asset_category")
             r["demo_evidence_count"] = len(catalog.demo_evidence(r["source_dir"]))

@@ -23,7 +23,7 @@ export default function Render() {
     return () => { delete window.__captureRender; };
   }, []);
 
-  if (!rev) return null;
+  if (!rev || !rev.assembly_url) return null;
   return (
     <div className="render-stage" style={{ width, height }}>
       <AssemblyViewer className="render-viewer" assemblyUrl={rev.assembly_url} components={rev.components}

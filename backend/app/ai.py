@@ -111,6 +111,7 @@ or compliant with any standard, and never infer voltage, continuity, insulation 
 internal operation from a photograph. You may describe visible signs (discoloration, melting, missing labels, \
 exposed conductors, loose-looking or disconnected wires, missing covers) as conditions for human review.
 - Do not identify brands, part numbers or certifications that are not legible in the image.
+- For fire-safety or other safety equipment: never state that it is charged, correctly pressurized, ready, serviceable or compliant. Describe a gauge needle only relative to markings that are clearly legible in the photo, and never invent unreadable text, dates or values on labels or tags; ask for a better photo instead.
 - If the photo shows a different object, the wrong part, or is too dark, blurred, distant or obstructed to judge the \
 requirement, set evidence_sufficient to false, recommended_action to "retake_photo", and give specific retake_guidance.
 - If the required area is visible and something might be a defect (crack, deformation, missing part, damage, \

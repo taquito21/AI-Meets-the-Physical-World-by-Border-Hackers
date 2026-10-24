@@ -33,3 +33,6 @@ The full script is in MULTI_INDUSTRY.md §6.
 
 ## Real chair segment (preferred for the live demo)
 Use the UTEP Conference Chair asset with the physical chair in the room. The script is in REAL_CHAIR.md.
+
+## Fire extinguisher segment (15–25 s)
+See FIRE_EXTINGUISHER.md: Fire Safety scenario → FE-001 demo inspection → Explode → gauge → precomputed (labelled) pin analysis → finding.

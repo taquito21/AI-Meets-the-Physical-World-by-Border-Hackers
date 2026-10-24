@@ -47,7 +47,7 @@ def items_by_req(state):
 
 # ---------------------------------------------------------------- packages --
 
-@pytest.mark.parametrize("name", ["chair-model-001", "table-model-001", "electrical-panel-icp-001", "utep-conference-chair-rw"])
+@pytest.mark.parametrize("name", ["chair-model-001", "table-model-001", "electrical-panel-icp-001", "utep-conference-chair-rw", "fire-extinguisher-fe-001"])
 def test_demo_packages_validate(name):
     report = validate_package(settings.packages_dir / name)
     assert report.ok, report.errors
@@ -72,7 +72,7 @@ def test_validation_catches_broken_references(tmp_path):
 
 def test_catalog_loaded(client):
     products = client.get("/api/products").json()
-    assert {p["id"] for p in products} == {"CHAIR-001@A", "TABLE-001@A", "ICP-001@A", "UTEP-CHAIR-RW@A"}
+    assert {p["id"] for p in products} == {"CHAIR-001@A", "TABLE-001@A", "ICP-001@A", "UTEP-CHAIR-RW@A", "FE-001@A"}
     rev = client.get("/api/revisions/CHAIR-001@A").json()
     assert rev["assembly_url"].endswith("assembly.glb")
     assert client.get(rev["assembly_url"]).status_code == 200

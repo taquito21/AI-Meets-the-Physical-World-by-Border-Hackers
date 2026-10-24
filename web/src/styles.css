@@ -212,3 +212,6 @@ textarea { resize: vertical; }
 .render-stage { position: fixed; inset: 0 auto auto 0; overflow: hidden; background: #eef2f7; }
 .render-viewer { width: 100%; height: 100%; }
 .test-banner { background: #fef3c7; color: #78350f; border-bottom: 1px solid #fde68a; font-size: .8rem; padding: .35rem 1rem; text-align: center; }
+.viewer-none { padding: 1rem; font-size: .9rem; color: var(--muted); background: #fff; border-bottom: 1px solid var(--line); }
+.chip-ind-facility-safety { background: #fee2e2; color: #991b1b; }
+.scenario-safety { background: linear-gradient(135deg, #ffffff, #fef2f2); }

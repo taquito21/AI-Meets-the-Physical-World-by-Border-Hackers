@@ -1,0 +1,135 @@
+{
+  "description": "Synthetic demonstration images for FE-001 (no real extinguisher photos yet). Replace with real photos taken without handling the extinguisher, then re-run tools/precompute_demo_assessments.py --force.",
+  "items": [
+    {
+      "id": "DEMO-FE-GAUGE",
+      "requirement_id": "GAUGE-VISIBILITY",
+      "file": "synthetic-gauge.jpg",
+      "caption": "Gauge dial (synthetic graphic from the model)",
+      "source": "Synthetic test image generated from the FE-001 illustrative model on 2026-10-24. Not a photograph of a real extinguisher.",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 7063,
+        "captured_at": "2026-10-24T17:20:42+00:00",
+        "result": {
+          "summary": "Image is a synthetic illustrative gauge graphic labeled DEMO, not a photograph of a real extinguisher gauge. The dial face and needle are clearly visible; the needle points within the green band.",
+          "correct_area_visible": "uncertain",
+          "image_quality": "good",
+          "evidence_sufficient": false,
+          "observations": [
+            "Circular gauge face with grey bezel, shown straight on with no glare.",
+            "Colored arc: red left, green center, red right; no numeric values or text labels on the arc.",
+            "Black needle clearly visible, pointing into the green band.",
+            "Text 'DEMO' and 'illustrative' printed on the face.",
+            "No visible cracks or damage on the depicted lens or bezel.",
+            "No extinguisher body, valve or other context visible."
+          ],
+          "conditions_for_human_review": [
+            "Image appears to be a synthetic graphic, not field evidence from asset FE-001-DEMO."
+          ],
+          "missing_information": [
+            "Real photograph of the gauge on the actual extinguisher",
+            "Context showing the gauge mounted on the valve of FE-001-DEMO",
+            "Legible manufacturer markings or zone labels on the dial"
+          ],
+          "recommended_action": "retake_photo",
+          "retake_guidance": "Photograph the actual gauge on extinguisher FE-001-DEMO: close-up, straight on, no glare, whole dial and printed markings in focus, with part of the valve visible for context.",
+          "uncertainty": "high",
+          "limitations": [
+            "Synthetic demo graphic cannot serve as evidence for a physical asset.",
+            "Needle in the green band does not establish charge, pressure or readiness.",
+            "Dial ranges are manufacturer-dependent and not legible here.",
+            "Internal condition and pressure cannot be verified from a photo."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-FE-PIN",
+      "requirement_id": "PIN-AND-SEAL",
+      "file": "synthetic-no-pin.jpg",
+      "caption": "Valve head with the safety pin and seal removed (synthetic: simulates a missing pin)",
+      "source": "Synthetic test image generated from the FE-001 illustrative model on 2026-10-24. Not a photograph of a real extinguisher.",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 5311,
+        "captured_at": "2026-10-24T17:20:48+00:00",
+        "result": {
+          "summary": "Valve head is visible, but no safety pin, pull ring or tamper seal can be seen. A possible missing pin and seal needs human review.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": true,
+          "observations": [
+            "Valve head, carry handle, lever, gauge and hose are visible.",
+            "No safety pin or pull ring is visible through the valve head.",
+            "No tamper seal is visible.",
+            "A thin wire/cord and a blank grey tag hang from the valve head; no text is legible on the tag.",
+            "The image is a synthetic rendering, not a real product photo."
+          ],
+          "conditions_for_human_review": [
+            "Safety pin appears missing from the valve head.",
+            "Tamper seal appears missing.",
+            "A loose wire/cord is near the tag; it may be a remnant of a seal and needs a check."
+          ],
+          "missing_information": [
+            "Pin and seal may be on the side of the valve head not shown; the opposite side is not visible.",
+            "Tag text is not visible."
+          ],
+          "recommended_action": "flag_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "medium",
+          "limitations": [
+            "Only one side of the valve head is shown.",
+            "A photo cannot confirm pressure, charge or readiness.",
+            "The gauge needle is not legible and was not assessed.",
+            "Synthetic demo image."
+          ]
+        }
+      }
+    },
+    {
+      "id": "DEMO-FE-FULL",
+      "requirement_id": "CYL-EXTERIOR",
+      "file": "synthetic-full.jpg",
+      "caption": "Full extinguisher (synthetic render of the model)",
+      "source": "Synthetic test image generated from the FE-001 illustrative model on 2026-10-24. Not a photograph of a real extinguisher.",
+      "precomputed_assessment": {
+        "provider": "anthropic",
+        "model": "claude-opus-5-5",
+        "latency_ms": 5640,
+        "captured_at": "2026-10-24T17:20:53+00:00",
+        "result": {
+          "summary": "Synthetic render shows the whole extinguisher from base boot to valve, front side only. No obvious corrosion, dents or damage visible at this small scale. Usable as evidence; inspector decides.",
+          "correct_area_visible": "yes",
+          "image_quality": "acceptable",
+          "evidence_sufficient": true,
+          "observations": [
+            "Full extinguisher visible: base boot, red cylinder, label area, hose, valve, handle, pin and tag.",
+            "Cylinder surface appears uniform red with no visible corrosion, dents or exposed metal.",
+            "Hose, handle, safety pin and tag appear present.",
+            "Extinguisher occupies a small part of the frame; fine surface detail is limited.",
+            "Bright white background flagged as overexposed by heuristics; cylinder itself is reasonably exposed.",
+            "Image is a synthetic render, not a real photograph.",
+            "Only one side of the cylinder is shown; rear and base underside are not visible."
+          ],
+          "conditions_for_human_review": [],
+          "missing_information": [
+            "Rear side of cylinder not shown.",
+            "Close-up detail of cylinder surface and base boot."
+          ],
+          "recommended_action": "accept_for_human_review",
+          "retake_guidance": "",
+          "uncertainty": "medium",
+          "limitations": [
+            "Internal cylinder condition cannot be determined from a photograph.",
+            "Pressure, charge and serviceability cannot be verified from a photo.",
+            "Small subject size may hide minor dents or corrosion.",
+            "Demo render; does not represent a real asset condition."
+          ]
+        }
+      }
+    }
+  ]
+}

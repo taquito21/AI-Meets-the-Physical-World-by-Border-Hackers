@@ -56,3 +56,10 @@
 - **AI positive path verified on real photos**: 5 of 7 accept_for_human_review, 1 genuine flag (empty fastener holes on the mechanism plate), 1 retake (label cut off).
   The same verdicts were reproduced through a live inspection upload (6–8 s).
 - 32 tests passing. The local demo data was reset (immutable revision reloaded). See REAL_CHAIR.md.
+
+## 2026-10-24: fire extinguisher FE-001 + platform improvements
+- New illustrative asset FE-001 (12 components, textured GLB, 12 requirements, conservative AI guidance). See FIRE_EXTINGUISHER.md.
+- GLB builder: lathe, tube, arc_panel, disc and plane shapes, embedded textures, face-orientation check; existing assets rebuild byte-identically.
+- Assets without a 3D model are supported (assembly_file optional).
+- Viewer: tapping empty space clears the selection; the selected part is strongly highlighted.
+- 36 tests passing; 10 real AI calls on synthetic test images (behaviour matched expectations); no real extinguisher photos yet.
