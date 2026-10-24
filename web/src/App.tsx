@@ -20,7 +20,7 @@ export default function App() {
       <header className="topbar">
         <NavLink to="/" className="brand">{t("Field Assistant")}</NavLink>
         <nav>
-          <NavLink to="/" end><ClipboardList aria-hidden /><span>{t(employer ? "Jobs" : "My jobs")}</span></NavLink>
+          <NavLink to="/" end><ClipboardList aria-hidden /><span>{t(employer ? "Overview" : "My jobs")}</span></NavLink>
           {employer && <NavLink to="/media"><FolderOpen aria-hidden /><span>{t("Media")}</span></NavLink>}
           <NavLink to="/ask"><BookOpen aria-hidden /><span>{t("Ask docs")}</span></NavLink>
         </nav>

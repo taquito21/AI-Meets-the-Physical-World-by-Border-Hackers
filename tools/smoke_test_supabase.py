@@ -72,12 +72,13 @@ def main() -> int:
         check(httpx.get(model["url"], timeout=20).status_code == 200, "signed model URL downloads from Storage")
 
         r = c.post("/api/jobs", headers=tokens["employer"], json={
-            "title": "Smoke job", "assigned_to": user_ids[1],
+            "title": "Smoke job", "assigned_to": user_ids[1], "due_date": "2030-01-15",
             "tasks": [{"description": "Photograph the gauge",
                        "media": [{"media_id": model["id"], "node_ids": [model["metadata"]["parts"][0]["id"]]}]},
                       {"description": "Note the hose condition"}]})
         check(r.status_code == 200, f"employer creates a job ({r.status_code})")
         job_id = r.json()["id"]
+        check(r.json()["due_date"] == "2030-01-15", "due date stored")
         task = r.json()["tasks"][0]["id"]
         check(c.post("/api/jobs", headers=tokens["employee"], json={
             "title": "x", "assigned_to": user_ids[1], "tasks": [{"description": "y"}]}).status_code == 403,
@@ -96,6 +97,10 @@ def main() -> int:
 
         r = c.post(f"/api/tasks/{task}/status", headers=tokens["employee"], json={"status": "flagged"})
         check(r.json()["counts"]["flagged"] == 1, "employee flags the task")
+        d = c.get("/api/dashboard", headers=tokens["employer"]).json()
+        check([a["status"] for a in d["attention"]] == ["flagged"] and d["team"][0]["open_jobs"] == 1,
+              "employer overview shows the flagged task and the team workload")
+        check(c.get("/api/dashboard", headers=tokens["employee"]).status_code == 403, "employee cannot open the overview")
         r = c.post(f"/api/tasks/{task}/status", headers=tokens["employer"], json={"status": "passed"})
         check(r.json()["tasks"][0]["status"] == "passed", "employer resolves it")
 

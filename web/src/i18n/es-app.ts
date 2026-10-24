@@ -140,6 +140,21 @@ const app: Record<string, string> = {
   "Create job": "Crear trabajo",
   "Creating…": "Creando…",
 
+  // Employer overview and due dates
+  "Overview": "Resumen",
+  "Open jobs": "Trabajos abiertos",
+  "Overdue": "Vencidos",
+  "Waiting for you": "Esperan tu respuesta",
+  "Failed tasks": "Tareas con falla",
+  "Overdue and due soon": "Vencidos y por vencer",
+  "Team": "Equipo",
+  "{n} open jobs": "{n} trabajos abiertos",
+  "All jobs": "Todos los trabajos",
+  "Due date (optional)": "Fecha límite (opcional)",
+  "Overdue · {date}": "Vencido · {date}",
+  "Due today": "Vence hoy",
+  "Due {date}": "Vence el {date}",
+
   // Media library
   "Media library": "Archivos de la empresa",
   "Upload": "Subir",

@@ -31,8 +31,10 @@ create table if not exists jobs (
   company_id uuid not null references companies(id),
   assigned_to uuid not null references users(id),
   title text not null,
+  due_date date,  -- optional; a job is overdue when this has passed and it still has open tasks
   created_at timestamptz not null default now()
 );
+alter table jobs add column if not exists due_date date;  -- for projects created before due dates existed
 
 create table if not exists tasks (
   id uuid primary key default gen_random_uuid(),
