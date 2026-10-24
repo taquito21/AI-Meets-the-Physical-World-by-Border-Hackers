@@ -10,3 +10,5 @@ backend/.env.*
 !backend/.env.example
 
 .vercel
+web/.env.local
+web/.env.*.local
