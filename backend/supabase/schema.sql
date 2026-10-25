@@ -1,4 +1,4 @@
--- Field Assistant: Postgres schema for Supabase.
+-- FieldSight: Postgres schema for Supabase.
 -- Apply once: Supabase dashboard -> SQL Editor -> New query -> paste this file -> Run. Safe to re-run.
 --
 -- Model: a company has one employer and its employees. The employer creates jobs, each assigned to one employee,

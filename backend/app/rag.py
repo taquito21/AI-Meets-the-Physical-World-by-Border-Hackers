@@ -26,7 +26,8 @@ TOP_K = 6
 ANSWER_SYSTEM = """You answer questions from field workers and their employers using only the company documents \
 provided. Each document is one excerpt from a manual or procedure. If the excerpts do not contain the answer, say \
 so plainly instead of guessing, and suggest what to look for. Keep answers short and practical. Never state that \
-equipment is safe, compliant or certified. Write plain text without Markdown (no asterisks or headings); for steps, \
+equipment is safe, compliant or certified. In this app the worker's boss is called their employer (they can flag a \
+task to ask them). Write plain text without Markdown (no asterisks or headings); for steps, \
 put each on its own line starting with "- "."""
 
 
@@ -125,18 +126,34 @@ def search(company_id: str, question: str, k: int = TOP_K) -> list[dict[str, Any
     return hits
 
 
-def answer(question: str, hits: list[dict[str, Any]]) -> dict[str, Any]:
-    """Claude's answer from the retrieved chunks, with numbered sources it actually cited."""
+def answer(question: str, hits: list[dict[str, Any]], task: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Claude's answer from the retrieved chunks, with numbered sources it actually cited. `task` (from
+    workflow.task_context) adds the task the question is about: its text and latest photos. Only the document
+    chunks can be cited; the task context helps interpret the question."""
+    import base64
+
     import anthropic
     if not hits:
         return {"answer": ("Tu empresa todavía no ha subido documentos." if i18n.current_lang.get() == "es"
                            else "No documents have been uploaded for your company yet."), "sources": []}
+    # Long tasks with many notes still fit: the context text is capped like the document chunks are.
+    if task and len(task["text"]) > 6000:
+        task = {**task, "text": task["text"][:6000] + "…"}
     ok, why = ai.claude_available()
     if not ok:
         raise RagError(why)
     docs = [{"type": "document", "source": {"type": "text", "media_type": "text/plain", "data": h["content"]},
              "title": h["title"] + (f", page {h['page']}" if h["page"] else ""), "citations": {"enabled": True}}
             for h in hits]
+    context: list[dict[str, Any]] = []
+    if task:
+        context.append({"type": "text", "text": "The question is about this task (context from the job, not "
+                                                "documentation; do not cite it):\n" + task["text"]})
+        for img in task["images"]:
+            context.append({"type": "image", "source": {"type": "base64", "media_type": "image/jpeg",
+                                                        "data": base64.standard_b64encode(img).decode()}})
+        if task["images"]:
+            context.append({"type": "text", "text": "Above: the latest photo(s) taken for this task."})
     try:
         response = ai.claude_client().messages.create(
             model=settings.ai_model, max_tokens=4000,
@@ -145,7 +162,7 @@ def answer(question: str, hits: list[dict[str, Any]]) -> dict[str, Any]:
                                     "never copy English sentences into the answer."
                                     if i18n.current_lang.get() == "es" else ""),
             output_config={"effort": settings.ai_effort},
-            messages=[{"role": "user", "content": [*docs, {"type": "text", "text": question}]}],
+            messages=[{"role": "user", "content": [*docs, *context, {"type": "text", "text": "Question: " + question}]}],
             **ai.request_options())
     except anthropic.APIStatusError as exc:
         raise RagError(f"AI provider error ({exc.status_code}): {exc.message}"[:300])

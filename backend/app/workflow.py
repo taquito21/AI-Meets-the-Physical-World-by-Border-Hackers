@@ -245,6 +245,37 @@ def add_evidence(user: dict[str, Any], task_id: str, *, text: str | None, photo:
     return row
 
 
+MAX_CONTEXT_PHOTOS = 2  # most recent photos sent with a question about a task
+
+
+def task_context(user: dict[str, Any], task_id: str) -> dict[str, Any]:
+    """What a question about one task should know: the job, the task, its notes, the AI photo findings, the
+    linked model parts, and the latest photos. Raises 404 if the user may not see the task."""
+    task, job = task_for(user, task_id)
+    people = company_users(user["company_id"])
+    evidence = db.select("evidence", {"task_id": task_id}, order=["created_at", "id"])
+    links = db.select("task_media", {"task_id": task_id})
+    media = db.select("media", {"id": [l["media_id"] for l in links]})
+    lines = [f"Job: {job['title']}", f"Task: {task['description']}", f"Current task status: {task['status']}"]
+    for m in media:
+        wanted = next((set(l["node_ids"]) for l in links if l["media_id"] == m["id"]), set())
+        parts = [p.get("name") for p in (m["metadata"] or {}).get("parts", []) if p.get("id") in wanted]
+        lines.append(f"Linked {m['kind'].replace('_', ' ')}: {m['title']}" + (f" (parts: {', '.join(parts)})" if parts else ""))
+    for e in evidence:
+        who = people.get(e["created_by"], {})
+        role = who.get("user_class", "person")
+        if e["text"]:
+            lines.append(f"Note from the {role} ({e['created_at'][:16]}): {e['text']}")
+        result = (e["ai_assessment"] or {}).get("result") or {}
+        if result.get("summary"):
+            findings = "; ".join(result.get("observations", []) + result.get("conditions_for_human_review", []))
+            lines.append(f"AI review of a photo ({e['created_at'][:16]}): {result['summary']}"
+                         + (f" Findings: {findings}" if findings else ""))
+    photos = [e for e in evidence if e["photo_path"]][-MAX_CONTEXT_PHOTOS:]
+    images = [data for data in (blobs.get(e["photo_path"]) for e in photos) if data]
+    return {"description": task["description"], "text": "\n".join(lines), "images": images}
+
+
 def assess_evidence(evidence_id: str, image_checks: dict[str, Any] | None = None) -> dict[str, Any]:
     """Run the AI photo review for one evidence photo and store the outcome on the row."""
     e = db.first("evidence", {"id": evidence_id})

@@ -27,7 +27,7 @@ keys and loads the profile from `users`.
 | POST | `/api/media` *(multipart: file, title?)* | employer | Upload `.glb`, `.pdf`, `.txt`, `.jpg/.png/.webp`. Documents are indexed for search; the response's `indexing` says whether that worked |
 | POST | `/api/media/{id}/reindex` | employer | Make a stored document searchable (again), e.g. one saved while search was unavailable; `indexing` reports the result. Old chunks are replaced only once the new ones are stored |
 | DELETE | `/api/media/{id}` | employer | Delete a file, its search chunks and task links |
-| POST | `/api/ask` `{question}` | logged in | Answer from the company's documents: `{answer, sources:[{n, title, page, cited_text, url}]}`. `url` is a signed link to the document; for PDFs it ends in `#page=N` so the viewer opens at the cited page |
+| POST | `/api/ask` `{question, task_id?}` | logged in | Answer from the company's documents: `{answer, sources:[{n, title, page, cited_text, url}]}`. `url` is a signed link to the document; for PDFs it ends in `#page=N` so the viewer opens at the cited page. With `task_id` (a task the user can see), the task's job, description, status, linked parts, notes, AI photo findings and 2 latest photos go to the model as context, and the description is added to the search query; only documents are cited |
 
 ## Shapes
 - **Jobs:** `finished` is true when no task is `pending` or `flagged`. The web client marks an unfinished job as

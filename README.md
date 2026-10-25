@@ -1,7 +1,7 @@
 # field-execution-platform
 
 Hackathon MVP for the **1881 International Hackathon 2026, Track 3: AI Meets the Physical World**.
-Interface label: **Field Assistant** (temporary, configurable via `APP_LABEL`).
+Interface label: **FieldSight** (configurable via `APP_LABEL`).
 
 Employers create **jobs** with ordered **tasks** and assign them to an employee. Employees log in, work through their
 jobs, add **evidence** (photos and notes) to each task, and mark it **passed**, **failed** or **flagged** (escalated to

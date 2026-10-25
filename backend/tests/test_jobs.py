@@ -340,3 +340,37 @@ def test_pdf_sources_link_to_the_cited_page(world, monkeypatch):
         "question": "after use recharge the extinguisher immediately"}).json()["sources"][0]
     assert src["page"] == 3 and src["url"].endswith("#page=3")
     assert world.login("acme-employee").get(src["url"].split("#")[0]).headers["content-type"] == "application/pdf"
+
+
+def test_questions_about_a_task_carry_its_context(world, monkeypatch):
+    from app import ai, rag
+    queries = []
+    monkeypatch.setattr(rag, "embed", lambda texts, kind: (queries.extend(texts) if kind == "query" else None)
+                        or fake_embed(texts, kind))
+    world.login("acme-employer").post("/api/media", files={"file": (
+        "manual.txt", b"The gauge needle must be in the green zone. Pull the pin to use.", "text/plain")})
+    job = make_job(world)
+    task = job["tasks"][0]["id"]
+    emp = world.login("acme-employee")
+    emp.post(f"/api/tasks/{task}/evidence", data={"text": "Needle is slightly left of green"},
+             files={"file": ("p.jpg", photo(), "image/jpeg")})
+    claude = FakeClaude()  # only the question goes to this fake (saving runs the real, disabled-in-tests AI paths)
+    monkeypatch.setattr(ai, "claude_available", lambda: (True, ""))
+    monkeypatch.setattr(ai, "claude_client", lambda: claude)
+
+    r = emp.post("/api/ask", json={"question": "Is this reading OK?", "task_id": task})
+    assert r.status_code == 200, r.text
+    content = claude.last["messages"][0]["content"]
+    context = next(b["text"] for b in content if b["type"] == "text" and "question is about this task" in b["text"])
+    assert "Task: Check the gauge" in context and "Job: Monthly check" in context
+    assert "Note from the employee" in context and "slightly left of green" in context
+    assert [b["type"] for b in content].count("image") == 1  # the latest photo goes along
+    assert [b["type"] for b in content].count("document") >= 1  # documents are still the citable sources
+    assert content[-1]["text"] == "Question: Is this reading OK?"
+    assert queries[-1] == "Is this reading OK?\nCheck the gauge"  # the task sharpens the search
+
+    other = world.login("other-employee").post("/api/ask", json={"question": "Is this OK?", "task_id": task})
+    assert other.status_code == 404  # another company's task: nothing leaks into the answer
+    general = emp.post("/api/ask", json={"question": "How do I use it?"})
+    assert general.status_code == 200
+    assert not any("question is about this task" in b.get("text", "") for b in claude.last["messages"][0]["content"])

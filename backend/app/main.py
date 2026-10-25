@@ -114,6 +114,7 @@ class StatusIn(BaseModel):
 
 class AskIn(BaseModel):
     question: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=1000)]
+    task_id: str | None = None  # ask about one task: its description, notes, AI findings and photos go along
 
 
 # ------------------------------------------------------------------ system --
@@ -303,7 +304,10 @@ def delete_media(media_id: str, user: Employer) -> dict[str, Any]:
 @app.post("/api/ask")
 def ask(body: AskIn, user: User) -> dict[str, Any]:
     """Answer a question from the company's documents, with numbered sources that link to the cited page."""
-    out = rag.answer(body.question, rag.search(user["company_id"], body.question))
+    task = workflow.task_context(user, body.task_id) if body.task_id else None
+    # The task description sharpens the search ("what does this reading mean?" finds the gauge section).
+    query = f"{body.question}\n{task['description']}" if task else body.question
+    out = rag.answer(body.question, rag.search(user["company_id"], query), task)
     docs = {m["id"]: m for m in db.select("media", {"id": sorted({s["media_id"] for s in out["sources"]}),
                                                      "company_id": user["company_id"]}, columns="id,storage_path")}
     urls = blobs.signed_urls([m["storage_path"] for m in docs.values()])

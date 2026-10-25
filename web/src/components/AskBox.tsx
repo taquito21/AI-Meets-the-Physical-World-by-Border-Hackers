@@ -5,7 +5,8 @@ import { t } from "../i18n";
 import { ErrorBox } from "./ui";
 
 // Ask a question of the company's documents; answers cite the document and page they came from.
-export function AskBox() {
+// Inside a task card (taskId set), the question is about that task: the server sends its notes and photos along.
+export function AskBox({ taskId }: { taskId?: string }) {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<AskResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -15,7 +16,7 @@ export function AskBox() {
     setBusy(true);
     setError(null);
     try {
-      setResult(await api.ask(question));
+      setResult(await api.ask(question, taskId));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -23,10 +24,12 @@ export function AskBox() {
     }
   };
   return (
-    <section className="card ask">
-      <h2 className="with-icon"><BookOpen aria-hidden />{t("Ask the documents")}</h2>
+    <section className={taskId ? "ask ask-task" : "card ask"}>
+      {taskId
+        ? <p className="small muted">{t("Your question goes with this task's description, notes and latest photos, and is answered from your company's documents.")}</p>
+        : <h2 className="with-icon"><BookOpen aria-hidden />{t("Ask the documents")}</h2>}
       <form className="capture" onSubmit={(e) => { e.preventDefault(); if (question.trim().length >= 3) ask(); }}>
-        <input placeholder={t("e.g. How often must the extinguisher gauge be checked?")} value={question}
+        <input placeholder={t(taskId ? "e.g. Is this reading OK? What should I check next?" : "e.g. How often must the extinguisher gauge be checked?")} value={question}
           onChange={(e) => setQuestion(e.target.value)} />
         <button className="btn btn-primary" disabled={busy || question.trim().length < 3}><Search aria-hidden />{busy ? t("Searching…") : t("Ask")}</button>
       </form>
