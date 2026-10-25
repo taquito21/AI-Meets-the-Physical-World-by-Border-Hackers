@@ -132,10 +132,14 @@ CREATE TABLE IF NOT EXISTS document_chunks (
   media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE, chunk_index INTEGER NOT NULL,
   content TEXT NOT NULL, embedding TEXT NOT NULL, UNIQUE (media_id, chunk_index)
 );
+CREATE TABLE IF NOT EXISTS face_embeddings (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, embeddings TEXT NOT NULL,
+  consent_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
 """
 
 # Decoded from / encoded to JSON text by the SQLite store (Postgres uses jsonb and does this itself).
-JSON_COLUMNS = {"ai_assessment", "metadata", "node_ids", "translations"}
+JSON_COLUMNS = {"ai_assessment", "metadata", "node_ids", "embeddings", "translations"}
 # Columns added after the first release, for local databases created before them.
 ADDED_COLUMNS = {table: {"lang": "TEXT", "translations": "TEXT NOT NULL DEFAULT '{}'"}
                  for table in ("jobs", "tasks", "evidence")}
@@ -466,7 +470,7 @@ delete = store.delete
 rpc = store.rpc
 
 # Children before parents (foreign keys). Used by tools/reset_demo_data.py and the opt-in Supabase test run.
-TABLES_CHILD_FIRST = ["document_chunks", "task_media", "evidence", "tasks", "jobs", "media", "users", "companies"]
+TABLES_CHILD_FIRST = ["face_embeddings", "document_chunks", "task_media", "evidence", "tasks", "jobs", "media", "users", "companies"]
 
 
 def first(table: str, where: Where | None = None, *, columns: str = "*", order: Order = None) -> dict[str, Any] | None:

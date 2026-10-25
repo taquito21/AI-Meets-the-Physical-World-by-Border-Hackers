@@ -128,6 +128,15 @@ $$;
 revoke execute on function match_document_chunks(uuid, extensions.vector, integer) from public, anon, authenticated;
 grant execute on function match_document_chunks(uuid, extensions.vector, integer) to service_role;
 
+-- Face login: only 128-number SFace vectors per user (never images), saved with the person's consent.
+-- Biometric data: readable by the backend (secret key) only, like every other table.
+create table if not exists face_embeddings (
+  user_id uuid primary key references users(id) on delete cascade,
+  embeddings jsonb not null,
+  consent_at timestamptz not null,
+  updated_at timestamptz not null default now()
+);
+
 -- Lock every table to the backend (secret key) only.
 alter table companies enable row level security;
 alter table users enable row level security;
@@ -137,6 +146,7 @@ alter table evidence enable row level security;
 alter table media enable row level security;
 alter table task_media enable row level security;
 alter table document_chunks enable row level security;
+alter table face_embeddings enable row level security;
 
 -- One private bucket for all files, organized as <company_id>/evidence/... and <company_id>/media/...
 -- Files are served only through the API, never through public URLs.

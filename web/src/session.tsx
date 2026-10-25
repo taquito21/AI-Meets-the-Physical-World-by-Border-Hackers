@@ -8,6 +8,8 @@ interface Session {
   loading: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithFace: (embeddings: number[][]) => Promise<void>;
+  reloadProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -55,11 +57,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     await loadProfile();
   };
 
+  // The server checks the face and hands back an ordinary Supabase session (see backend/app/face.py).
+  const signInWithFace = async (embeddings: number[][]) => {
+    const tokens = await api.faceLogin(embeddings);
+    const { error: err } = await (await supabase()).auth.setSession(tokens);
+    if (err) throw new Error(err.message);
+    await loadProfile();
+  };
+
   useEffect(() => {
     document.title = me ? `${me.company.name} · FieldSight` : "FieldSight";
   }, [me]);
 
-  return <Ctx.Provider value={{ me, loading, error, signIn, signOut }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ me, loading, error, signIn, signInWithFace, reloadProfile: loadProfile, signOut }}>{children}</Ctx.Provider>;
 }
 
 export function useSession(): Session {

@@ -17,7 +17,7 @@ from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, Field, StringConstraints
 from starlette.concurrency import run_in_threadpool
 
-from . import ai, db, i18n, media, rag, workflow
+from . import ai, db, face, i18n, media, rag, workflow
 from .auth import current_user, employer
 from .blobs import blobs
 from .config import settings
@@ -137,7 +137,35 @@ def client_config() -> dict[str, Any]:
 @app.get("/api/me")
 def me(user: User) -> dict[str, Any]:
     company = db.first("companies", {"id": user["company_id"]})
-    return {**user, "company": company}
+    return {**user, "company": company, "has_face": face.has_face(user["id"])}
+
+
+class FaceIn(BaseModel):
+    embeddings: list[list[float]] = Field(max_length=10)
+    consent: bool = False
+
+
+def _client(request: Request) -> str:
+    return request.headers.get("x-forwarded-for", "").split(",")[0].strip() or \
+        (request.client.host if request.client else "unknown")
+
+
+@app.post("/api/auth/face-login")
+def face_login(body: FaceIn, request: Request) -> dict[str, Any]:
+    """No login needed: the face is the login. Returns a Supabase session for the browser to adopt."""
+    return face.supabase_session(face.identify(body.embeddings, _client(request)))
+
+
+@app.post("/api/me/face")
+def register_face(body: FaceIn, user: User) -> dict[str, Any]:
+    face.register(user, body.embeddings, body.consent)
+    return {"has_face": True}
+
+
+@app.delete("/api/me/face")
+def delete_face(user: User) -> dict[str, Any]:
+    face.remove(user)
+    return {"has_face": False}
 
 
 @app.get("/api/users")
@@ -304,7 +332,13 @@ if settings.web_dist_dir.exists():
     def spa(full_path: str):
         candidate = (settings.web_dist_dir / full_path).resolve()
         if full_path and candidate.is_file() and settings.web_dist_dir.resolve() in candidate.parents:
+            if full_path.startswith("assets/"):  # Vite content-hashes these names, so they never change
+                return FileResponse(candidate, headers={"Cache-Control": "public, max-age=31536000, immutable"})
             return FileResponse(candidate)
-        if full_path.startswith("api/"):
+        # A missing file (e.g. a bundle from an older deploy) must 404, not fall back to the HTML page
+        if full_path.startswith(("api/", "assets/")) or "." in full_path.rsplit("/", 1)[-1]:
             raise HTTPException(404, "Not found")
-        return FileResponse(settings.web_dist_dir / "index.html")
+        # Sent without ETag/Last-Modified: Vercel stamps every file with the same mtime and new builds keep the
+        # same size, so FileResponse's validators never change and browsers would keep a stale page forever.
+        return Response((settings.web_dist_dir / "index.html").read_bytes(), media_type="text/html",
+                        headers={"Cache-Control": "no-cache"})

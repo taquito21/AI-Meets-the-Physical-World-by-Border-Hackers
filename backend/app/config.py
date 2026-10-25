@@ -76,6 +76,8 @@ class Settings:
     # Document search (RAG): Voyage AI embeddings through the MongoDB Atlas API.
     anthropic_ok: bool = bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
     voyage_api_key: str = os.environ.get("VOYAGE_API_KEY", "").strip()
+    # Face login: minimum cosine similarity between a login frame and a registered face (OpenCV suggests 0.363).
+    face_threshold: float = float(os.environ.get("FACE_THRESHOLD", "0.40"))
     voyage_model: str = os.environ.get("VOYAGE_MODEL", "voyage-4")  # 1024-dim vectors, matching schema.sql
     # Keys from the Voyage AI platform ("pa-...") use Voyage's endpoint; MongoDB Atlas model keys use Atlas's.
     voyage_url: str = os.environ.get("VOYAGE_URL") or (
