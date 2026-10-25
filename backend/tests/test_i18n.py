@@ -89,7 +89,7 @@ def fake_translator(monkeypatch, calls: list | None = None):
     """Stands in for the model: marks each text with its target language."""
     from app import translate
 
-    def fake(texts, target):
+    def fake(texts, target, sources=None):
         if calls is not None:
             calls.append((list(texts), target))
         return [f"[{target}] {t}" for t in texts]
@@ -123,7 +123,7 @@ def test_typed_text_is_translated_on_save_and_shown_in_the_readers_language(worl
 
 def test_missing_translations_are_filled_when_the_job_is_opened(world, monkeypatch):
     from app import db, translate
-    monkeypatch.setattr(translate, "translate", lambda texts, target: None)  # AI unavailable at save time
+    monkeypatch.setattr(translate, "translate", lambda *args: None)  # AI unavailable at save time
     boss = world.login("acme-employer")
     job = boss.post("/api/jobs", json={"title": "Revisar panel", "assigned_to": world.users["acme-employee"]["id"],
                                        "tasks": [{"description": "Mira las etiquetas"}]}, headers={"X-Lang": "es"}).json()
@@ -197,3 +197,13 @@ def test_client_requests_the_review_translation_right_after_upload(world, monkey
     shown = boss.get(f"/api/jobs/{job['id']}").json()["tasks"][0]["evidence"][0]["ai_assessment"]
     assert shown["result"]["summary"] == "[en] Se ve el manómetro."
     assert len(calls) == saves  # the employer's first view does not wait on a translation
+
+
+def test_translator_is_told_each_texts_language_when_known(monkeypatch):
+    from app import translate
+    seen = {}
+    monkeypatch.setattr(translate, "translate", lambda texts, target, sources=None: seen.update(
+        texts=texts, sources=sources) or [f"[{target}] {t}" for t in texts])
+    rows = [("evidence", {"text": "Ya se, que hacemos?", "lang": "es"}), ("jobs", {"title": "Old job"})]
+    translate.fill(rows, "en")
+    assert seen == {"texts": ["Ya se, que hacemos?", "Old job"], "sources": ["es", None]}  # None: saved before lang
