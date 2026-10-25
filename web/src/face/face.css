@@ -34,6 +34,11 @@
 .face-cam-problem h3 { margin: 0; font-size: 1.05rem; }
 .face-cam-problem p { margin: 0; color: var(--muted, #526071); }
 
+/* Two classes, so a card's column layout for form labels (.card label) does not stack it */
+.face-cam .face-cam-pick { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: .45rem; margin: 0; font-size: .9rem; color: var(--muted, #526071); }
+.face-cam .face-cam-pick select { width: auto; max-width: min(19rem, 68vw); padding: .35rem .5rem; }
+
 .face-cam-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .face-cam-actions .btn { flex: 1 1 200px; }
 

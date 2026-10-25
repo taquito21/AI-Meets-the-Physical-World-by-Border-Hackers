@@ -40,6 +40,9 @@ On Vercel every file goes through the Python function, whose responses are cappe
   never requests.
 - The browser downloads the pieces once (about 53 MB), joins them, checks the hash, and keeps them in Cache Storage.
 - Camera access needs HTTPS. `localhost` also works.
+- Virtual cameras (DroidCam, OBS, Iriun, Camo…) are often a laptop's default and only show a "start the app"
+  picture. The face camera skips them when a real camera exists. With more than one camera it shows a **Camera**
+  list, and the choice is remembered on that device.
 
 ## Tests
 `backend/tests/test_face.py` uses synthetic vectors and a fake Supabase Auth server. It never contacts the real
