@@ -2,7 +2,7 @@
 // to an off-screen canvas, the face is found and turned into 128 numbers by ./engine, and only those numbers are
 // handed to onDone. No picture is stored or sent.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CameraOff, CircleCheck, KeyRound, LoaderCircle, RefreshCw, ShieldCheck, TriangleAlert, X } from "lucide-react";
+import { Camera, CameraOff, CircleCheck, KeyRound, LoaderCircle, RefreshCw, ShieldCheck, TriangleAlert, X } from "lucide-react";
 import { t } from "../i18n";
 import { align, cosine, detect, embed, loadModels, modelsReady, type LoadProgress } from "./engine";
 import "./face.css";
@@ -14,6 +14,10 @@ const MIN_FACE = 0.25; // face size (√(w·h) of the box) as a share of the fra
 const INTERVAL_MS = 250; // about 4 samples per second (slower if the phone needs longer per sample)
 const MAX_FRAME = 640; // longest side of the analysed frame, like a 640×480 webcam frame in the desktop app
 const DARK = 50; // mean brightness (0–255) of the centre of the frame below which we ask for more light
+// Phone-as-webcam and streaming apps install virtual cameras that a laptop often makes its default, so the video shows
+// the app's "start me" picture instead of the person. Never chosen automatically when a real camera exists.
+const VIRTUAL_CAMERA = /\b(droidcam|virtual|obs|manycam|snap camera|xsplit|epoccam|iriun|camo|ndi|mmhmm|vcam|splitcam|youcam)\b/i;
+const CAMERA_KEY = "fep.faceCamera"; // the camera the person picked on this device
 
 type CameraState = "starting" | "on" | "denied" | "missing" | "busy" | "unavailable" | "error";
 type Hint =
@@ -50,6 +54,34 @@ function cameraProblem(e: unknown): CameraState {
   return "error";
 }
 
+function savedCamera(): string {
+  try {
+    return localStorage.getItem(CAMERA_KEY) ?? "";
+  } catch {
+    return ""; // storage unavailable
+  }
+}
+
+function saveCamera(id: string) {
+  try {
+    if (id) localStorage.setItem(CAMERA_KEY, id);
+    else localStorage.removeItem(CAMERA_KEY);
+  } catch {
+    /* keep the choice for this visit only */
+  }
+}
+
+/** A camera by id, or with "" the browser's default front camera. */
+function openCamera(deviceId: string): Promise<MediaStream> {
+  const size = { width: { ideal: 640 }, height: { ideal: 480 } };
+  return navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: deviceId ? { deviceId: { exact: deviceId }, ...size } : { facingMode: "user", ...size },
+  });
+}
+
+const stopTracks = (stream: MediaStream) => stream.getTracks().forEach((track) => track.stop());
+
 /** Mean brightness of the middle of the frame, sampling every 4th pixel. */
 function brightness(rgba: Uint8ClampedArray, w: number, h: number): number {
   let sum = 0, n = 0;
@@ -84,6 +116,9 @@ export default function FaceCamera(props: {
   const [count, setCount] = useState(0);
   const [finished, setFinished] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [cameraId, setCameraId] = useState(savedCamera); // "" = the browser's default
+  const [cameras, setCameras] = useState<{ id: string; label: string }[]>([]);
+  const [activeId, setActiveId] = useState("");
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -91,7 +126,7 @@ export default function FaceCamera(props: {
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
-  // Camera: open on mount (and on "Try again"), always stop every track on unmount.
+  // Camera: open on mount (and on "Try again" or another camera), always stop every track on unmount.
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -100,12 +135,28 @@ export default function FaceCamera(props: {
         return;
       }
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
-        });
-        if (!alive) {
-          stream.getTracks().forEach((track) => track.stop());
+        let stream: MediaStream;
+        let chosen = cameraId;
+        try {
+          stream = await openCamera(cameraId);
+        } catch (e) {
+          const name = e instanceof DOMException || e instanceof Error ? e.name : "";
+          if (!cameraId || (name !== "OverconstrainedError" && name !== "NotFoundError")) throw e;
+          saveCamera(""); // the remembered camera is gone (e.g. unplugged): use the default one
+          chosen = "";
+          stream = await openCamera(chosen);
+        }
+        // Camera names can only be read once access is granted, so the list comes after opening one.
+        const inputs = (await navigator.mediaDevices.enumerateDevices().catch(() => []))
+          .filter((d) => d.kind === "videoinput" && d.deviceId);
+        if (!alive) return stopTracks(stream);
+        const track = stream.getVideoTracks()[0];
+        setCameras(inputs.map((d) => ({ id: d.deviceId, label: d.label })));
+        setActiveId(track?.getSettings().deviceId ?? chosen);
+        const real = inputs.find((d) => d.label && !VIRTUAL_CAMERA.test(d.label));
+        if (!chosen && track && VIRTUAL_CAMERA.test(track.label) && real) {
+          stopTracks(stream); // the default is a virtual camera (e.g. DroidCam): open the real one instead
+          setCameraId(real.deviceId);
           return;
         }
         streamRef.current = stream;
@@ -126,7 +177,7 @@ export default function FaceCamera(props: {
       alive = false;
       stopCamera();
     };
-  }, [attempt, stopCamera]);
+  }, [attempt, cameraId, stopCamera]);
 
   // Models: downloaded once (about 40 MB), then served from the browser's cache.
   useEffect(() => {
@@ -224,6 +275,14 @@ export default function FaceCamera(props: {
     setAttempt((a) => a + 1);
   };
 
+  const pickCamera = (id: string) => {
+    saveCamera(id);
+    setCount(0);
+    setHint("Put your face inside the oval");
+    setCamera("starting");
+    setCameraId(id);
+  };
+
   const cancel = () => {
     stopCamera();
     props.onCancel();
@@ -278,6 +337,16 @@ export default function FaceCamera(props: {
           <p className="face-cam-hint" aria-live="polite">{t(hint)}</p>
           <p className="face-cam-privacy"><ShieldCheck aria-hidden />{t("Your picture never leaves this phone. Only numbers calculated from your face are sent.")}</p>
         </>
+      )}
+
+      {cameras.length > 1 && !finished && (
+        <label className="face-cam-pick">
+          <Camera aria-hidden />
+          <span>{t("Camera")}</span>
+          <select value={activeId || cameraId} onChange={(e) => pickCamera(e.target.value)}>
+            {cameras.map((c, i) => <option key={c.id} value={c.id}>{c.label || t("Camera {n}", { n: i + 1 })}</option>)}
+          </select>
+        </label>
       )}
 
       <div className="face-cam-actions">

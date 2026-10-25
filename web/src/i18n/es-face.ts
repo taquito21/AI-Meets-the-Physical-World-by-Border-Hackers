@@ -31,6 +31,9 @@ const face: Record<string, string> = {
   "The camera or the face check stopped working.": "La cámara o la revisión del rostro dejó de funcionar.",
   "Face recognition could not be loaded": "No se pudo cargar el reconocimiento facial",
   "Check the internet connection and try again.": "Revisa la conexión a internet y vuelve a intentarlo.",
+  // Choosing the camera (shown when there is more than one)
+  "Camera": "Cámara",
+  "Camera {n}": "Cámara {n}",
   // Buttons
   "Try again": "Intentar de nuevo",
   "Use username and password instead": "Entrar con usuario y contraseña",
