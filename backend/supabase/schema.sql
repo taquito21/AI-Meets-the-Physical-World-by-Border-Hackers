@@ -32,7 +32,9 @@ create table if not exists jobs (
   assigned_to uuid not null references users(id),
   title text not null,
   due_date date,  -- optional; a job is overdue when this has passed and it still has open tasks
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  lang text,  -- language the text was written in ('en' | 'es'); null for rows saved before translation existed
+  translations jsonb not null default '{}'::jsonb  -- machine translations, e.g. {"es": {"title": "..."}}
 );
 alter table jobs add column if not exists due_date date;  -- for projects created before due dates existed
 
@@ -42,7 +44,9 @@ create table if not exists tasks (
   position integer not null,
   description text not null,
   status text not null default 'pending' check (status in ('pending', 'passed', 'failed', 'flagged')),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  lang text,
+  translations jsonb not null default '{}'::jsonb
 );
 
 -- A photo, a text entry, or both. ai_assessment is null until a photo has been assessed.
@@ -52,10 +56,20 @@ create table if not exists evidence (
   created_by uuid not null references users(id),
   photo_path text,
   text text,
-  ai_assessment jsonb,
+  ai_assessment jsonb,  -- also carries its own lang and translations
   created_at timestamptz not null default now(),
+  lang text,
+  translations jsonb not null default '{}'::jsonb,
   check (photo_path is not null or text is not null)
 );
+
+-- Machine translation of typed text, for projects created before it existed.
+alter table jobs add column if not exists lang text;
+alter table jobs add column if not exists translations jsonb not null default '{}'::jsonb;
+alter table tasks add column if not exists lang text;
+alter table tasks add column if not exists translations jsonb not null default '{}'::jsonb;
+alter table evidence add column if not exists lang text;
+alter table evidence add column if not exists translations jsonb not null default '{}'::jsonb;
 
 -- metadata holds kind-specific data, e.g. a 3D model's parts list (names, specs, explosion vectors).
 create table if not exists media (

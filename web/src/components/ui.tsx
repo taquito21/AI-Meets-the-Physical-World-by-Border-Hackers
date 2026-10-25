@@ -56,6 +56,20 @@ export function CountChips({ counts }: { counts: Counts }) {
   );
 }
 
+// Text someone typed in the other language, machine-translated by the server; the original is one tap away.
+export function Typed({ text, original }: { text: string; original?: string }) {
+  const [showOriginal, setShowOriginal] = useState(false);
+  if (original === undefined || original === text) return <>{text}</>;
+  return (
+    <>
+      {showOriginal ? original : text}{" "}
+      <button type="button" className="link translated" onClick={() => setShowOriginal(!showOriginal)}>
+        {showOriginal ? t("Show translation") : t("Translated · show original")}
+      </button>
+    </>
+  );
+}
+
 // Today's date in the person's own time zone, as "YYYY-MM-DD" (the format due dates are stored in).
 export function today(): string {
   const d = new Date();

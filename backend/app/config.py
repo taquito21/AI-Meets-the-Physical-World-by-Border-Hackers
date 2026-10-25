@@ -68,6 +68,11 @@ class Settings:
     ai_timeout_s: float = float(os.environ.get("AI_TIMEOUT_S") or ("40" if os.environ.get("VERCEL") else "60"))
     ai_max_retries: int = int(os.environ.get("AI_MAX_RETRIES") or ("0" if os.environ.get("VERCEL") else "1"))
     ai_fallbacks: bool = _bool("AI_FALLBACKS", True)
+    # Machine translation of typed text (job titles, tasks, notes) and saved AI reviews into the other language.
+    # A photo upload waits on the note's translation and then the review, so on Vercel both must fit in maxDuration.
+    translate_model: str = os.environ.get("TRANSLATE_MODEL", "claude-haiku-5-5")
+    translate_timeout_s: float = float(os.environ.get("TRANSLATE_TIMEOUT_S") or ("8" if os.environ.get("VERCEL")
+                                                                                 else "15"))
     # Document search (RAG): Voyage AI embeddings through the MongoDB Atlas API.
     anthropic_ok: bool = bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
     voyage_api_key: str = os.environ.get("VOYAGE_API_KEY", "").strip()

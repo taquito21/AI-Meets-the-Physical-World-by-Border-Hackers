@@ -83,3 +83,117 @@ def test_package_translation_files_line_up_with_their_packages():
             assert report.ok, report.errors
             ids = {c["component_id"] for c in report.components}
             assert set(doc.get("components", {})) <= ids, f"{pkg.name}/{f.name}: unknown component ids"
+
+
+def fake_translator(monkeypatch, calls: list | None = None):
+    """Stands in for the model: marks each text with its target language."""
+    from app import translate
+
+    def fake(texts, target):
+        if calls is not None:
+            calls.append((list(texts), target))
+        return [f"[{target}] {t}" for t in texts]
+    monkeypatch.setattr(translate, "translate", fake)
+
+
+def test_typed_text_is_translated_on_save_and_shown_in_the_readers_language(world, monkeypatch):
+    calls = []
+    fake_translator(monkeypatch, calls)
+    boss, emp = world.login("acme-employer"), world.login("acme-employee")
+    job = boss.post("/api/jobs", json={"title": "Check extinguisher", "assigned_to": world.users["acme-employee"]["id"],
+                                       "tasks": [{"description": "Read the gauge"}]}).json()
+    assert len(calls) == 1 and calls[0] == (["Check extinguisher", "Read the gauge"], "es")  # one call per save
+    assert job["title"] == "Check extinguisher" and "original" not in job  # the writer sees what they wrote
+
+    task = job["tasks"][0]["id"]
+    emp.post(f"/api/tasks/{task}/evidence", headers={"X-Lang": "es"}, data={"text": "La aguja está en verde"})
+    assert calls[-1] == (["La aguja está en verde"], "en")
+
+    es = emp.get(f"/api/jobs/{job['id']}", headers={"X-Lang": "es"}).json()
+    assert es["title"] == "[es] Check extinguisher"
+    assert es["original"] == {"lang": "en", "title": "Check extinguisher"}
+    assert es["tasks"][0]["description"] == "[es] Read the gauge"
+    assert es["tasks"][0]["evidence"][0]["text"] == "La aguja está en verde"
+    en = boss.get(f"/api/jobs/{job['id']}").json()
+    assert en["tasks"][0]["evidence"][0]["text"] == "[en] La aguja está en verde"
+    assert en["tasks"][0]["evidence"][0]["original"]["text"] == "La aguja está en verde"
+    assert emp.get("/api/jobs", headers={"X-Lang": "es"}).json()[0]["title"] == "[es] Check extinguisher"
+    assert len(calls) == 2  # reading never re-translates what was saved
+
+
+def test_missing_translations_are_filled_when_the_job_is_opened(world, monkeypatch):
+    from app import db, translate
+    monkeypatch.setattr(translate, "translate", lambda texts, target: None)  # AI unavailable at save time
+    boss = world.login("acme-employer")
+    job = boss.post("/api/jobs", json={"title": "Revisar panel", "assigned_to": world.users["acme-employee"]["id"],
+                                       "tasks": [{"description": "Mira las etiquetas"}]}, headers={"X-Lang": "es"}).json()
+    assert boss.get(f"/api/jobs/{job['id']}").json()["title"] == "Revisar panel"  # falls back to the original
+
+    fake_translator(monkeypatch)
+    assert boss.get(f"/api/jobs/{job['id']}").json()["title"] == "[en] Revisar panel"
+    assert db.first("jobs", {"id": job["id"]})["translations"] == {"en": {"title": "[en] Revisar panel"}}  # stored
+
+
+def test_ai_review_is_translated_when_the_job_is_opened_not_on_upload(world, monkeypatch):
+    from app import db
+    from test_jobs import photo
+    calls = []
+    fake_translator(monkeypatch, calls)
+    boss, emp = world.login("acme-employer"), world.login("acme-employee")
+    job = boss.post("/api/jobs", json={"title": "Check", "assigned_to": world.users["acme-employee"]["id"],
+                                       "tasks": [{"description": "Gauge"}]}).json()
+    task = job["tasks"][0]["id"]
+    ev = emp.post(f"/api/tasks/{task}/evidence", headers={"X-Lang": "es"},
+                  files={"file": ("p.jpg", photo(), "image/jpeg")}).json()["tasks"][0]["evidence"][0]
+    review = {"status": "completed", "lang": "es", "result": {"summary": "Se ve el manómetro.", "observations": []}}
+    db.update("evidence", {"ai_assessment": review}, {"id": ev["id"]})  # as the photo review would store it
+    saves = len(calls)
+
+    shown = boss.get(f"/api/jobs/{job['id']}").json()["tasks"][0]["evidence"][0]["ai_assessment"]
+    assert shown["result"]["summary"] == "[en] Se ve el manómetro." and shown["translated_from"] == "es"
+    assert len(calls) == saves + 1
+    boss.get(f"/api/jobs/{job['id']}")
+    assert len(calls) == saves + 1  # stored: the next view does not translate again
+
+
+def test_ai_review_is_translated_for_the_other_reader(monkeypatch):
+    from app import i18n, translate
+    fake_translator(monkeypatch)
+    result = {"summary": "Gauge visible.", "observations": ["Needle in green"], "retake_guidance": "",
+              "recommended_action": "accept_for_human_review", "limitations": []}
+    review = {"status": "completed", "result": dict(result), "lang": "en"}
+    translate.fill([("evidence", {"ai_assessment": review})], "es")
+    assert review["translations"]["es"] == {"summary": "[es] Gauge visible.", "observations": ["[es] Needle in green"]}
+    token = i18n.current_lang.set("es")
+    try:
+        shown = i18n.review(review)
+    finally:
+        i18n.current_lang.reset(token)
+    assert shown["result"]["summary"] == "[es] Gauge visible." and shown["translated_from"] == "en"
+    assert shown["result"]["recommended_action"] == "accept_for_human_review"  # codes never change
+    assert "translations" not in shown
+    assert i18n.review(review)["result"] == result  # the writer's language is shown as saved
+
+
+def test_client_requests_the_review_translation_right_after_upload(world, monkeypatch):
+    from app import db
+    from test_jobs import photo
+    calls = []
+    fake_translator(monkeypatch, calls)
+    boss, emp = world.login("acme-employer"), world.login("acme-employee")
+    job = boss.post("/api/jobs", json={"title": "Check", "assigned_to": world.users["acme-employee"]["id"],
+                                       "tasks": [{"description": "Gauge"}]}).json()
+    task = job["tasks"][0]["id"]
+    ev = emp.post(f"/api/tasks/{task}/evidence", headers={"X-Lang": "es"},
+                  files={"file": ("p.jpg", photo(), "image/jpeg")}).json()["tasks"][0]["evidence"][0]
+    review = {"status": "completed", "lang": "es", "result": {"summary": "Se ve el manómetro.", "observations": []}}
+    db.update("evidence", {"ai_assessment": review}, {"id": ev["id"]})  # as the photo review would store it
+
+    assert world.login("other-employer").post(f"/api/evidence/{ev['id']}/translate").status_code == 404
+    assert emp.post(f"/api/evidence/{ev['id']}/translate", headers={"X-Lang": "es"}).json() == {"translated": True}
+    assert calls[-1] == (["Se ve el manómetro."], "en")
+    assert emp.post(f"/api/evidence/{ev['id']}/translate").json() == {"translated": False}  # already there
+    saves = len(calls)
+    shown = boss.get(f"/api/jobs/{job['id']}").json()["tasks"][0]["evidence"][0]["ai_assessment"]
+    assert shown["result"]["summary"] == "[en] Se ve el manómetro."
+    assert len(calls) == saves  # the employer's first view does not wait on a translation

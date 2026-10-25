@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Check, CloudOff, Eye, Hand, Info, Lightbulb, RefreshCw, Sparkles, type LucideIcon } from "lucide-react";
 import { api, type Assessment, type Evidence, type Job } from "../api";
 import { t } from "../i18n";
-import { when } from "./ui";
+import { Typed, when } from "./ui";
 
 // Plain-language headline first; the full AI output stays one tap away. English keys, translated with t().
 const HEADLINE: Record<string, { tone: string; icon: LucideIcon; title: string; text: string }> = {
@@ -79,7 +79,7 @@ export function EvidenceCard({ e, onOpen, onJob }: { e: Evidence; onOpen: (url: 
         <div className="tiny muted">
           <b>{e.created_by?.username ?? t("Unknown")}</b>{byEmployer && ` (${t("employer")})`} · {when(e.created_at)}
         </div>
-        {e.text && <p className="evidence-note">{e.text}</p>}
+        {e.text && <p className="evidence-note"><Typed text={e.text} original={e.original?.text} /></p>}
         {checks && !checks.passed && <div className="small checks">{t("Photo check:")} {checks.issues.map((i) => t(i)).join(", ")}</div>}
         {e.photo_url && (retrying ? <div className="ai ai-muted"><span className="spinner" /> {t("Checking the photo again…")}</div>
           : <AssessmentView a={e.ai_assessment} onRetry={retry} />)}

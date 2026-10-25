@@ -36,6 +36,9 @@ export interface MediaItem {
   indexing?: { indexed: boolean; chunks?: number; error?: string } | null; // right after upload
 }
 
+// Typed text is shown in the reader's language; when that is a machine translation, `original` has it as written.
+export type Original<F extends string> = { original?: { lang: string | null } & Record<F, string> };
+
 export interface AssessmentResult {
   summary: string;
   correct_area_visible: "yes" | "no" | "uncertain";
@@ -60,9 +63,10 @@ export interface Assessment {
   error?: string | null;
   latency_ms?: number;
   image_checks?: ImageChecks | null;
+  translated_from?: string | null; // set when the free text was machine-translated for this reader
 }
 
-export interface Evidence {
+export interface Evidence extends Original<"text"> {
   id: string;
   task_id: string;
   created_by: Person | null;
@@ -72,7 +76,7 @@ export interface Evidence {
   created_at: string;
 }
 
-export interface Task {
+export interface Task extends Original<"description"> {
   id: string;
   position: number;
   description: string;
@@ -82,7 +86,7 @@ export interface Task {
   media: (MediaItem & { node_ids: string[] })[];
 }
 
-export interface JobSummary {
+export interface JobSummary extends Original<"title"> {
   id: string;
   title: string;
   created_at: string;
@@ -101,7 +105,7 @@ export interface NewJob {
 }
 
 // Employer overview: tasks waiting for them (flagged) or failed, and each employee's workload.
-export interface AttentionTask {
+export interface AttentionTask extends Original<"description"> {
   id: string; job_id: string; job_title: string; position: number; description: string;
   status: "flagged" | "failed"; updated_at: string; assigned_to: Person | null;
 }
@@ -172,6 +176,12 @@ async function prepareImage(file: File): Promise<Blob> {
   }
 }
 
+// The AI review is saved in the reader's language; ask for the other one in a separate request (the upload has no
+// time to spare). Fire and forget: if it fails, the server translates it when the job is opened in that language.
+function translateReview(evidenceId: string) {
+  request(`/api/evidence/${evidenceId}/translate`, { method: "POST" }).catch(() => {});
+}
+
 const json = (method: string, data: unknown): RequestInit => ({
   method,
   headers: { "Content-Type": "application/json" },
@@ -199,9 +209,17 @@ export const api = {
     const fd = new FormData();
     if (file) fd.append("file", await prepareImage(file), "photo.jpg");
     if (text.trim()) fd.append("text", text.trim());
-    return request<Job>(`/api/tasks/${taskId}/evidence`, { method: "POST", body: fd });
+    const job = await request<Job>(`/api/tasks/${taskId}/evidence`, { method: "POST", body: fd });
+    const photos = job.tasks.find((t) => t.id === taskId)?.evidence.filter((e) => e.photo_url) ?? [];
+    const added = file && photos[photos.length - 1];
+    if (added && added.ai_assessment?.status === "completed") translateReview(added.id);
+    return job;
   },
-  reassess: (evidenceId: string) => request<Job>(`/api/evidence/${evidenceId}/assess`, { method: "POST" }),
+  reassess: async (evidenceId: string) => {
+    const job = await request<Job>(`/api/evidence/${evidenceId}/assess`, { method: "POST" });
+    translateReview(evidenceId);
+    return job;
+  },
   media: () => request<MediaItem[]>("/api/media"),
   uploadMedia: (file: File, title: string) => {
     const fd = new FormData();

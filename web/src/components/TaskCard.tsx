@@ -4,7 +4,7 @@ import { api, type Job, type Task, type TaskStatus, type UserClass } from "../ap
 import { t } from "../i18n";
 import { EvidenceCard } from "./EvidenceCard";
 import { ModelView } from "./ModelView";
-import { ErrorBox, StatusChip } from "./ui";
+import { ErrorBox, StatusChip, Typed } from "./ui";
 
 const ACTIONS: { status: TaskStatus; label: string; className: string; icon: LucideIcon }[] = [
   { status: "passed", label: "Passed", className: "btn-green", icon: CircleCheck },
@@ -61,7 +61,7 @@ export function TaskCard({ task, role, onJob, onOpenImage }:
   return (
     <section className={`card task task-${task.status}`}>
       <div className="card-head">
-        <div><span className="muted small">{t("Task {n}", { n: task.position + 1 })}</span><h2>{task.description}</h2></div>
+        <div><span className="muted small">{t("Task {n}", { n: task.position + 1 })}</span><h2><Typed text={task.description} original={task.original?.description} /></h2></div>
         <StatusChip status={task.status} />
       </div>
       <div className={`now ${done ? "now-done" : "now-todo"}`}>{t(nowLine(task, role))}</div>

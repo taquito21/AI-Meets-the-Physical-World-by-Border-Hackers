@@ -254,6 +254,12 @@ def reassess(evidence_id: str, user: User) -> dict[str, Any]:
     return workflow.job_detail(user, job["id"])
 
 
+@app.post("/api/evidence/{evidence_id}/translate")
+def translate_review(evidence_id: str, user: User) -> dict[str, Any]:
+    """Sent by the client right after a photo review, so the review is ready in the other language too."""
+    return {"translated": workflow.translate_review(user, evidence_id)}
+
+
 # ------------------------------------------------------------------- media --
 
 @app.get("/api/media")

@@ -327,6 +327,7 @@ label input, label select, label textarea { color: var(--ink); }
 .evidence-text { grid-template-columns: 1fr; }
 .evidence-employer .evidence-body { background: #f5f3ff; border-radius: 8px; padding: .4rem .6rem; }
 .evidence-note { white-space: pre-wrap; margin: .2rem 0; }
+.translated { font-size: .75rem; font-weight: normal; white-space: nowrap; }
 .model-view { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: .5rem 0; background: #fff; }
 .model-view .viewer { height: 320px; }
 .pad { padding: .4rem .8rem; }
