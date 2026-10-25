@@ -26,7 +26,10 @@ export function AskBox({ taskId }: { taskId?: string }) {
   return (
     <section className={taskId ? "ask ask-task" : "card ask"}>
       {taskId
-        ? <p className="small muted">{t("Your question goes with this task's description, notes and latest photos, and is answered from your company's documents.")}</p>
+        ? <>
+          <h4 className="with-icon"><BookOpen aria-hidden />{t("Ask about this task")}</h4>
+          <p className="tiny muted">{t("Your question goes with this task's description, notes and latest photos, and is answered from your company's documents.")}</p>
+        </>
         : <h2 className="with-icon"><BookOpen aria-hidden />{t("Ask the documents")}</h2>}
       <form className="capture" onSubmit={(e) => { e.preventDefault(); if (question.trim().length >= 3) ask(); }}>
         <input placeholder={t(taskId ? "e.g. Is this reading OK? What should I check next?" : "e.g. How often must the extinguisher gauge be checked?")} value={question}
