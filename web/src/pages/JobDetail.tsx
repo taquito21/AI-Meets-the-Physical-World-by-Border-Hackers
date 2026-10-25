@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { api, type Job } from "../api";
-import { AskBox } from "../components/AskBox";
 import { TaskCard } from "../components/TaskCard";
 import { CountChips, DueChip, ErrorBox, Lightbox, Progress, Typed, usePolling } from "../components/ui";
 import { t } from "../i18n";
@@ -57,7 +56,6 @@ export default function JobDetail() {
       {job.tasks.map((task) => (
         <TaskCard key={task.id} task={task} role={me.user_class} onJob={setJob} onOpenImage={setLightbox} />
       ))}
-      <AskBox />
       {me.user_class === "employer" && (
         <button className="btn btn-red-ghost" onClick={remove}><Trash2 aria-hidden />{t("Delete job")}</button>
       )}

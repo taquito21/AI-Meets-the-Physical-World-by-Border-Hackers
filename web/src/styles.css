@@ -411,3 +411,5 @@ body { background: #eef4f6; }
 
 /* iPhone Safari zooms into any field whose text is under 16 px and keeps the zoom after login: never go below it */
 input, textarea, select { font-size: max(16px, 1em); }
+.ask-task { border-top: 1px dashed var(--line); margin: .5rem 0; padding-top: .5rem; }
+.btn.on { background: #eff6ff; border-color: #93c5fd; }

@@ -229,5 +229,6 @@ export const api = {
   },
   reindexMedia: (id: string) => request<MediaItem>(`/api/media/${id}/reindex`, { method: "POST" }),
   deleteMedia: (id: string) => request<{ deleted: string }>(`/api/media/${id}`, { method: "DELETE" }),
-  ask: (question: string) => request<AskResult>("/api/ask", json("POST", { question })),
+  // With a task, the server adds that task's description, notes, AI findings and latest photos as context.
+  ask: (question: string, taskId?: string) => request<AskResult>("/api/ask", json("POST", { question, task_id: taskId ?? null })),
 };

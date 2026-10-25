@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
-import { Box, Camera, CircleCheck, CircleX, FileText, Flag, Image, RotateCcw, Send, type LucideIcon } from "lucide-react";
+import { BookOpen, Box, Camera, CircleCheck, CircleX, FileText, Flag, Image, RotateCcw, Send, type LucideIcon } from "lucide-react";
 import { api, type Job, type Task, type TaskStatus, type UserClass } from "../api";
 import { t } from "../i18n";
+import { AskBox } from "./AskBox";
 import { EvidenceCard } from "./EvidenceCard";
 import { ModelView } from "./ModelView";
 import { ErrorBox, StatusChip, Typed } from "./ui";
@@ -29,6 +30,7 @@ export function TaskCard({ task, role, onJob, onOpenImage }:
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [asking, setAsking] = useState(false);
   // The first 3D model is shown by default; the button hides it.
   const [showModel, setShowModel] = useState<string | null>(
     () => task.media.find((m) => m.kind === "model_3d")?.id ?? null);
@@ -66,8 +68,7 @@ export function TaskCard({ task, role, onJob, onOpenImage }:
       </div>
       <div className={`now ${done ? "now-done" : "now-todo"}`}>{t(nowLine(task, role))}</div>
 
-      {(models.length > 0 || others.length > 0) && (
-        <div className="row small">
+      <div className="row small">
           {models.map((m) => (
             <button key={m.id} className="btn btn-small" onClick={() => setShowModel(showModel === m.id ? null : m.id)}>
               <Box aria-hidden />{showModel === m.id ? t("Hide 3D model") : t("Show 3D model")}: {m.title}
@@ -78,8 +79,11 @@ export function TaskCard({ task, role, onJob, onOpenImage }:
               {m.kind === "document" ? <FileText aria-hidden /> : <Image aria-hidden />}{m.title}
             </a>
           ))}
+          <button className={`btn btn-small${asking ? " on" : ""}`} aria-expanded={asking} onClick={() => setAsking(!asking)}>
+            <BookOpen aria-hidden />{t("Ask about this task")}
+          </button>
         </div>
-      )}
+      {asking && <AskBox taskId={task.id} />}
       {models.filter((m) => m.id === showModel).map((m) => (
         <ModelView key={m.id} model={m} highlight={m.node_ids} status={task.status} />
       ))}

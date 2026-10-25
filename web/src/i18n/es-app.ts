@@ -179,6 +179,10 @@ const app: Record<string, string> = {
 
   // Ask the documents
   "Ask the documents": "Preguntar a los documentos",
+  "Ask about this task": "Preguntar sobre esta tarea",
+  "Your question goes with this task's description, notes and latest photos, and is answered from your company's documents.":
+    "Tu pregunta se envía con la descripción, las notas y las últimas fotos de esta tarea, y se responde con los documentos de tu empresa.",
+  "e.g. Is this reading OK? What should I check next?": "p. ej. ¿Está bien esta lectura? ¿Qué reviso después?",
   "e.g. How often must the extinguisher gauge be checked?": "p. ej. ¿Cada cuánto se debe revisar el manómetro del extintor?",
   "Ask": "Preguntar",
   "Searching…": "Buscando…",
